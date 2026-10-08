@@ -1,0 +1,692 @@
+---
+import Base from '../layouts/Base.astro';
+import ArrowOut from '../components/ArrowOut.astro';
+import Header from '../components/Header.astro';
+import { SITE } from '../config';
+import { services, etapes, projets } from '../data/contenu';
+import { num } from '../data/sections';
+
+// Mots qui défilent à la fin du titre (le premier est celui affiché sans JS).
+const mots = ['apps', 'bots', 'outils', 'jeux'];
+
+const annee = new Date().getFullYear();
+---
+
+<Base>
+  <Header home />
+
+  <main>
+    <section class="hero wrap" aria-labelledby="hero-titre">
+      <h1 id="hero-titre" class="hero__title" aria-label={`Je construis vos sites et vos ${mots.join(', ')}.`}>
+        <span class="line" style="--d: 0" aria-hidden="true">Je construis</span>
+        <span class="line" style="--d: 1" aria-hidden="true">vos sites</span>
+        <span class="line" style="--d: 2" aria-hidden="true"
+          ><em>&amp; vos <span class="swap" data-mots={mots.join(',')}>{mots[0]}</span>.</em></span
+        >
+      </h1>
+
+      <div class="ruler" aria-hidden="true"></div>
+
+      <div class="hero__meta">
+        <p class="hero__lede">{SITE.description}</p>
+        <dl class="specs mono">
+          <div><dt>Statut</dt><dd>{SITE.statut}</dd></div>
+          <div><dt>Basé en</dt><dd>{SITE.ville}</dd></div>
+          <div><dt>Réponse</dt><dd>Sous 24 h</dd></div>
+        </dl>
+        <a href="#contact" class="btn">Parler de votre projet <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+
+    <section id="services" class="block wrap" aria-labelledby="t-services">
+      <div class="block__head title-reveal">
+        <span class="mono block__num">{num('services')}</span>
+        <h2 id="t-services"><span>Services</span></h2>
+        <p class="block__aside">Un seul interlocuteur, du cahier des charges à la mise en ligne.</p>
+      </div>
+      <ol class="grid-services">
+        {
+          services.map((s, i) => (
+            <li class="card reveal" style={`--i: ${i}`}>
+              <span class="mono card__ref">{String.fromCharCode(65 + i)}</span>
+              <h3>{s.titre}</h3>
+              <p>{s.texte}</p>
+              <ul class="mono card__pts">
+                {s.points.map((p) => <li>{p}</li>)}
+              </ul>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section id="methode" class="block wrap" aria-labelledby="t-methode">
+      <div class="block__head title-reveal">
+        <span class="mono block__num">{num('methode')}</span>
+        <h2 id="t-methode"><span>Méthode</span></h2>
+        <p class="block__aside">Pas de surprise : prix fixé avant de commencer.</p>
+      </div>
+      <ol class="steps">
+        {
+          etapes.map((e, i) => (
+            <li class="step reveal" style={`--i: ${i}`}>
+              <span class="step__n">{i + 1}</span>
+              <h3>{e.titre}</h3>
+              <p>{e.texte}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    {
+      projets.length > 0 && (
+        <section id="projets" class="block wrap" aria-labelledby="t-projets">
+          <div class="block__head title-reveal">
+            <span class="mono block__num">{num('projets')}</span>
+            <h2 id="t-projets"><span>Projets</span></h2>
+            <p class="block__aside">Une sélection de ce qui tourne en production.</p>
+          </div>
+          <ul class="projets">
+            {projets.map((p) => (
+              <li class="projet reveal">
+                <span class="mono projet__an">{p.annee}</span>
+                {p.logo ? (
+                  <img class="projet__logo" src={p.logo} alt="" width="64" height="64" loading="lazy" decoding="async" />
+                ) : (
+                  <span class="projet__logo" aria-hidden="true" />
+                )}
+                <div>
+                  <h3>
+                    {p.url || p.repo ? (
+                      <a href={p.url ?? p.repo} target="_blank" rel="noopener">
+                        {p.nom}<ArrowOut />
+                      </a>
+                    ) : (
+                      p.nom
+                    )}
+                  </h3>
+                  <p>{p.resume}</p>
+                  <p class="mono projet__liens">
+                    {p.url && <a href={p.url} target="_blank" rel="noopener">Voir le site<ArrowOut /></a>}
+                    {p.repo && <a href={p.repo} target="_blank" rel="noopener">Code sur GitHub<ArrowOut /></a>}
+                  </p>
+                </div>
+                <div class="mono projet__side">
+                  <span>{p.type}</span>
+                  <span class="projet__stack">{p.stack.join(' · ')}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <section id="contact" class="contact" aria-labelledby="t-contact">
+      <div class="wrap">
+        <div class="block__head title-reveal">
+          <span class="mono block__num">{num('contact')}</span>
+          <h2 id="t-contact"><span>Contact</span></h2>
+          <p class="block__aside">Décrivez votre projet en quelques lignes : je réponds sous 24 h.</p>
+        </div>
+        <a class="contact__mail" href={`mailto:${SITE.email}?subject=${encodeURIComponent('Projet — premier contact')}`}>
+          <span class="contact__label mono">Écrire à</span>
+          <span class="contact__addr">{SITE.email}</span>
+          <span class="contact__arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer wrap mono">
+    <span>© {annee} {SITE.nom} — {SITE.statut}</span>
+    <a href="/mentions-legales">Mentions légales</a>
+  </footer>
+</Base>
+
+<script>
+  const animer = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Apparition au défilement ; sans JS ou avec mouvement réduit, tout reste visible.
+  const items = document.querySelectorAll<HTMLElement>('.reveal, .title-reveal');
+  if ('IntersectionObserver' in window && animer) {
+    document.documentElement.classList.add('js-reveal');
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            e.target.classList.add('is-in');
+            io.unobserve(e.target);
+          }
+        }
+      },
+      { rootMargin: '0px 0px -10% 0px' },
+    );
+    items.forEach((el) => io.observe(el));
+  }
+
+  // Dernier mot du titre qui change : sort par le haut, le suivant monte par le bas.
+  const swap = document.querySelector<HTMLElement>('.swap');
+  const mots = swap?.dataset.mots?.split(',') ?? [];
+  if (swap && mots.length > 1 && animer && 'animate' in swap) {
+    let i = 0;
+    const easing = 'cubic-bezier(0.2, 0.7, 0.1, 1)';
+    const suivant = async () => {
+      if (document.hidden) return;
+      await swap.animate(
+        [{ transform: 'none', opacity: 1 }, { transform: 'translateY(-60%)', opacity: 0 }],
+        { duration: 380, easing: 'cubic-bezier(0.6, 0, 0.8, 0.4)', fill: 'forwards' },
+      ).finished;
+      i = (i + 1) % mots.length;
+      swap.textContent = mots[i];
+      swap.animate(
+        [{ transform: 'translateY(60%)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+        { duration: 620, easing, fill: 'forwards' },
+      );
+    };
+    // On attend la fin de l'arrivée du titre avant de commencer.
+    setTimeout(() => setInterval(suivant, 2600), 1400);
+  }
+</script>
+
+<style>
+  /* ---------- Hero ---------- */
+  .hero {
+    padding-top: clamp(2.5rem, 7vw, 6rem);
+    padding-bottom: clamp(3rem, 7vw, 6rem);
+  }
+  .hero__title {
+    margin: 0;
+    font-family: var(--f-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: clamp(3.6rem, 15.5vw, 13.5rem);
+    line-height: 0.84;
+    letter-spacing: -0.01em;
+  }
+  .hero__title .line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.04em;
+    animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+    animation-delay: calc(var(--d) * 110ms + 80ms);
+  }
+  .hero__title em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .swap {
+    display: inline-block;
+  }
+  @keyframes rise {
+    from { transform: translateY(40%); opacity: 0; clip-path: inset(0 0 100% 0); }
+    to { transform: none; opacity: 1; clip-path: inset(0 0 0 0); }
+  }
+
+  /* Règle graduée : petites marques tous les 8px, grandes tous les 80px. */
+  .ruler {
+    height: 18px;
+    margin: clamp(1.5rem, 3vw, 2.5rem) 0;
+    border-top: 1px solid var(--line);
+    background:
+      repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 80px) top / 100% 18px no-repeat,
+      repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 8px) top / 100% 7px no-repeat;
+    animation: draw 1.2s 0.45s cubic-bezier(0.6, 0, 0.2, 1) both;
+  }
+  @keyframes draw {
+    from { clip-path: inset(0 100% 0 0); }
+    to { clip-path: inset(0 0 0 0); }
+  }
+
+  .hero__meta {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr auto;
+    gap: clamp(1.5rem, 4vw, 4rem);
+    align-items: end;
+    animation: fade 0.8s 0.7s both;
+  }
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  .hero__lede {
+    margin: 0;
+    max-width: 34ch;
+    font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+    line-height: 1.4;
+  }
+  .specs {
+    margin: 0;
+    display: grid;
+    gap: 0.35rem;
+  }
+  .specs div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px dashed var(--hair);
+    padding-bottom: 0.35rem;
+  }
+  .specs dt {
+    color: var(--ink-soft);
+  }
+  .specs dd {
+    margin: 0;
+  }
+  @media (max-width: 900px) {
+    .hero__meta {
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.4rem;
+    background: var(--ink);
+    color: var(--paper);
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--ink);
+    white-space: nowrap;
+    transition: background 0.2s, color 0.2s;
+  }
+  .btn span {
+    transition: transform 0.2s;
+  }
+  .btn:hover {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+  }
+  .btn:hover span {
+    transform: translateX(4px);
+  }
+  @media (max-width: 900px) {
+    .btn {
+      justify-self: start;
+    }
+  }
+
+  /* ---------- Blocs ---------- */
+  .block {
+    padding-top: clamp(3rem, 7vw, 6rem);
+    padding-bottom: clamp(3rem, 7vw, 6rem);
+    border-top: 1px solid var(--line);
+  }
+  .block__head {
+    display: grid;
+    grid-template-columns: 4rem 1fr minmax(0, 22rem);
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: clamp(2rem, 4vw, 3.5rem);
+  }
+  .block__num {
+    color: var(--accent);
+    font-size: 0.85rem;
+  }
+  .block__head h2 {
+    margin: 0;
+    font-family: var(--f-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: clamp(2.6rem, 7vw, 5.5rem);
+    line-height: 0.9;
+  }
+  .block__aside {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+  .block__head h2 > span {
+    display: block;
+  }
+  /* Titres de section : même montée que le grand titre, numéro et aparté en fondu juste après. */
+  :global(.js-reveal) .title-reveal h2 > span,
+  :global(.js-reveal) .title-reveal .block__num,
+  :global(.js-reveal) .title-reveal .block__aside {
+    opacity: 0;
+  }
+  :global(.js-reveal) .title-reveal.is-in h2 > span {
+    animation: rise-titre 0.9s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+  }
+  /* Comme « rise », mais la découpe déborde de la ligne : sinon l'accent de « MÉTHODE » est rogné. */
+  @keyframes rise-titre {
+    from { transform: translateY(40%); opacity: 0; clip-path: inset(-40% -5% 100% -5%); }
+    to { transform: none; opacity: 1; clip-path: inset(-40% -5% -20% -5%); }
+  }
+  :global(.js-reveal) .title-reveal.is-in .block__num,
+  :global(.js-reveal) .title-reveal.is-in .block__aside {
+    animation: fade 0.7s 0.25s both;
+  }
+  @media (max-width: 760px) {
+    .block__head {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+  }
+
+  /* ---------- Services ---------- */
+  .grid-services {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-left: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+  }
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 1.25rem 1.75rem;
+    min-height: 22rem;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+    transition: background 0.25s, color 0.25s;
+  }
+  .card:hover {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .card__ref {
+    font-size: 0.85rem;
+  }
+  .card h3 {
+    margin: auto 0 0.6rem;
+    padding-top: 3rem;
+    font-family: var(--f-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 2.1rem;
+    line-height: 0.95;
+  }
+  .card p {
+    margin: 0 0 1.25rem;
+  }
+  .card__pts {
+    list-style: none;
+    margin: 0;
+    padding: 1rem 0 0;
+    border-top: 1px solid currentColor;
+    display: grid;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+  }
+  .card__pts li::before {
+    content: '+ ';
+  }
+  @media (max-width: 1080px) {
+    .grid-services {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 560px) {
+    .grid-services {
+      grid-template-columns: 1fr;
+    }
+    .card {
+      min-height: 0;
+    }
+    .card h3 {
+      padding-top: 1.5rem;
+    }
+  }
+
+  /* ---------- Méthode ---------- */
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(1rem, 2.5vw, 2rem);
+    counter-reset: step;
+  }
+  .step {
+    position: relative;
+    padding-top: 1.25rem;
+    border-top: 3px solid var(--ink);
+  }
+  .step:first-child {
+    border-top-color: var(--accent);
+  }
+  .step__n {
+    display: block;
+    font-family: var(--f-display);
+    font-weight: 900;
+    font-size: clamp(4rem, 8vw, 6.5rem);
+    line-height: 0.8;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--ink);
+    /* Remplissage de bas en haut à l'apparition : un dégradé net glisse dans le texte. */
+    background: linear-gradient(to top, var(--ink) 50%, transparent 50%) top / 100% 200% no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  :global(.js-reveal) .step.is-in .step__n {
+    animation: remplir 0.9s cubic-bezier(0.6, 0, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 120ms + 350ms);
+  }
+  .step:first-child .step__n {
+    background-image: linear-gradient(to top, var(--accent) 50%, transparent 50%);
+    -webkit-text-stroke-color: var(--accent);
+  }
+  @keyframes remplir {
+    to { background-position: bottom; }
+  }
+  .step h3 {
+    margin: 1rem 0 0.4rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  .step p {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+  @media (max-width: 900px) {
+    .steps {
+      grid-template-columns: repeat(2, 1fr);
+      row-gap: 2.5rem;
+    }
+  }
+  @media (max-width: 480px) {
+    .steps {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ---------- Projets ---------- */
+  .projets {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+  .projet {
+    position: relative;
+    display: grid;
+    grid-template-columns: 5rem 4rem 1fr 16rem;
+    gap: 1.5rem;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .projet h3 {
+    margin: 0 0 0.3rem;
+    font-family: var(--f-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 2rem;
+    line-height: 1;
+  }
+  .projet h3 a {
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  /* Toute la ligne est cliquable (lien étiré) ; les petits liens restent au-dessus. */
+  .projet h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  .projet::before {
+    content: '';
+    position: absolute;
+    inset: 0 calc(-1 * min(1rem, var(--gutter)));
+    background: color-mix(in srgb, var(--accent) 9%, transparent);
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+  }
+  .projet:hover::before {
+    opacity: 1;
+  }
+  .projet:hover h3 a {
+    color: var(--accent);
+  }
+  .projet:hover h3 :global(.arrow-out) {
+    transform: translate(2px, -2px);
+  }
+  .projet p {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+  .projet__liens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-top: 0.75rem !important;
+  }
+  .projet__liens a {
+    position: relative;
+    z-index: 2;
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+  }
+  .projet__liens a:hover {
+    color: var(--ink);
+  }
+  .projet__logo {
+    display: block;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 22%;
+    object-fit: cover;
+    transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.1, 1);
+  }
+  .projet:hover .projet__logo {
+    transform: rotate(-6deg) scale(1.06);
+  }
+  .projet__an {
+    color: var(--accent);
+  }
+  .projet__side {
+    display: grid;
+    gap: 0.3rem;
+    align-content: start;
+    text-align: right;
+  }
+  .projet__stack {
+    color: var(--ink-soft);
+    text-transform: none;
+  }
+  @media (max-width: 760px) {
+    /* Mobile : logo à gauche du contenu, année et fiche technique sur toute la largeur. */
+    .projet {
+      grid-template-columns: 3rem 1fr;
+      gap: 0.5rem 1rem;
+    }
+    .projet__an,
+    .projet__side {
+      grid-column: 1 / -1;
+    }
+    .projet__logo {
+      width: 3rem;
+      height: 3rem;
+    }
+    .projet__side {
+      text-align: left;
+    }
+  }
+
+  /* ---------- Contact ---------- */
+  .contact {
+    /* Fond inversé : on prend la teinte d'accent prévue pour l'autre thème, sinon le contraste s'effondre. */
+    --accent: var(--accent-inv);
+    padding: clamp(3rem, 7vw, 6rem) 0;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .contact .block__aside {
+    color: color-mix(in srgb, var(--paper) 65%, transparent);
+  }
+  .contact__mail {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 0.5rem 2rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--paper);
+    border-bottom: 1px solid var(--paper);
+    text-decoration: none;
+  }
+  .contact__label {
+    grid-column: 1 / -1;
+    color: var(--accent);
+  }
+  .contact__addr {
+    font-family: var(--f-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    /* Toujours sur une ligne : la taille suit la largeur d'écran. */
+    font-size: clamp(1.25rem, 6.4vw, 6.25rem);
+    line-height: 0.9;
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+  .contact__arrow {
+    font-size: clamp(2rem, 6vw, 5rem);
+    line-height: 1;
+    transition:
+      transform 0.3s cubic-bezier(0.2, 0.7, 0.1, 1),
+      color 0.2s;
+  }
+  .contact__mail:hover .contact__addr {
+    color: var(--accent);
+  }
+  .contact__mail:hover .contact__arrow {
+    color: var(--accent);
+    transform: translateX(12px);
+  }
+
+  /* ---------- Pied ---------- */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- Apparition ---------- */
+  /* Animation plutôt que transition : le délai de cascade ne doit pas retarder les survols. */
+  :global(.js-reveal) .reveal {
+    opacity: 0;
+  }
+  :global(.js-reveal) .reveal.is-in {
+    animation: reveal 0.65s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+    animation-delay: calc(var(--i, 0) * 80ms);
+  }
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: none; }
+  }
+</style>

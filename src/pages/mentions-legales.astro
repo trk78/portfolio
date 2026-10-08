@@ -1,0 +1,68 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import { SITE, LEGAL } from '../config';
+---
+
+<Base title="Mentions légales" noindex>
+  <Header />
+  <main class="wrap legal">
+    <a href="/" class="mono back">← Retour</a>
+    <h1>Mentions légales</h1>
+
+    <h2>Éditeur</h2>
+    <p>
+      {LEGAL.editeur} — {LEGAL.statut}<br />
+      Nom commercial : {LEGAL.nomCommercial}<br />
+      SIRET : {LEGAL.siret}<br />
+      Code APE : {LEGAL.ape}<br />
+      {LEGAL.adresse}<br />
+      Contact : <a href={`mailto:${SITE.email}`}>{SITE.email}</a><br />
+      {LEGAL.tva}
+    </p>
+    <p>Directeur de la publication : {LEGAL.editeur}.</p>
+
+    <h2>Hébergement</h2>
+    <p>{LEGAL.hebergeur}</p>
+
+    <h2>Données personnelles</h2>
+    <p>
+      Ce site ne dépose aucun cookie et n'utilise aucun outil de mesure d'audience. Les messages envoyés par e-mail
+      servent uniquement à répondre à votre demande et ne sont jamais transmis à des tiers. Vous pouvez demander leur
+      suppression à tout moment à l'adresse ci-dessus.
+    </p>
+  </main>
+</Base>
+
+<style>
+  .legal {
+    max-width: 760px;
+    padding-top: 3rem;
+    padding-bottom: 5rem;
+  }
+  .back {
+    text-decoration: none;
+    color: var(--accent);
+  }
+  h1 {
+    margin: 1.5rem 0 2rem;
+    font-family: var(--f-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: clamp(2.8rem, 9vw, 5rem);
+    line-height: 0.9;
+  }
+  h2 {
+    margin: 2.5rem 0 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+    font-family: var(--f-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  p {
+    margin: 0 0 1rem;
+  }
+</style>

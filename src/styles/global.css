@@ -1,0 +1,136 @@
+@import '@fontsource/big-shoulders-display/700';
+@import '@fontsource/big-shoulders-display/900';
+@import '@fontsource/hanken-grotesk/400';
+@import '@fontsource/hanken-grotesk/600';
+@import '@fontsource/spline-sans-mono/400';
+@import '@fontsource/spline-sans-mono/500';
+
+:root {
+  --paper: #efeae0;
+  --paper-2: #e6e0d3;
+  --ink: #151412;
+  --ink-soft: #57524a;
+  --line: #151412;
+  --hair: rgba(21, 20, 18, 0.18);
+  /* Violet : teinte foncée sur fond clair, claire sur fond sombre (contraste). */
+  --violet-deep: #6a2ee8;
+  --violet-light: #ab8cff;
+  --accent: var(--violet-deep);
+  --accent-inv: var(--violet-light);
+  --accent-ink: #f6f2ff;
+
+  --f-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --f-body: 'Hanken Grotesk', system-ui, sans-serif;
+  --f-mono: 'Spline Sans Mono', ui-monospace, monospace;
+
+  --gutter: clamp(16px, 4vw, 48px);
+  --max: 1320px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #151412;
+    --paper-2: #1d1c19;
+    --ink: #efeae0;
+    --ink-soft: #a39d92;
+    --line: #efeae0;
+    --hair: rgba(239, 234, 224, 0.16);
+    --accent: var(--violet-light);
+    --accent-inv: var(--violet-deep);
+    --accent-ink: #151412;
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Grain papier, posé au-dessus de tout sans capter les clics. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.wrap {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.mono {
+  font-family: var(--f-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Transition fluide entre les pages (navigateurs compatibles) ; la barre du haut reste en place. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+  ::view-transition-old(root) {
+    animation: 0.25s ease both vt-out;
+  }
+  ::view-transition-new(root) {
+    animation: 0.45s cubic-bezier(0.2, 0.7, 0.1, 1) both vt-in;
+  }
+  @keyframes vt-out {
+    to { opacity: 0; }
+  }
+  @keyframes vt-in {
+    from { opacity: 0; transform: translateY(14px); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

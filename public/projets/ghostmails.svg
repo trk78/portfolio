@@ -1,0 +1,26 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Ghostmails Logo v2 — Ghost + Envelope -->
+  <rect width="512" height="512" rx="120" fill="url(#brand-grad)"/>
+  <defs>
+    <linearGradient id="brand-grad" x1="0" y1="0" x2="512" y2="512">
+      <stop stop-color="#7C6AFF"/>
+      <stop offset="1" stop-color="#A78BFA"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(256,240) translate(-156,-160)">
+    <!-- Ghost body -->
+    <path d="M156 18C88 18 34 72 34 140v168c0 0 18-26 42-26s32 26 52 26 32-26 52-26 32 26 52 26 42-26 42-26V140c0-68-54-122-118-122z" fill="white" opacity="0.95"/>
+    <!-- Eyes -->
+    <circle cx="116" cy="128" r="22" fill="#7C6AFF"/>
+    <circle cx="196" cy="128" r="22" fill="#7C6AFF"/>
+    <!-- Eye shine -->
+    <circle cx="124" cy="120" r="7.5" fill="white" opacity="0.7"/>
+    <circle cx="204" cy="120" r="7.5" fill="white" opacity="0.7"/>
+    <!-- Envelope -->
+    <rect x="92" y="192" width="128" height="88" rx="10" fill="#7C6AFF" opacity="0.85"/>
+    <!-- Envelope flap -->
+    <path d="M92 201l64 38 64-38" stroke="white" stroke-width="5.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+    <!-- Envelope bottom corners -->
+    <path d="M92 272l34-26M220 272l-34-26" stroke="white" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.35"/>
+  </g>
+</svg>
