@@ -23,7 +23,10 @@ npm run preview
 
 ## Déploiement (Cloudflare Pages)
 
-`npm run deploy` (build + `wrangler pages deploy`). Ne jamais passer `--force` à wrangler.
+Automatique à chaque push sur `main` (GitHub Actions, `.github/workflows/deploy.yml`).
+Secret GitHub `CLOUDFLARE_API_TOKEN` (droit « Cloudflare Pages : Edit »), variable `CLOUDFLARE_ACCOUNT_ID`.
+
+À la main : `npm run deploy` (build + `wrangler pages deploy`). Ne jamais passer `--force` à wrangler.
 
 - Domaine : `timeojea.ovh`, DNS chez Cloudflare (registrar OVH)
 - `PUBLIC_SITE_URL` surcharge l'URL publique (canonical + sitemap), défaut `https://timeojea.ovh`
