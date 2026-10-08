@@ -60,8 +60,8 @@ export const projets: Projet[] = [
     resume:
       "Le jeu de déduction sociale Undercover sur un seul téléphone, avec des mots générés par IA sur n'importe quel thème. Jouable hors ligne.",
     stack: ['Vanilla JavaScript', 'PWA', 'Gemini 2.5 Flash', 'Cloudflare Workers', 'GitHub Pages'],
-    url: 'https://timeojea.github.io/undercover-plus/',
-    repo: 'https://github.com/timeojea/undercover-plus',
+    url: 'https://trk78.github.io/undercover-plus/',
+    repo: 'https://github.com/trk78/undercover-plus',
     logo: '/projets/undercover-plus.webp',
   },
   {
@@ -71,8 +71,8 @@ export const projets: Projet[] = [
     resume:
       'Télécharger une vidéo TikTok en MP4 sans filigrane ou en MP3, sans rien installer. Open source, bilingue, 100 % côté navigateur.',
     stack: ['Next.js 14', 'TypeScript', 'Tailwind CSS', 'GitHub Pages'],
-    url: 'https://timeojea.github.io/pastetok/',
-    repo: 'https://github.com/timeojea/pastetok',
+    url: 'https://trk78.github.io/pastetok/',
+    repo: 'https://github.com/trk78/pastetok',
     logo: '/projets/pastetok.svg',
   },
 ];
