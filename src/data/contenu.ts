@@ -54,6 +54,16 @@ export const projets: Projet[] = [
     logo: '/projets/ghostmails.svg',
   },
   {
+    nom: 'MyCityCost',
+    type: 'Application web',
+    annee: '2026',
+    resume:
+      'Comparer le coût et la qualité de vie entre 7 674 villes dans 179 pays : loyers, immobilier, fiscalité, pollution. Uniquement des sources officielles.',
+    stack: ['Next.js 14', 'TypeScript', 'Prisma 7', 'Neon PostgreSQL', 'Tailwind CSS 4', 'Cloudflare'],
+    url: 'https://mycitycost.com',
+    logo: '/projets/mycitycost.svg',
+  },
+  {
     nom: 'Undercover+',
     type: 'Jeu web (PWA)',
     annee: '2025',
