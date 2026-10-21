@@ -17,15 +17,23 @@ const annee = new Date().getFullYear();
 const pictos = [
   // Site vitrine : fenêtre de navigateur
   '<rect x="3" y="5" width="42" height="34" rx="3" pathLength="1"/><path d="M3 13h42" pathLength="1"/><path d="M10 22h18M10 28h28M10 33h14" pathLength="1"/>',
-  // Application web : tableau de bord
-  '<rect x="3" y="5" width="42" height="34" rx="3" pathLength="1"/><path d="M14 5v34" pathLength="1"/><path d="M21 32V24M28 32V17M35 32v-10M42 32V14" pathLength="1"/>',
+  // Application web : fenêtre avec barre latérale, deux cartes de chiffres et une courbe
+  '<rect x="3" y="5" width="42" height="34" rx="3" pathLength="1"/><path d="M3 12h42M14 12v27M7 8.5h1M10.5 8.5h1M6.5 17h4M6.5 21h4M6.5 25h4" pathLength="1"/><path d="M18 16h10v6H18zM31 16h10v6H31zM18 34l5-5 4 3 6-6 8 4" pathLength="1"/>',
   // Application mobile : téléphone
   '<rect x="13" y="2" width="22" height="42" rx="4" pathLength="1"/><path d="M21 7h6M22 38h4" pathLength="1"/><path d="M18 16h12M18 21h8M18 26h12" pathLength="1"/>',
   // Automatisation & IA : robot
   '<rect x="8" y="14" width="32" height="24" rx="5" pathLength="1"/><path d="M24 14V7M20 5h8M3 24v6M45 24v6" pathLength="1"/><path d="M17 23v4M31 23v4M18 32h12" pathLength="1"/>',
 ];
-// Méthode : nombre d'éléments animés dans la scène de chaque étape (appel, devis, développement, mise en ligne).
-const scenes = [3, 5, 6, 6];
+// Méthode : lignes de code tapées en fond pendant le survol de « Développement ».
+const code = [
+  'const projet = await concevoir(besoin);',
+  'for (const sprint of planning) {',
+  '  livrer(sprint); // vous suivez chaque étape',
+  '}',
+  'await tester(projet, { mobile: true });',
+  'deployer(projet);',
+];
+const range = (n: number) => Array.from({ length: n }, (_, j) => j);
 ---
 
 <Base>
@@ -72,12 +80,17 @@ const scenes = [3, 5, 6, 6];
         <span class="mono block__num">{num('methode')}</span>
         <h2 id="t-methode"><span>Méthode</span></h2>
       </div>
+      <div class="methode__fond" aria-hidden="true">
+        <div class="fond fond-0">{range(4).map((j) => <i style={`--j: ${j}`} />)}</div>
+        <div class="fond fond-1">{range(7).map((j) => <i style={`--j: ${j}`} />)}</div>
+        <div class="fond fond-2">{code.map((l, j) => <span style={`--j: ${j}; --n: ${l.length}`}>{l}</span>)}</div>
+        <div class="fond fond-3">{range(18).map((j) => <i style={`--j: ${j}`} />)}</div>
+      </div>
       <ol class="steps">
         {
           etapes.map((e, i) => (
             <li class="step reveal" style={`--i: ${i}`}>
-              <div class={`step__scene scene-${i}`} aria-hidden="true">{Array.from({ length: scenes[i] }, (_, j) => <i style={`--j: ${j}`} />)}</div>
-              <span class="step__n">{i + 1}</span>
+              <span class="step__tete"><span class="step__bulle" aria-hidden="true" /><span class="step__n">{i + 1}</span></span>
               <h3>{e.titre}</h3>
               <p>{e.texte}</p>
             </li>
@@ -243,6 +256,15 @@ const scenes = [3, 5, 6, 6];
     maj();
     addEventListener('scroll', maj, { passive: true });
     addEventListener('resize', maj);
+  }
+
+  // Méthode : l'étape survolée s'élargit et lance sa scène en fond de toute la section.
+  const methode = document.querySelector<HTMLElement>('#methode');
+  if (steps && methode && souris) {
+    steps.querySelectorAll<HTMLElement>('.step').forEach((li, i) => {
+      li.addEventListener('pointerenter', () => (methode.dataset.actif = String(i)));
+    });
+    steps.addEventListener('pointerleave', () => delete methode.dataset.actif);
   }
 
   // Contact : la flèche est attirée par le curseur tant qu'il survole le bloc de l'e-mail.
@@ -611,9 +633,12 @@ const scenes = [3, 5, 6, 6];
   .card__picto :global(*) {
     stroke-dasharray: 1;
   }
+  .card__picto {
+    transform-origin: top right;
+  }
   .card:hover .card__picto {
     opacity: 1;
-    scale: 1.12;
+    scale: 1.6;
   }
   .card:hover .card__picto :global(*) {
     animation: tracer 0.9s cubic-bezier(0.6, 0, 0.2, 1) both;
@@ -691,7 +716,7 @@ const scenes = [3, 5, 6, 6];
     isolation: isolate;
     padding-top: 1.25rem;
     border-top: 3px solid var(--ink);
-    transition: opacity 0.4s;
+    transition: filter 0.4s;
   }
   /* Trait violet par-dessus : chaque étape prend son quart de la progression (--p de 0 à 1, posé par le script). */
   .step::before {
@@ -709,7 +734,7 @@ const scenes = [3, 5, 6, 6];
     display: block;
     position: relative;
     width: fit-content;
-    transform-origin: left top;
+    transform-origin: center;
     transition: scale 0.5s cubic-bezier(0.3, 1.5, 0.5, 1);
     font-family: var(--f-display);
     font-weight: 900;
@@ -733,14 +758,18 @@ const scenes = [3, 5, 6, 6];
   @keyframes remplir {
     to { background-position: bottom; }
   }
-  /* Bulle violette qui gonfle derrière le chiffre survolé. */
-  .step__n::after {
-    content: '';
+  /* Bulle violette qui gonfle derrière le chiffre survolé ; hors du chiffre, sinon son « scale » la ferait passer devant. */
+  .step__tete {
+    position: relative;
+    display: block;
+    width: fit-content;
+  }
+  .step__bulle {
     position: absolute;
     z-index: -1;
     left: 50%;
-    top: 45%;
-    width: 1.35em;
+    top: 50%;
+    width: clamp(5.5rem, 10vw, 8.5rem);
     aspect-ratio: 1;
     border-radius: 50%;
     background: var(--accent);
@@ -755,156 +784,185 @@ const scenes = [3, 5, 6, 6];
   }
   .step p {
     margin: 0;
+    /* Trois lignes réservées : la section ne saute pas quand les colonnes changent de largeur au survol. */
+    min-height: 4.8em;
     color: var(--ink-soft);
   }
-  /* ---------- Méthode : survol (grands écrans, vraie souris) ---------- */
-  .step__scene {
-    position: absolute;
-    z-index: -2;
-    top: 1.25rem;
-    right: 0;
-    width: 55%;
-    height: 9rem;
-    opacity: 0;
-    transition: opacity 0.4s;
-    pointer-events: none;
+  /* ---------- Méthode : survol (vraie souris, data-actif posé par le script) ---------- */
+  #methode {
+    isolation: isolate;
   }
-  .step__scene i {
+  .steps {
+    transition: grid-template-columns 0.6s cubic-bezier(0.2, 0.7, 0.1, 1);
+  }
+  @media (min-width: 901px) {
+    #methode[data-actif='0'] .steps { grid-template-columns: 1.8fr 1fr 1fr 1fr; }
+    #methode[data-actif='1'] .steps { grid-template-columns: 1fr 1.8fr 1fr 1fr; }
+    #methode[data-actif='2'] .steps { grid-template-columns: 1fr 1fr 1.8fr 1fr; }
+    #methode[data-actif='3'] .steps { grid-template-columns: 1fr 1fr 1fr 1.8fr; }
+  }
+  /* filter et non opacity : l'animation d'apparition (fill both) garde la main sur opacity. */
+  #methode[data-actif] .step {
+    filter: opacity(0.35);
+  }
+  #methode[data-actif='0'] .step:nth-child(1),
+  #methode[data-actif='1'] .step:nth-child(2),
+  #methode[data-actif='2'] .step:nth-child(3),
+  #methode[data-actif='3'] .step:nth-child(4) {
+    filter: none;
+  }
+  /* Chiffre survolé : grossit, bulle violette derrière, chiffre en couleur d'encre d'accent. */
+  .step:hover .step__n {
+    scale: 1.2;
+  }
+  .step:hover .step__n {
+    background: none;
+    color: var(--accent-ink);
+    -webkit-text-stroke-color: transparent;
+  }
+  .step:hover .step__bulle {
+    scale: 1;
+  }
+
+  /* Calque pleine largeur derrière la section ; une scène par étape. */
+  .methode__fond {
+    position: absolute;
+    z-index: -1;
+    inset: 0 auto 0 50%;
+    width: 100vw;
+    translate: -50% 0;
+    overflow: hidden;
+    pointer-events: none;
+    mask-image: linear-gradient(transparent, #000 12%, #000 88%, transparent);
+  }
+  .fond {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  .fond i,
+  .fond span {
     position: absolute;
     display: block;
   }
-  @media (min-width: 901px) and (hover: hover) {
-    .steps {
-      transition: grid-template-columns 0.6s cubic-bezier(0.2, 0.7, 0.1, 1);
-    }
-    /* L'étape survolée s'élargit et pousse les autres. */
-    .steps:has(> .step:nth-child(1):hover) { grid-template-columns: 2.4fr 1fr 1fr 1fr; }
-    .steps:has(> .step:nth-child(2):hover) { grid-template-columns: 1fr 2.4fr 1fr 1fr; }
-    .steps:has(> .step:nth-child(3):hover) { grid-template-columns: 1fr 1fr 2.4fr 1fr; }
-    .steps:has(> .step:nth-child(4):hover) { grid-template-columns: 1fr 1fr 1fr 2.4fr; }
-    .steps:has(> .step:hover) > .step:not(:hover) {
-      opacity: 0.45;
-    }
-    .step:hover .step__n {
-      scale: 1.15;
-      background-image: linear-gradient(var(--accent-ink), var(--accent-ink));
-      -webkit-text-stroke-color: var(--accent-ink);
-    }
-    .step:hover .step__n::after {
-      scale: 1;
-    }
-    .step:hover .step__scene {
-      opacity: 1;
-    }
-    .step p {
-      max-width: 28ch;
-    }
+  #methode[data-actif='0'] .fond-0,
+  #methode[data-actif='1'] .fond-1,
+  #methode[data-actif='2'] .fond-2,
+  #methode[data-actif='3'] .fond-3 {
+    opacity: 1;
   }
 
-  /* Appel : ondes qui partent du combiné. */
-  .scene-0 i {
-    left: 50%;
-    top: 50%;
-    width: 7rem;
+  /* 1. Appel : grandes ondes qui partent du combiné, à gauche. */
+  .fond-0 i {
+    left: 22%;
+    top: 62%;
+    width: 30vmax;
     aspect-ratio: 1;
-    margin: -3.5rem 0 0 -3.5rem;
-    border: 2px solid var(--accent);
+    margin: -15vmax 0 0 -15vmax;
+    border: 1.5px solid var(--accent);
     border-radius: 50%;
     opacity: 0;
   }
-  .step:hover .scene-0 i {
-    animation: sonner 1.8s ease-out infinite;
-    animation-delay: calc(var(--j) * 0.6s);
+  #methode[data-actif='0'] .fond-0 i {
+    animation: onde-appel 4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+    animation-delay: calc(var(--j) * 1s);
   }
-  @keyframes sonner {
-    from { scale: 0.2; opacity: 0.9; }
-    to { scale: 1.4; opacity: 0; }
-  }
-
-  /* Devis : une feuille dont les lignes s'écrivent, la dernière (le total) en violet. */
-  .scene-1 {
-    border: 1.5px solid var(--line);
-    border-radius: 4px;
-    width: 9rem;
-    right: 1rem;
-  }
-  .scene-1 i {
-    left: 1rem;
-    top: calc(1rem + var(--j) * 1.35rem);
-    height: 0.4rem;
-    width: calc(70% - var(--j) * 6%);
-    background: var(--ink-soft);
-    border-radius: 2px;
-    transform-origin: left;
-    scale: 0 1;
-  }
-  .scene-1 i:last-child {
-    left: auto;
-    right: 1rem;
-    width: 35%;
-    background: var(--accent);
-  }
-  .step:hover .scene-1 i {
-    animation: ecrire 2.6s cubic-bezier(0.6, 0, 0.2, 1) infinite;
-    animation-delay: calc(var(--j) * 0.25s);
-  }
-  @keyframes ecrire {
-    0% { scale: 0 1; }
-    25%, 85% { scale: 1 1; }
-    100% { scale: 1 1; opacity: 0; }
+  @keyframes onde-appel {
+    from { scale: 0.05; opacity: 0.8; }
+    to { scale: 4; opacity: 0; }
   }
 
-  /* Développement : lignes de code indentées qui se tapent, curseur qui clignote au bout. */
-  .scene-2 i {
-    top: calc(0.5rem + var(--j) * 1.3rem);
-    left: 1rem;
-    height: 0.45rem;
-    width: calc(65% - var(--j) * 6%);
-    border-radius: 2px;
-    background: var(--ink-soft);
+  /* 2. Devis : les lignes d'un devis s'écrivent sur toute la largeur, total en violet. */
+  .fond-1 i {
+    left: 8vw;
+    right: 8vw;
+    top: calc(14% + var(--j) * 11%);
+    height: 1px;
+    background: color-mix(in srgb, var(--ink) 25%, transparent);
     clip-path: inset(0 100% 0 0);
   }
-  .scene-2 i:nth-child(odd) {
+  /* Libellé à gauche, prix à droite. */
+  .fond-1 i::before,
+  .fond-1 i::after {
+    content: '';
+    position: absolute;
+    bottom: 0.5rem;
+    height: 0.6rem;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--ink) 32%, transparent);
+  }
+  .fond-1 i::before {
+    left: 0;
+    width: calc(18% + var(--j) * 3%);
+  }
+  .fond-1 i::after {
+    right: 0;
+    width: 7%;
+  }
+  .fond-1 i:last-child {
+    height: 2px;
     background: var(--accent);
   }
-  /* Indentation façon bloc de code. */
-  .scene-2 i:nth-child(3n + 2),
-  .scene-2 i:nth-child(3n) {
-    translate: 1rem 0;
+  .fond-1 i:last-child::before,
+  .fond-1 i:last-child::after {
+    height: 1.2rem;
+    background: color-mix(in srgb, var(--accent) 70%, transparent);
   }
-  .scene-2 i:nth-child(3n) {
-    translate: 2rem 0;
+  #methode[data-actif='1'] .fond-1 i {
+    animation: ligne-devis 4.5s cubic-bezier(0.6, 0, 0.2, 1) infinite both;
+    animation-delay: calc(var(--j) * 0.18s);
   }
-  .step:hover .scene-2 i {
-    animation: taper 3s steps(8) infinite;
-    animation-delay: calc(var(--j) * 0.35s);
-  }
-  @keyframes taper {
+  @keyframes ligne-devis {
     0% { clip-path: inset(0 100% 0 0); }
-    30%, 90% { clip-path: inset(0 0 0 0); }
+    22%, 88% { clip-path: inset(0 0 0 0); opacity: 1; }
     100% { clip-path: inset(0 0 0 0); opacity: 0; }
   }
 
-  /* Mise en ligne : la courbe de visites qui monte. */
-  .scene-3 i {
-    bottom: 0.5rem;
-    left: calc(var(--j) * 16%);
-    width: 11%;
-    height: calc(15% + var(--j) * 15%);
+  /* 3. Développement : du code tapé lettre par lettre en grand. */
+  .fond-2 span {
+    left: 8vw;
+    top: calc(8% + var(--j) * 14%);
+    font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+    font-size: clamp(1rem, 2vw, 1.9rem);
+    white-space: pre;
+    color: color-mix(in srgb, var(--ink) 12%, transparent);
+    clip-path: inset(0 100% 0 0);
+  }
+  .fond-2 span:nth-child(odd) {
+    color: color-mix(in srgb, var(--accent) 32%, transparent);
+  }
+  #methode[data-actif='2'] .fond-2 span {
+    animation: taper 6s infinite both;
+    animation-timing-function: steps(var(--n));
+    animation-delay: calc(var(--j) * 0.7s);
+  }
+  @keyframes taper {
+    0% { clip-path: inset(0 100% 0 0); }
+    18%, 85% { clip-path: inset(0 0 0 0); opacity: 1; }
+    100% { clip-path: inset(0 0 0 0); opacity: 0; }
+  }
+
+  /* 4. Mise en ligne : courbe de visites en barres qui montent sur toute la largeur. */
+  .fond-3 i {
+    bottom: 0;
+    left: calc(2vw + var(--j) * 5.4vw);
+    width: 3.2vw;
+    height: calc(8% + var(--j) * var(--j) * 0.26%);
     background: var(--accent);
-    opacity: calc(0.4 + var(--j) * 0.12);
-    border-radius: 3px 3px 0 0;
+    opacity: calc(0.06 + var(--j) * 0.012);
+    border-radius: 4px 4px 0 0;
     transform-origin: bottom;
     scale: 1 0;
   }
-  .step:hover .scene-3 i {
-    animation: monter 2.4s cubic-bezier(0.3, 1.4, 0.5, 1) infinite;
-    animation-delay: calc(var(--j) * 0.12s);
+  #methode[data-actif='3'] .fond-3 i {
+    animation: barre 3.6s cubic-bezier(0.3, 1.3, 0.5, 1) infinite both;
+    animation-delay: calc(var(--j) * 0.05s);
   }
-  @keyframes monter {
+  @keyframes barre {
     0% { scale: 1 0; }
-    35%, 85% { scale: 1 1; }
-    100% { scale: 1 1; opacity: 0; }
+    35%, 88% { scale: 1 1; }
+    100% { scale: 1 0; }
   }
 
   @media (max-width: 900px) {
