@@ -9,6 +9,7 @@ import { num } from '../data/sections';
 // Mots qui défilent à la fin du titre (le premier est celui affiché sans JS).
 const mots = ['apps', 'bots', 'outils', 'jeux'];
 const nombre = (n: number) => n.toLocaleString('fr-FR');
+const lettres = (t: string) => [...t];
 
 const annee = new Date().getFullYear();
 ---
@@ -21,8 +22,8 @@ const annee = new Date().getFullYear();
     <section class="hero wrap" aria-labelledby="hero-titre">
       <canvas class="hero__fond" aria-hidden="true"></canvas>
       <h1 id="hero-titre" class="hero__title" aria-label={`Je construis vos sites et vos ${mots.join(', ')}.`}>
-        <span class="line" style="--d: 0" aria-hidden="true">Je construis</span>
-        <span class="line" style="--d: 1" aria-hidden="true">vos sites</span>
+        <span class="line" style="--d: 0" aria-hidden="true">{lettres('Je construis').map((c) => (c === ' ' ? ' ' : <span class="l">{c}</span>))}</span>
+        <span class="line" style="--d: 1" aria-hidden="true">{lettres('vos sites').map((c) => (c === ' ' ? ' ' : <span class="l">{c}</span>))}</span>
         <span class="line" style="--d: 2" aria-hidden="true"
           ><em>&amp; vos <span class="swap" data-mots={mots.join(',')}>{mots[0]}</span>.</em></span
         >
@@ -34,7 +35,6 @@ const annee = new Date().getFullYear();
       <div class="block__head title-reveal">
         <span class="mono block__num">{num('services')}</span>
         <h2 id="t-services"><span>Services</span></h2>
-        <p class="block__aside">Un seul interlocuteur, du cahier des charges à la mise en ligne.</p>
       </div>
       <ol class="grid-services">
         {
@@ -56,7 +56,6 @@ const annee = new Date().getFullYear();
       <div class="block__head title-reveal">
         <span class="mono block__num">{num('methode')}</span>
         <h2 id="t-methode"><span>Méthode</span></h2>
-        <p class="block__aside">Pas de surprise : prix fixé avant de commencer.</p>
       </div>
       <ol class="steps">
         {
@@ -77,8 +76,9 @@ const annee = new Date().getFullYear();
           <div class="block__head title-reveal">
             <span class="mono block__num">{num('projets')}</span>
             <h2 id="t-projets"><span>Projets</span></h2>
-            <p class="block__aside">Une sélection de ce qui tourne en production.</p>
           </div>
+          <div class="projets__fond" aria-hidden="true"></div>
+          <div class="projets__fond" aria-hidden="true"></div>
           <ul class="chiffres">
             {chiffres.map((c, i) => (
               <li class="chiffre reveal" style={`--i: ${i}`} hidden={!!c.source} data-source={c.source} data-champ={c.champ}>
@@ -89,7 +89,7 @@ const annee = new Date().getFullYear();
           </ul>
           <ul class="projets">
             {projets.map((p) => (
-              <li class="projet reveal" style={p.apercu ? `--apercu: url(${p.apercu})` : undefined}>
+              <li class="projet reveal" data-apercu={p.apercu}>
                 <span class="mono projet__an">{p.annee}</span>
                 {p.logo ? (
                   <img class="projet__logo" src={p.logo} alt="" width="64" height="64" loading="lazy" decoding="async" />
@@ -128,11 +128,10 @@ const annee = new Date().getFullYear();
         <div class="block__head title-reveal">
           <span class="mono block__num">{num('contact')}</span>
           <h2 id="t-contact"><span>Contact</span></h2>
-          <p class="block__aside">Décrivez votre projet en quelques lignes : je réponds sous 24 h.</p>
         </div>
-        <a class="contact__mail" href={`mailto:${SITE.email}?subject=${encodeURIComponent('Projet — premier contact')}`}>
+        <a class="contact__mail" aria-label={`Écrire à ${SITE.email}`} href={`mailto:${SITE.email}?subject=${encodeURIComponent('Projet — premier contact')}`}>
           <span class="contact__label mono">Écrire à</span>
-          <span class="contact__addr">{SITE.email}</span>
+          <span class="contact__addr reveal-lettres">{lettres(SITE.email).map((c, k) => <span class="l" style={`--k: ${k}`} aria-hidden="true">{c}</span>)}</span>
           <span class="contact__arrow" aria-hidden="true">→</span>
         </a>
       </div>
@@ -149,7 +148,7 @@ const annee = new Date().getFullYear();
   const animer = !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Apparition au défilement ; sans JS ou avec mouvement réduit, tout reste visible.
-  const items = document.querySelectorAll<HTMLElement>('.reveal, .title-reveal');
+  const items = document.querySelectorAll<HTMLElement>('.reveal, .title-reveal, .block, .reveal-lettres');
   if ('IntersectionObserver' in window && animer) {
     document.documentElement.classList.add('js-reveal');
     const io = new IntersectionObserver(
@@ -236,6 +235,33 @@ const annee = new Date().getFullYear();
       // Source indisponible : le chiffre reste masqué.
     }
   });
+
+  // Survol d'un projet : la capture de son site devient le fond de toute la section.
+  // Deux calques qui se relaient pour un fondu enchaîné d'une capture à l'autre.
+  const fonds = [...document.querySelectorAll<HTMLElement>('.projets__fond')];
+  const liste = document.querySelector<HTMLElement>('.projets');
+  if (fonds.length === 2 && liste && matchMedia('(hover: hover)').matches) {
+    let actif = 0;
+    let courant = '';
+    // Précharge toutes les captures dès qu'on approche de la liste : pas de trou au premier survol.
+    liste.addEventListener('pointerenter', () => {
+      liste.querySelectorAll<HTMLElement>('.projet[data-apercu]').forEach((li) => (new Image().src = li.dataset.apercu!));
+    }, { once: true });
+    liste.querySelectorAll<HTMLElement>('.projet[data-apercu]').forEach((li) => {
+      li.addEventListener('pointerenter', () => {
+        const src = li.dataset.apercu!;
+        if (src !== courant) {
+          actif = 1 - actif;
+          fonds[actif].style.setProperty('--fond', `url(${src})`);
+          courant = src;
+        }
+        fonds[actif].classList.add('is-on');
+        fonds[1 - actif].classList.remove('is-on');
+      });
+    });
+    // On n'éteint qu'en quittant toute la liste, pour ne pas clignoter entre deux lignes.
+    liste.addEventListener('pointerleave', () => fonds.forEach((f) => f.classList.remove('is-on')));
+  }
 
   // Compteurs : défilent de 0 à leur valeur à l'arrivée à l'écran (valeur finale déjà dans le HTML).
   const compteurs = document.querySelectorAll<HTMLElement>('.compteur');
@@ -385,7 +411,6 @@ const annee = new Date().getFullYear();
   }
   .hero__title .line {
     display: block;
-    overflow: hidden;
     padding-bottom: 0.04em;
     animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.1, 1) both;
     animation-delay: calc(var(--d) * 110ms + 80ms);
@@ -399,7 +424,8 @@ const annee = new Date().getFullYear();
   }
   @keyframes rise {
     from { transform: translateY(40%); opacity: 0; clip-path: inset(0 0 100% 0); }
-    to { transform: none; opacity: 1; clip-path: inset(0 0 0 0); }
+    /* Découpe finale plus large que la ligne : les lettres peuvent sauter au survol sans être rognées. */
+    to { transform: none; opacity: 1; clip-path: inset(-30% -5% -30% -5%); }
   }
 
   @keyframes fade {
@@ -408,9 +434,27 @@ const annee = new Date().getFullYear();
   }
   /* ---------- Blocs ---------- */
   .block {
+    position: relative;
     padding-top: clamp(3rem, 7vw, 6rem);
     padding-bottom: clamp(3rem, 7vw, 6rem);
-    border-top: 1px solid var(--line);
+  }
+  /* Trait de séparation : se dessine de gauche à droite quand la section arrive. */
+  .block::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--line);
+    transform-origin: left;
+  }
+  :global(.js-reveal) .block::before {
+    scale: 0 1;
+    transition: scale 1.2s cubic-bezier(0.6, 0, 0.2, 1);
+  }
+  :global(.js-reveal) .block.is-in::before {
+    scale: 1 1;
   }
   .block__head {
     display: grid;
@@ -629,24 +673,28 @@ const annee = new Date().getFullYear();
     inset: 0;
     z-index: 1;
   }
-  .projet::before {
-    content: '';
+  #projets {
+    position: relative;
+    isolation: isolate;
+  }
+  /* Pleine largeur d'écran, derrière tout le contenu de la section ; voile pour garder le texte lisible. */
+  .projets__fond {
     position: absolute;
-    inset: 0 calc(-1 * min(1rem, var(--gutter)));
-    /* Capture d'accueil du site, voilée côté texte pour rester lisible. */
+    z-index: -1;
+    top: 0;
+    left: 50%;
+    width: 100vw;
+    height: 100%;
+    translate: -50% 0;
     background:
-      linear-gradient(90deg, color-mix(in srgb, var(--paper) 94%, transparent) 30%, color-mix(in srgb, var(--paper) 55%, transparent)),
-      var(--apercu, none) center top / cover no-repeat;
+      linear-gradient(color-mix(in srgb, var(--paper) 80%, transparent), color-mix(in srgb, var(--paper) 80%, transparent)),
+      var(--fond, none) center top / cover no-repeat;
     opacity: 0;
-    scale: 1.02;
-    transition:
-      opacity 0.35s,
-      scale 0.5s cubic-bezier(0.2, 0.7, 0.1, 1);
+    transition: opacity 0.6s ease;
     pointer-events: none;
   }
-  .projet:hover::before {
+  .projets__fond.is-on {
     opacity: 1;
-    scale: 1;
   }
   .projet:hover h3 a {
     color: var(--accent);
@@ -912,4 +960,32 @@ const annee = new Date().getFullYear();
     scale: 0.75;
   }
 
+
+  /* ---------- Lettres ---------- */
+  .l {
+    display: inline-block;
+  }
+  /* Titre : chaque lettre saute et passe en violet au survol. */
+  .hero__title .l {
+    transition:
+      translate 0.5s cubic-bezier(0.3, 1.8, 0.5, 1),
+      color 0.3s;
+  }
+  .hero__title .l:hover {
+    translate: 0 -0.08em;
+    color: var(--accent);
+    transition-duration: 0.15s;
+  }
+  /* E-mail : les lettres montent l'une après l'autre à l'arrivée de la section Contact. */
+  :global(.js-reveal) .reveal-lettres .l {
+    opacity: 0;
+  }
+  :global(.js-reveal) .reveal-lettres.is-in .l {
+    animation: lettre 0.6s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+    animation-delay: calc(var(--k) * 28ms + 200ms);
+  }
+  @keyframes lettre {
+    from { opacity: 0; translate: 0 0.5em; }
+    to { opacity: 1; translate: none; }
+  }
 </style>

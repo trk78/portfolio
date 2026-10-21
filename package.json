@@ -8,7 +8,8 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "deploy": "npm run build && wrangler pages deploy dist --project-name timeo --branch main"
+    "deploy": "npm run build && wrangler pages deploy dist --project-name timeo --branch main",
+    "captures": "node scripts/captures/ghostmails.mjs && node scripts/captures/undercover.mjs && node scripts/captures/page.mjs https://mycitycost.com/map public/projets/apercus/mycitycost.webp && node scripts/captures/page.mjs https://trk78.github.io/pastetok/ public/projets/apercus/pastetok.webp"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
@@ -18,6 +19,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "puppeteer-core": "^24.43.1",
     "typescript": "^6.0.3",
     "wrangler": "^4.148.0"
   }
