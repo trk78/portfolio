@@ -38,7 +38,17 @@ Coupé si « mouvement réduit » ; les effets souris (`html.a-souris`) seulemen
 
 Règle de progression au défilement · mot du titre qui change · lettres du titre au survol · grille de points animée derrière le titre (canvas, réagit à la souris) · curseur personnalisé · titres et traits de section qui apparaissent · chiffres de la méthode remplis · trait de la méthode qui se remplit au défilement · cartes de services remplies depuis le point d'entrée du curseur (lettre en filigrane, puces en cascade) · compteurs · capture du projet survolé en fond de section (fondu entre deux calques, autres projets estompés) · bouton « copier l'adresse » · e-mail écrit lettre par lettre · transitions entre pages.
 
-## Déploiement (Cloudflare Pages)
+## Compteurs (Worker + D1)
+
+Depuis `worker/`, créer la base avec `npx wrangler d1 create compteurs`, puis remplacer le placeholder `database_id` dans `wrangler.toml` par l’identifiant obtenu.
+Appliquer le schéma avec `npx wrangler d1 execute compteurs --remote --file=schema.sql`, puis déployer avec `npx wrangler deploy`.
+Pour travailler localement : `npx wrangler d1 execute compteurs --local --file=schema.sql`, puis `npx wrangler dev`.
+
+`POST /hit` cumule les joueurs par nouvelle partie Undercover+ et les liens valides soumis à PasteTok (pas les téléchargements confirmés). `GET /stats` fournit les deux totaux, avec un cache de 60 secondes. Seuls ces totaux sont stockés. Origines d’écriture autorisées : `https://trk78.github.io` et `http://localhost:*` ; incréments Undercover bornés à 3–20, PasteTok forcé à 1. Pas de limite par IP : ces garde-fous ne bloquent pas des appels répétés depuis un client qui usurpe l’origine.
+
+Après déploiement, ajuster si nécessaire les URL dans `src/data/contenu.ts`, `undercover-plus/script.js` et `pastetok/lib/tiktok.ts`.
+
+## Déploiement du portfolio (Cloudflare Pages)
 
 Automatique à chaque push sur `main` (GitHub Actions, `.github/workflows/deploy.yml`).
 Secret GitHub `CLOUDFLARE_API_TOKEN` (droit « Cloudflare Pages : Edit »), variable `CLOUDFLARE_ACCOUNT_ID`.

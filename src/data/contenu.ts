@@ -83,7 +83,7 @@ export const projets: Projet[] = [
     type: 'Outil web',
     annee: '2026',
     resume:
-      'Télécharger une vidéo TikTok en MP4 sans filigrane, avec filigrane ou en MP3, avec aperçu avant téléchargement. Sans serveur, sans cookie, open source et bilingue.',
+      'Télécharger une vidéo TikTok en MP4 sans filigrane, avec filigrane ou en MP3, avec aperçu avant téléchargement. Sans cookie, open source et bilingue.',
     stack: ['Next.js 14', 'TypeScript', 'Tailwind CSS', 'GitHub Pages'],
     url: 'https://trk78.github.io/pastetok/',
     repo: 'https://github.com/trk78/pastetok',
@@ -107,7 +107,18 @@ export const projets: Projet[] = [
 // et le chiffre reste masqué tant qu'elle n'est pas arrivée.
 export type Chiffre = { valeur: number; label: string; source?: string; champ?: string };
 export const chiffres: Chiffre[] = [
-  { valeur: projets.filter((p) => p.url).length, label: 'projets en ligne' },
+  {
+    valeur: 0,
+    label: 'joueurs sur Undercover+',
+    source: 'https://compteurs.timeo-jeannin.workers.dev/stats',
+    champ: 'undercoverJoueurs',
+  },
+  {
+    valeur: 0,
+    label: 'vidéos TikTok téléchargées sur PasteTok',
+    source: 'https://compteurs.timeo-jeannin.workers.dev/stats',
+    champ: 'pastetokVideos',
+  },
   { valeur: 7674, label: 'villes comparées sur MyCityCost' },
   {
     valeur: 0,
