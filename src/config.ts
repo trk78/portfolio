@@ -2,7 +2,6 @@
 export const SITE = {
   nom: 'Timéo',
   statut: 'Auto-entrepreneur',
-  ville: 'France',
   email: 'timeo.jeannin@gmail.com',
   description:
     "Développeur freelance : sites, applications web et mobiles, automatisations. Du premier appel à la mise en ligne.",

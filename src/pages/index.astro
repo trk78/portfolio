@@ -26,16 +26,6 @@ const annee = new Date().getFullYear();
       </h1>
 
       <div class="ruler" aria-hidden="true"></div>
-
-      <div class="hero__meta">
-        <p class="hero__lede">{SITE.description}</p>
-        <dl class="specs mono">
-          <div><dt>Statut</dt><dd>{SITE.statut}</dd></div>
-          <div><dt>Basé en</dt><dd>{SITE.ville}</dd></div>
-          <div><dt>Réponse</dt><dd>Sous 24 h</dd></div>
-        </dl>
-        <a href="#contact" class="btn">Parler de votre projet <span aria-hidden="true">→</span></a>
-      </div>
     </section>
 
     <section id="services" class="block wrap" aria-labelledby="t-services">
@@ -239,78 +229,10 @@ const annee = new Date().getFullYear();
     to { clip-path: inset(0 0 0 0); }
   }
 
-  .hero__meta {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr auto;
-    gap: clamp(1.5rem, 4vw, 4rem);
-    align-items: end;
-    animation: fade 0.8s 0.7s both;
-  }
   @keyframes fade {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: none; }
   }
-  .hero__lede {
-    margin: 0;
-    max-width: 34ch;
-    font-size: clamp(1.1rem, 1.6vw, 1.35rem);
-    line-height: 1.4;
-  }
-  .specs {
-    margin: 0;
-    display: grid;
-    gap: 0.35rem;
-  }
-  .specs div {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    border-bottom: 1px dashed var(--hair);
-    padding-bottom: 0.35rem;
-  }
-  .specs dt {
-    color: var(--ink-soft);
-  }
-  .specs dd {
-    margin: 0;
-  }
-  @media (max-width: 900px) {
-    .hero__meta {
-      grid-template-columns: 1fr;
-      align-items: start;
-    }
-  }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 1.4rem;
-    background: var(--ink);
-    color: var(--paper);
-    font-weight: 600;
-    text-decoration: none;
-    border: 1px solid var(--ink);
-    white-space: nowrap;
-    transition: background 0.2s, color 0.2s;
-  }
-  .btn span {
-    transition: transform 0.2s;
-  }
-  .btn:hover {
-    background: var(--accent);
-    color: var(--accent-ink);
-    border-color: var(--accent);
-  }
-  .btn:hover span {
-    transform: translateX(4px);
-  }
-  @media (max-width: 900px) {
-    .btn {
-      justify-self: start;
-    }
-  }
-
   /* ---------- Blocs ---------- */
   .block {
     padding-top: clamp(3rem, 7vw, 6rem);

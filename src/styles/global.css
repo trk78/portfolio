@@ -2,8 +2,6 @@
 @import '@fontsource/big-shoulders-display/900';
 @import '@fontsource/hanken-grotesk/400';
 @import '@fontsource/hanken-grotesk/600';
-@import '@fontsource/spline-sans-mono/400';
-@import '@fontsource/spline-sans-mono/500';
 
 :root {
   --paper: #efeae0;
@@ -21,7 +19,6 @@
 
   --f-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
   --f-body: 'Hanken Grotesk', system-ui, sans-serif;
-  --f-mono: 'Spline Sans Mono', ui-monospace, monospace;
 
   --gutter: clamp(16px, 4vw, 48px);
   --max: 1320px;
@@ -97,7 +94,7 @@ a {
 }
 
 .mono {
-  font-family: var(--f-mono);
+  font-family: var(--f-body);
   font-size: 0.75rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
