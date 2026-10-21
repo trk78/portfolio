@@ -1047,7 +1047,7 @@ const range = (n: number) => Array.from({ length: n }, (_, j) => j);
   }
   #projets.a-fond > .block__head,
   #projets.a-fond > .chiffres {
-    opacity: 0.3;
+    opacity: 0.15;
   }
   .projet:hover h3 a {
     color: var(--accent);
@@ -1055,12 +1055,13 @@ const range = (n: number) => Array.from({ length: n }, (_, j) => j);
   /* Au survol, les autres projets s'effacent pour laisser voir la capture ; la ligne survolée garde un fond lisible. */
   .projet {
     transition:
-      opacity 0.4s,
+      filter 0.4s,
       background 0.4s;
   }
   @media (hover: hover) {
+    /* filter et non opacity : l'animation d'apparition (fill both) garde la main sur opacity, le logo restait opaque. */
     .projets:hover .projet:not(:hover) {
-      opacity: 0.25;
+      filter: opacity(0.15);
     }
     .projets .projet:hover {
       background: color-mix(in srgb, var(--paper) 72%, transparent);
