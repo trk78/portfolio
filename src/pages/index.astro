@@ -125,9 +125,6 @@ const annee = new Date().getFullYear();
     }
 
     <section id="contact" class="contact" aria-labelledby="t-contact">
-      <div class="contact__defile" aria-hidden="true">
-        <span>{'Parlons de votre projet — '.repeat(4)}</span><span>{'Parlons de votre projet — '.repeat(4)}</span>
-      </div>
       <div class="wrap">
         <div class="block__head title-reveal">
           <span class="mono block__num">{num('contact')}</span>
@@ -246,6 +243,70 @@ const annee = new Date().getFullYear();
       mail.style.setProperty('--ay', '0px');
     });
   }
+
+  // Chiffres en direct : on lit la valeur, puis on affiche le chiffre (il reste masqué si la source ne répond pas).
+  document.querySelectorAll<HTMLElement>('.chiffre[data-source]').forEach(async (li) => {
+    try {
+      const json = await (await fetch(li.dataset.source!)).json();
+      const n = Number(json[li.dataset.champ!]);
+      if (!Number.isFinite(n) || n <= 0) return;
+      const el = li.querySelector<HTMLElement>('.compteur')!;
+      el.dataset.valeur = String(n);
+      el.textContent = n.toLocaleString('fr-FR');
+      li.hidden = false;
+    } catch {
+      // Source indisponible : le chiffre reste masqué.
+    }
+  });
+
+  // Survol d'un projet : la capture de son site devient le fond de toute la section.
+  // Deux calques qui se relaient pour un fondu enchaîné d'une capture à l'autre.
+  const fonds = [...document.querySelectorAll<HTMLElement>('.projets__fond')];
+  const liste = document.querySelector<HTMLElement>('.projets');
+  if (fonds.length === 2 && liste && matchMedia('(hover: hover)').matches) {
+    let actif = 0;
+    let courant = '';
+    // Précharge toutes les captures dès qu'on approche de la liste : pas de trou au premier survol.
+    liste.addEventListener('pointerenter', () => {
+      liste.querySelectorAll<HTMLElement>('.projet[data-apercu]').forEach((li) => (new Image().src = li.dataset.apercu!));
+    }, { once: true });
+    liste.querySelectorAll<HTMLElement>('.projet[data-apercu]').forEach((li) => {
+      li.addEventListener('pointerenter', () => {
+        const src = li.dataset.apercu!;
+        if (src !== courant) {
+          actif = 1 - actif;
+          fonds[actif].style.setProperty('--fond', `url(${src})`);
+          courant = src;
+        }
+        fonds[actif].classList.add('is-on');
+        fonds[1 - actif].classList.remove('is-on');
+      });
+    });
+    // On n'éteint qu'en quittant toute la liste, pour ne pas clignoter entre deux lignes.
+    liste.addEventListener('pointerleave', () => fonds.forEach((f) => f.classList.remove('is-on')));
+  }
+
+  // Compteurs : défilent de 0 à leur valeur à l'arrivée à l'écran (valeur finale déjà dans le HTML).
+  const compteurs = document.querySelectorAll<HTMLElement>('.compteur');
+  if (animer && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        io.unobserve(e.target);
+        const el = e.target as HTMLElement;
+        const fin = Number(el.dataset.valeur);
+        const debut = performance.now();
+        const pas = (t: number) => {
+          const k = Math.min((t - debut) / 1400, 1);
+          el.textContent = Math.round(fin * (1 - (1 - k) ** 3)).toLocaleString('fr-FR');
+          if (k < 1) requestAnimationFrame(pas);
+        };
+        requestAnimationFrame(pas);
+      }
+    }, { threshold: 0.6 });
+    compteurs.forEach((c) => io.observe(c));
+  }
+
 
   // Curseur personnalisé : un point qui suit la souris avec un léger retard, et s'ouvre en anneau sur ce qui est cliquable.
   const curseur = document.querySelector<HTMLElement>('.curseur');
@@ -857,36 +918,6 @@ const annee = new Date().getFullYear();
       translate 0.4s cubic-bezier(0.2, 0.7, 0.1, 1),
       color 0.2s;
   }
-  /* Bandeau en contour qui défile en fond de la section ; deux copies identiques pour une boucle sans saut. */
-  .contact {
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
-  }
-  .contact__defile {
-    position: absolute;
-    z-index: -1;
-    bottom: 0.5rem;
-    left: 0;
-    display: flex;
-    white-space: nowrap;
-    font-family: var(--f-display);
-    font-weight: 900;
-    text-transform: uppercase;
-    font-size: clamp(4rem, 12vw, 10rem);
-    line-height: 1;
-    color: transparent;
-    -webkit-text-stroke: 1px color-mix(in srgb, var(--paper) 18%, transparent);
-    pointer-events: none;
-  }
-  .contact__defile span {
-    padding-right: 0.3em;
-    animation: defile 40s linear infinite;
-  }
-  @keyframes defile {
-    to { translate: -100% 0; }
-  }
-
   /* ---------- Pied ---------- */
   .footer {
     display: flex;
