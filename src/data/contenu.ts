@@ -9,6 +9,7 @@ export type Projet = {
   url?: string; // site en ligne
   repo?: string; // dépôt GitHub public
   logo?: string; // chemin dans public/, ex. /projets/nom.svg
+  apercu?: string; // capture du site affichée au survol (public/projets/apercus/)
 };
 
 export const services: Service[] = [
@@ -52,6 +53,7 @@ export const projets: Projet[] = [
     stack: ['Next.js 15', 'TypeScript', 'Hono', 'Tailwind CSS', 'Cloudflare Workers', 'Cloudflare Pages'],
     url: 'https://ghostmails.cc',
     logo: '/projets/ghostmails.svg',
+    apercu: '/projets/apercus/ghostmails.webp',
   },
   {
     nom: 'MyCityCost',
@@ -62,6 +64,7 @@ export const projets: Projet[] = [
     stack: ['Next.js 14', 'TypeScript', 'Prisma 7', 'Neon PostgreSQL', 'Tailwind CSS 4', 'Cloudflare'],
     url: 'https://mycitycost.com',
     logo: '/projets/mycitycost.svg',
+    apercu: '/projets/apercus/mycitycost.webp',
   },
   {
     nom: 'Undercover+',
@@ -73,6 +76,7 @@ export const projets: Projet[] = [
     url: 'https://trk78.github.io/undercover-plus/',
     repo: 'https://github.com/trk78/undercover-plus',
     logo: '/projets/undercover-plus.webp',
+    apercu: '/projets/apercus/undercover-plus.webp',
   },
   {
     nom: 'PasteTok',
@@ -84,5 +88,21 @@ export const projets: Projet[] = [
     url: 'https://trk78.github.io/pastetok/',
     repo: 'https://github.com/trk78/pastetok',
     logo: '/projets/pastetok.svg',
+    apercu: '/projets/apercus/pastetok.webp',
   },
+];
+
+// Chiffres animés en tête de la section Projets. Avec `source`, la valeur est lue en direct (JSON, champ `champ`)
+// et le chiffre reste masqué tant qu'elle n'est pas arrivée.
+export type Chiffre = { valeur: number; label: string; source?: string; champ?: string };
+export const chiffres: Chiffre[] = [
+  { valeur: projets.filter((p) => p.url).length, label: 'projets en ligne' },
+  { valeur: 7674, label: 'villes comparées sur MyCityCost' },
+  {
+    valeur: 0,
+    label: 'adresses générées sur Ghostmails',
+    source: 'https://api.ghostmails.cc/api/stats',
+    champ: 'addressesCreated',
+  },
+  { valeur: 24, label: 'heures max pour une réponse' },
 ];

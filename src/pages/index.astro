@@ -3,20 +3,23 @@ import Base from '../layouts/Base.astro';
 import ArrowOut from '../components/ArrowOut.astro';
 import Header from '../components/Header.astro';
 import { SITE } from '../config';
-import { services, etapes, projets } from '../data/contenu';
+import { services, etapes, projets, chiffres } from '../data/contenu';
 import { num } from '../data/sections';
 
 // Mots qui défilent à la fin du titre (le premier est celui affiché sans JS).
 const mots = ['apps', 'bots', 'outils', 'jeux'];
+const nombre = (n: number) => n.toLocaleString('fr-FR');
 
 const annee = new Date().getFullYear();
 ---
 
 <Base>
   <Header home />
+  <div class="curseur" aria-hidden="true"></div>
 
   <main>
     <section class="hero wrap" aria-labelledby="hero-titre">
+      <canvas class="hero__fond" aria-hidden="true"></canvas>
       <h1 id="hero-titre" class="hero__title" aria-label={`Je construis vos sites et vos ${mots.join(', ')}.`}>
         <span class="line" style="--d: 0" aria-hidden="true">Je construis</span>
         <span class="line" style="--d: 1" aria-hidden="true">vos sites</span>
@@ -25,7 +28,6 @@ const annee = new Date().getFullYear();
         >
       </h1>
 
-      <div class="ruler" aria-hidden="true"></div>
     </section>
 
     <section id="services" class="block wrap" aria-labelledby="t-services">
@@ -77,9 +79,17 @@ const annee = new Date().getFullYear();
             <h2 id="t-projets"><span>Projets</span></h2>
             <p class="block__aside">Une sélection de ce qui tourne en production.</p>
           </div>
+          <ul class="chiffres">
+            {chiffres.map((c, i) => (
+              <li class="chiffre reveal" style={`--i: ${i}`} hidden={!!c.source} data-source={c.source} data-champ={c.champ}>
+                <strong class="compteur" data-valeur={c.valeur}>{nombre(c.valeur)}</strong>
+                <span class="mono">{c.label}</span>
+              </li>
+            ))}
+          </ul>
           <ul class="projets">
             {projets.map((p) => (
-              <li class="projet reveal">
+              <li class="projet reveal" style={p.apercu ? `--apercu: url(${p.apercu})` : undefined}>
                 <span class="mono projet__an">{p.annee}</span>
                 {p.logo ? (
                   <img class="projet__logo" src={p.logo} alt="" width="64" height="64" loading="lazy" decoding="async" />
@@ -178,13 +188,191 @@ const annee = new Date().getFullYear();
     // On attend la fin de l'arrivée du titre avant de commencer.
     setTimeout(() => setInterval(suivant, 2600), 1400);
   }
+
+  // Effets liés à la souris : seulement avec une vraie souris (pas sur mobile) et sans « mouvement réduit ».
+  const souris = animer && matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  // Titre en profondeur : on suit le curseur dans toute la fenêtre.
+  const hero = document.querySelector<HTMLElement>('.hero__title');
+  if (souris) {
+    document.documentElement.classList.add('a-souris');
+    addEventListener('pointermove', (e) => {
+      // Position de -1 à 1 par rapport au centre de l'écran.
+      hero?.style.setProperty('--mx', (e.clientX / innerWidth - 0.5) * 2 + '');
+      hero?.style.setProperty('--my', (e.clientY / innerHeight - 0.5) * 2 + '');
+    });
+  }
+
+  // Cartes de services inclinables, avec reflet sous le curseur.
+  if (souris) {
+    document.querySelectorAll<HTMLElement>('.card').forEach((card) => {
+      card.addEventListener('pointermove', (e) => {
+        const r = card.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width;
+        const py = (e.clientY - r.top) / r.height;
+        card.style.setProperty('--px', `${px * 100}%`);
+        card.style.setProperty('--py', `${py * 100}%`);
+        card.style.setProperty('--rx', `${(0.5 - py) * 10}deg`);
+        card.style.setProperty('--ry', `${(px - 0.5) * 10}deg`);
+      });
+      card.addEventListener('pointerleave', () => {
+        card.style.setProperty('--rx', '0deg');
+        card.style.setProperty('--ry', '0deg');
+      });
+    });
+  }
+
+  // Chiffres en direct : on lit la valeur, puis on affiche le chiffre (il reste masqué si la source ne répond pas).
+  document.querySelectorAll<HTMLElement>('.chiffre[data-source]').forEach(async (li) => {
+    try {
+      const json = await (await fetch(li.dataset.source!)).json();
+      const n = Number(json[li.dataset.champ!]);
+      if (!Number.isFinite(n) || n <= 0) return;
+      const el = li.querySelector<HTMLElement>('.compteur')!;
+      el.dataset.valeur = String(n);
+      el.textContent = n.toLocaleString('fr-FR');
+      li.hidden = false;
+    } catch {
+      // Source indisponible : le chiffre reste masqué.
+    }
+  });
+
+  // Compteurs : défilent de 0 à leur valeur à l'arrivée à l'écran (valeur finale déjà dans le HTML).
+  const compteurs = document.querySelectorAll<HTMLElement>('.compteur');
+  if (animer && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        io.unobserve(e.target);
+        const el = e.target as HTMLElement;
+        const fin = Number(el.dataset.valeur);
+        const debut = performance.now();
+        const pas = (t: number) => {
+          const k = Math.min((t - debut) / 1400, 1);
+          el.textContent = Math.round(fin * (1 - (1 - k) ** 3)).toLocaleString('fr-FR');
+          if (k < 1) requestAnimationFrame(pas);
+        };
+        requestAnimationFrame(pas);
+      }
+    }, { threshold: 0.6 });
+    compteurs.forEach((c) => io.observe(c));
+  }
+
+
+  // Curseur personnalisé : un point qui suit la souris avec un léger retard, et s'ouvre en anneau sur ce qui est cliquable.
+  const curseur = document.querySelector<HTMLElement>('.curseur');
+  if (curseur && souris) {
+    let x = -100, y = -100, cx = -100, cy = -100;
+    addEventListener('pointermove', (e) => {
+      x = e.clientX;
+      y = e.clientY;
+      curseur.classList.add('is-on');
+      curseur.classList.toggle('is-actif', !!(e.target as Element).closest('a, button, .card'));
+    });
+    document.addEventListener('pointerleave', () => curseur.classList.remove('is-on'));
+    addEventListener('pointerdown', () => curseur.classList.add('is-clic'));
+    addEventListener('pointerup', () => curseur.classList.remove('is-clic'));
+    const suivre = () => {
+      cx += (x - cx) * 0.22;
+      cy += (y - cy) * 0.22;
+      curseur.style.translate = `${cx}px ${cy}px`;
+      requestAnimationFrame(suivre);
+    };
+    requestAnimationFrame(suivre);
+  }
+
+  // Fond du titre : grille de points qui ondule, et que la souris repousse et colore en violet.
+  const fond = document.querySelector<HTMLCanvasElement>('.hero__fond');
+  const ctx = fond?.getContext('2d');
+  if (fond && ctx) {
+    const ESP = 26; // espacement des points, en px
+    const RAYON = 180; // zone d'influence de la souris, en px
+    let w = 0, h = 0, mx = -1e4, my = -1e4, visible = true, boucle = false;
+    let encre = '#000', accent = '#000';
+    const taille = () => {
+      const r = fond.getBoundingClientRect();
+      const dpr = Math.min(devicePixelRatio, 2);
+      w = r.width;
+      h = r.height;
+      fond.width = w * dpr;
+      fond.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const st = getComputedStyle(fond);
+      encre = st.getPropertyValue('--line').trim();
+      accent = st.getPropertyValue('--accent').trim();
+    };
+    const dessiner = (t: number) => {
+      ctx.clearRect(0, 0, w, h);
+      for (let y = ESP / 2; y < h; y += ESP) {
+        for (let x = ESP / 2; x < w; x += ESP) {
+          const dx = x - mx, dy = y - my;
+          const d = Math.hypot(dx, dy) || 1;
+          const proche = Math.max(0, 1 - d / RAYON);
+          const vague = animer ? Math.sin(x * 0.012 + y * 0.018 + t * 0.0012) * 0.5 + 0.5 : 0.5;
+          const px = x + (dx / d) * proche * 16;
+          const py = y + (dy / d) * proche * 16;
+          const r = 0.8 + vague * 0.7 + proche * 2.4;
+          ctx.globalAlpha = 0.14 + vague * 0.12;
+          ctx.fillStyle = encre;
+          ctx.beginPath();
+          ctx.arc(px, py, r, 0, Math.PI * 2);
+          ctx.fill();
+          if (proche > 0) {
+            ctx.globalAlpha = proche * 0.9;
+            ctx.fillStyle = accent;
+            ctx.fill();
+          }
+        }
+      }
+    };
+    const tour = (t: number) => {
+      dessiner(t);
+      if (animer && visible && !document.hidden) requestAnimationFrame(tour);
+      else boucle = false;
+    };
+    const lancer = () => {
+      if (boucle) return;
+      boucle = true;
+      requestAnimationFrame(tour);
+    };
+    new ResizeObserver(() => {
+      taille();
+      if (!animer) dessiner(0);
+    }).observe(fond);
+    new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      if (visible && animer) lancer();
+    }).observe(fond);
+    document.addEventListener('visibilitychange', () => animer && visible && lancer());
+    if (souris) {
+      addEventListener('pointermove', (e) => {
+        const r = fond.getBoundingClientRect();
+        mx = e.clientX - r.left;
+        my = e.clientY - r.top;
+      });
+    }
+  }
 </script>
 
 <style>
   /* ---------- Hero ---------- */
   .hero {
+    position: relative;
+    isolation: isolate;
     padding-top: clamp(2.5rem, 7vw, 6rem);
     padding-bottom: clamp(3rem, 7vw, 6rem);
+  }
+  /* Toile pleine largeur derrière le titre, fondue sur les bords. */
+  .hero__fond {
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    left: 50%;
+    width: 100vw;
+    height: 100%;
+    translate: -50% 0;
+    pointer-events: none;
+    mask-image: radial-gradient(ellipse 70% 75% at 50% 50%, #000 35%, transparent 85%);
   }
   .hero__title {
     margin: 0;
@@ -212,21 +400,6 @@ const annee = new Date().getFullYear();
   @keyframes rise {
     from { transform: translateY(40%); opacity: 0; clip-path: inset(0 0 100% 0); }
     to { transform: none; opacity: 1; clip-path: inset(0 0 0 0); }
-  }
-
-  /* Règle graduée : petites marques tous les 8px, grandes tous les 80px. */
-  .ruler {
-    height: 18px;
-    margin: clamp(1.5rem, 3vw, 2.5rem) 0;
-    border-top: 1px solid var(--line);
-    background:
-      repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 80px) top / 100% 18px no-repeat,
-      repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 8px) top / 100% 7px no-repeat;
-    animation: draw 1.2s 0.45s cubic-bezier(0.6, 0, 0.2, 1) both;
-  }
-  @keyframes draw {
-    from { clip-path: inset(0 100% 0 0); }
-    to { clip-path: inset(0 0 0 0); }
   }
 
   @keyframes fade {
@@ -460,13 +633,20 @@ const annee = new Date().getFullYear();
     content: '';
     position: absolute;
     inset: 0 calc(-1 * min(1rem, var(--gutter)));
-    background: color-mix(in srgb, var(--accent) 9%, transparent);
+    /* Capture d'accueil du site, voilée côté texte pour rester lisible. */
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--paper) 94%, transparent) 30%, color-mix(in srgb, var(--paper) 55%, transparent)),
+      var(--apercu, none) center top / cover no-repeat;
     opacity: 0;
-    transition: opacity 0.25s;
+    scale: 1.02;
+    transition:
+      opacity 0.35s,
+      scale 0.5s cubic-bezier(0.2, 0.7, 0.1, 1);
     pointer-events: none;
   }
   .projet:hover::before {
     opacity: 1;
+    scale: 1;
   }
   .projet:hover h3 a {
     color: var(--accent);
@@ -607,8 +787,129 @@ const annee = new Date().getFullYear();
     animation: reveal 0.65s cubic-bezier(0.2, 0.7, 0.1, 1) both;
     animation-delay: calc(var(--i, 0) * 80ms);
   }
+  /* « translate » et non « transform » : transform reste libre pour l'inclinaison des cartes. */
   @keyframes reveal {
-    from { opacity: 0; transform: translateY(18px); }
-    to { opacity: 1; transform: none; }
+    from { opacity: 0; translate: 0 18px; }
+    to { opacity: 1; translate: none; }
   }
+
+  /* ---------- Interactions à la souris (classe posée par le script) ---------- */
+  :global(.a-souris) .hero__title .line {
+    /* Chaque ligne bouge un peu plus que la précédente : effet de profondeur. */
+    translate: calc(var(--mx, 0) * (var(--d) + 1) * -6px) calc(var(--my, 0) * (var(--d) + 1) * -3px);
+    transition: translate 0.6s cubic-bezier(0.2, 0.7, 0.1, 1);
+  }
+
+
+  :global(.a-souris) .card {
+    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition:
+      background 0.25s,
+      color 0.25s,
+      transform 0.3s ease-out;
+  }
+  :global(.a-souris) .card:hover {
+    z-index: 1;
+  }
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at var(--px, 50%) var(--py, 50%), rgba(255, 255, 255, 0.3), transparent 45%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  :global(.a-souris) .card:hover::after {
+    opacity: 1;
+  }
+
+  /* ---------- Chiffres ---------- */
+  .chiffres {
+    list-style: none;
+    margin: 0 0 clamp(2rem, 4vw, 3rem);
+    padding: 0;
+    display: grid;
+    /* auto-fit : la grille se resserre tant qu'un chiffre en direct n'est pas arrivé. */
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1.5rem;
+  }
+  .chiffre {
+    display: grid;
+    gap: 0.4rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+  /* Sinon « display: grid » l'emporte sur l'attribut hidden. */
+  .chiffre[hidden] {
+    display: none;
+  }
+  .compteur {
+    font-family: var(--f-display);
+    font-weight: 900;
+    font-size: clamp(2.6rem, 6vw, 4.5rem);
+    line-height: 0.9;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .chiffre .mono {
+    color: var(--ink-soft);
+  }
+
+  /* ---------- Curseur personnalisé ---------- */
+  :global(.a-souris),
+  :global(.a-souris) * {
+    cursor: none !important;
+  }
+  .curseur {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 101;
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 1.5px solid var(--accent);
+    pointer-events: none;
+    opacity: 0;
+    transition:
+      width 0.25s cubic-bezier(0.2, 0.7, 0.1, 1),
+      height 0.25s cubic-bezier(0.2, 0.7, 0.1, 1),
+      margin 0.25s cubic-bezier(0.2, 0.7, 0.1, 1),
+      background 0.25s,
+      opacity 0.3s,
+      scale 0.15s;
+  }
+  /* Onde qui pulse autour du point au repos. */
+  .curseur::after {
+    content: '';
+    position: absolute;
+    inset: -1.5px;
+    border-radius: 50%;
+    border: 1px solid var(--accent);
+    animation: onde 1.8s ease-out infinite;
+  }
+  @keyframes onde {
+    from { scale: 1; opacity: 0.8; }
+    to { scale: 3.2; opacity: 0; }
+  }
+  .curseur.is-on {
+    opacity: 1;
+  }
+  .curseur.is-actif {
+    width: 44px;
+    height: 44px;
+    margin: -22px 0 0 -22px;
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+  }
+  .curseur.is-actif::after {
+    animation: none;
+    opacity: 0;
+  }
+  .curseur.is-clic {
+    scale: 0.75;
+  }
+
 </style>
