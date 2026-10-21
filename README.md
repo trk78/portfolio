@@ -1,6 +1,6 @@
 # Portfolio
 
-Site vitrine de Timéo, développeur web & applications (auto-entrepreneur). Astro 7 statique, déployé sur Cloudflare Pages (projet `timeo`) → https://timeojea.ovh
+Site vitrine de Timéo, développeur web & applications (auto-entrepreneur). Astro 7 statique, déployé sur Cloudflare Pages (projet `timeo`) → https://jeannin.dev
 
 ## Commandes
 
@@ -28,7 +28,7 @@ Secret GitHub `CLOUDFLARE_API_TOKEN` (droit « Cloudflare Pages : Edit »), vari
 
 À la main : `npm run deploy` (build + `wrangler pages deploy`). Ne jamais passer `--force` à wrangler.
 
-- Domaine : `timeojea.ovh`, DNS chez Cloudflare (registrar OVH)
-- `PUBLIC_SITE_URL` surcharge l'URL publique (canonical + sitemap), défaut `https://timeojea.ovh`
+- Domaine : `jeannin.dev`, DNS chez Cloudflare (registrar Cloudflare)
+- `PUBLIC_SITE_URL` surcharge l'URL publique (canonical + sitemap), défaut `https://jeannin.dev`
 
 Polices Fontsource : importer `@fontsource/<police>/<poids>` **sans** `.css` (l'export du paquet l'ajoute déjà).
