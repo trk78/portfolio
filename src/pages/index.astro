@@ -12,6 +12,20 @@ const nombre = (n: number) => n.toLocaleString('fr-FR');
 const lettres = (t: string) => [...t];
 
 const annee = new Date().getFullYear();
+
+// Pictos des services, dans l'ordre de `services` ; pathLength=1 pour les tracer au survol quelle que soit leur longueur.
+const pictos = [
+  // Site vitrine : fenêtre de navigateur
+  '<rect x="3" y="5" width="42" height="34" rx="3" pathLength="1"/><path d="M3 13h42" pathLength="1"/><path d="M10 22h18M10 28h28M10 33h14" pathLength="1"/>',
+  // Application web : tableau de bord
+  '<rect x="3" y="5" width="42" height="34" rx="3" pathLength="1"/><path d="M14 5v34" pathLength="1"/><path d="M21 32V24M28 32V17M35 32v-10M42 32V14" pathLength="1"/>',
+  // Application mobile : téléphone
+  '<rect x="13" y="2" width="22" height="42" rx="4" pathLength="1"/><path d="M21 7h6M22 38h4" pathLength="1"/><path d="M18 16h12M18 21h8M18 26h12" pathLength="1"/>',
+  // Automatisation & IA : robot
+  '<rect x="8" y="14" width="32" height="24" rx="5" pathLength="1"/><path d="M24 14V7M20 5h8M3 24v6M45 24v6" pathLength="1"/><path d="M17 23v4M31 23v4M18 32h12" pathLength="1"/>',
+];
+// Méthode : nombre d'éléments animés dans la scène de chaque étape (appel, devis, développement, mise en ligne).
+const scenes = [3, 5, 6, 6];
 ---
 
 <Base>
@@ -41,7 +55,7 @@ const annee = new Date().getFullYear();
           services.map((s, i) => (
             <li class="card reveal" style={`--i: ${i}`}>
               <span class="mono card__ref">{String.fromCharCode(65 + i)}</span>
-              <span class="card__lettre" aria-hidden="true">{String.fromCharCode(65 + i)}</span>
+              <svg class="card__picto" viewBox="0 0 48 46" aria-hidden="true" set:html={pictos[i]} />
               <h3>{s.titre}</h3>
               <p>{s.texte}</p>
               <ul class="mono card__pts">
@@ -62,6 +76,7 @@ const annee = new Date().getFullYear();
         {
           etapes.map((e, i) => (
             <li class="step reveal" style={`--i: ${i}`}>
+              <div class={`step__scene scene-${i}`} aria-hidden="true">{Array.from({ length: scenes[i] }, (_, j) => <i style={`--j: ${j}`} />)}</div>
               <span class="step__n">{i + 1}</span>
               <h3>{e.titre}</h3>
               <p>{e.texte}</p>
@@ -263,6 +278,7 @@ const annee = new Date().getFullYear();
   // Deux calques qui se relaient pour un fondu enchaîné d'une capture à l'autre.
   const fonds = [...document.querySelectorAll<HTMLElement>('.projets__fond')];
   const liste = document.querySelector<HTMLElement>('.projets');
+  const section = document.querySelector<HTMLElement>('#projets');
   if (fonds.length === 2 && liste && matchMedia('(hover: hover)').matches) {
     let actif = 0;
     let courant = '';
@@ -280,10 +296,14 @@ const annee = new Date().getFullYear();
         }
         fonds[actif].classList.add('is-on');
         fonds[1 - actif].classList.remove('is-on');
+        section?.classList.add('a-fond');
       });
     });
     // On n'éteint qu'en quittant toute la liste, pour ne pas clignoter entre deux lignes.
-    liste.addEventListener('pointerleave', () => fonds.forEach((f) => f.classList.remove('is-on')));
+    liste.addEventListener('pointerleave', () => {
+      fonds.forEach((f) => f.classList.remove('is-on'));
+      section?.classList.remove('a-fond');
+    });
   }
 
   // Compteurs : défilent de 0 à leur valeur à l'arrivée à l'écran (valeur finale déjà dans le HTML).
@@ -572,28 +592,41 @@ const annee = new Date().getFullYear();
   .card__ref {
     font-size: 0.85rem;
   }
-  /* Grande lettre en filigrane qui glisse et pivote au survol. */
-  .card__lettre {
+  /* Picto en trait fin, retracé au survol. */
+  .card__picto {
     position: absolute;
-    z-index: -1;
-    top: -0.12em;
-    right: -0.05em;
-    font-family: var(--f-display);
-    font-weight: 900;
-    font-size: 11rem;
-    line-height: 1;
-    color: transparent;
-    -webkit-text-stroke: 1px var(--line);
+    top: 1.25rem;
+    right: 1.25rem;
+    width: 3.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.45;
     transition:
-      translate 0.6s cubic-bezier(0.2, 0.7, 0.1, 1),
-      rotate 0.6s cubic-bezier(0.2, 0.7, 0.1, 1),
-      -webkit-text-stroke-color 0.35s;
-    pointer-events: none;
+      opacity 0.35s,
+      scale 0.5s cubic-bezier(0.2, 0.7, 0.1, 1);
   }
-  .card:hover .card__lettre {
-    translate: -0.15em 0.1em;
-    rotate: -8deg;
-    -webkit-text-stroke-color: color-mix(in srgb, var(--accent-ink) 35%, transparent);
+  .card__picto :global(*) {
+    stroke-dasharray: 1;
+  }
+  .card:hover .card__picto {
+    opacity: 1;
+    scale: 1.12;
+  }
+  .card:hover .card__picto :global(*) {
+    animation: tracer 0.9s cubic-bezier(0.6, 0, 0.2, 1) both;
+  }
+  .card:hover .card__picto :global(:nth-child(2)) {
+    animation-delay: 0.15s;
+  }
+  .card:hover .card__picto :global(:nth-child(3)) {
+    animation-delay: 0.3s;
+  }
+  @keyframes tracer {
+    from { stroke-dashoffset: 1; }
+    to { stroke-dashoffset: 0; }
   }
   .card__pts li {
     transition: translate 0.35s cubic-bezier(0.2, 0.7, 0.1, 1);
@@ -655,8 +688,10 @@ const annee = new Date().getFullYear();
   }
   .step {
     position: relative;
+    isolation: isolate;
     padding-top: 1.25rem;
     border-top: 3px solid var(--ink);
+    transition: opacity 0.4s;
   }
   /* Trait violet par-dessus : chaque étape prend son quart de la progression (--p de 0 à 1, posé par le script). */
   .step::before {
@@ -672,6 +707,10 @@ const annee = new Date().getFullYear();
   }
   .step__n {
     display: block;
+    position: relative;
+    width: fit-content;
+    transform-origin: left top;
+    transition: scale 0.5s cubic-bezier(0.3, 1.5, 0.5, 1);
     font-family: var(--f-display);
     font-weight: 900;
     font-size: clamp(4rem, 8vw, 6.5rem);
@@ -694,6 +733,21 @@ const annee = new Date().getFullYear();
   @keyframes remplir {
     to { background-position: bottom; }
   }
+  /* Bulle violette qui gonfle derrière le chiffre survolé. */
+  .step__n::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 50%;
+    top: 45%;
+    width: 1.35em;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--accent);
+    translate: -50% -50%;
+    scale: 0;
+    transition: scale 0.5s cubic-bezier(0.3, 1.5, 0.5, 1);
+  }
   .step h3 {
     margin: 1rem 0 0.4rem;
     font-size: 1.1rem;
@@ -703,6 +757,156 @@ const annee = new Date().getFullYear();
     margin: 0;
     color: var(--ink-soft);
   }
+  /* ---------- Méthode : survol (grands écrans, vraie souris) ---------- */
+  .step__scene {
+    position: absolute;
+    z-index: -2;
+    top: 1.25rem;
+    right: 0;
+    width: 55%;
+    height: 9rem;
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+  }
+  .step__scene i {
+    position: absolute;
+    display: block;
+  }
+  @media (min-width: 901px) and (hover: hover) {
+    .steps {
+      transition: grid-template-columns 0.6s cubic-bezier(0.2, 0.7, 0.1, 1);
+    }
+    /* L'étape survolée s'élargit et pousse les autres. */
+    .steps:has(> .step:nth-child(1):hover) { grid-template-columns: 2.4fr 1fr 1fr 1fr; }
+    .steps:has(> .step:nth-child(2):hover) { grid-template-columns: 1fr 2.4fr 1fr 1fr; }
+    .steps:has(> .step:nth-child(3):hover) { grid-template-columns: 1fr 1fr 2.4fr 1fr; }
+    .steps:has(> .step:nth-child(4):hover) { grid-template-columns: 1fr 1fr 1fr 2.4fr; }
+    .steps:has(> .step:hover) > .step:not(:hover) {
+      opacity: 0.45;
+    }
+    .step:hover .step__n {
+      scale: 1.15;
+      background-image: linear-gradient(var(--accent-ink), var(--accent-ink));
+      -webkit-text-stroke-color: var(--accent-ink);
+    }
+    .step:hover .step__n::after {
+      scale: 1;
+    }
+    .step:hover .step__scene {
+      opacity: 1;
+    }
+    .step p {
+      max-width: 28ch;
+    }
+  }
+
+  /* Appel : ondes qui partent du combiné. */
+  .scene-0 i {
+    left: 50%;
+    top: 50%;
+    width: 7rem;
+    aspect-ratio: 1;
+    margin: -3.5rem 0 0 -3.5rem;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    opacity: 0;
+  }
+  .step:hover .scene-0 i {
+    animation: sonner 1.8s ease-out infinite;
+    animation-delay: calc(var(--j) * 0.6s);
+  }
+  @keyframes sonner {
+    from { scale: 0.2; opacity: 0.9; }
+    to { scale: 1.4; opacity: 0; }
+  }
+
+  /* Devis : une feuille dont les lignes s'écrivent, la dernière (le total) en violet. */
+  .scene-1 {
+    border: 1.5px solid var(--line);
+    border-radius: 4px;
+    width: 9rem;
+    right: 1rem;
+  }
+  .scene-1 i {
+    left: 1rem;
+    top: calc(1rem + var(--j) * 1.35rem);
+    height: 0.4rem;
+    width: calc(70% - var(--j) * 6%);
+    background: var(--ink-soft);
+    border-radius: 2px;
+    transform-origin: left;
+    scale: 0 1;
+  }
+  .scene-1 i:last-child {
+    left: auto;
+    right: 1rem;
+    width: 35%;
+    background: var(--accent);
+  }
+  .step:hover .scene-1 i {
+    animation: ecrire 2.6s cubic-bezier(0.6, 0, 0.2, 1) infinite;
+    animation-delay: calc(var(--j) * 0.25s);
+  }
+  @keyframes ecrire {
+    0% { scale: 0 1; }
+    25%, 85% { scale: 1 1; }
+    100% { scale: 1 1; opacity: 0; }
+  }
+
+  /* Développement : lignes de code indentées qui se tapent, curseur qui clignote au bout. */
+  .scene-2 i {
+    top: calc(0.5rem + var(--j) * 1.3rem);
+    left: 1rem;
+    height: 0.45rem;
+    width: calc(65% - var(--j) * 6%);
+    border-radius: 2px;
+    background: var(--ink-soft);
+    clip-path: inset(0 100% 0 0);
+  }
+  .scene-2 i:nth-child(odd) {
+    background: var(--accent);
+  }
+  /* Indentation façon bloc de code. */
+  .scene-2 i:nth-child(3n + 2),
+  .scene-2 i:nth-child(3n) {
+    translate: 1rem 0;
+  }
+  .scene-2 i:nth-child(3n) {
+    translate: 2rem 0;
+  }
+  .step:hover .scene-2 i {
+    animation: taper 3s steps(8) infinite;
+    animation-delay: calc(var(--j) * 0.35s);
+  }
+  @keyframes taper {
+    0% { clip-path: inset(0 100% 0 0); }
+    30%, 90% { clip-path: inset(0 0 0 0); }
+    100% { clip-path: inset(0 0 0 0); opacity: 0; }
+  }
+
+  /* Mise en ligne : la courbe de visites qui monte. */
+  .scene-3 i {
+    bottom: 0.5rem;
+    left: calc(var(--j) * 16%);
+    width: 11%;
+    height: calc(15% + var(--j) * 15%);
+    background: var(--accent);
+    opacity: calc(0.4 + var(--j) * 0.12);
+    border-radius: 3px 3px 0 0;
+    transform-origin: bottom;
+    scale: 1 0;
+  }
+  .step:hover .scene-3 i {
+    animation: monter 2.4s cubic-bezier(0.3, 1.4, 0.5, 1) infinite;
+    animation-delay: calc(var(--j) * 0.12s);
+  }
+  @keyframes monter {
+    0% { scale: 1 0; }
+    35%, 85% { scale: 1 1; }
+    100% { scale: 1 1; opacity: 0; }
+  }
+
   @media (max-width: 900px) {
     .steps {
       grid-template-columns: repeat(2, 1fr);
@@ -777,6 +981,15 @@ const annee = new Date().getFullYear();
   }
   .projets__fond.is-on {
     opacity: 1;
+  }
+  /* Capture en fond : le titre et les chiffres s'effacent pour la laisser voir. */
+  #projets > .block__head,
+  #projets > .chiffres {
+    transition: opacity 0.5s;
+  }
+  #projets.a-fond > .block__head,
+  #projets.a-fond > .chiffres {
+    opacity: 0.3;
   }
   .projet:hover h3 a {
     color: var(--accent);

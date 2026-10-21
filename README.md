@@ -36,7 +36,7 @@ npm run preview
 Tout est en CSS ou en JS sans bibliothèque, dans `src/pages/index.astro` et `src/components/Header.astro`.
 Coupé si « mouvement réduit » ; les effets souris (`html.a-souris`) seulement avec une vraie souris.
 
-Règle de progression au défilement · mot du titre qui change · lettres du titre au survol · grille de points animée derrière le titre (canvas, réagit à la souris) · curseur personnalisé · titres et traits de section qui apparaissent · chiffres de la méthode remplis · trait de la méthode qui se remplit au défilement · cartes de services remplies depuis le point d'entrée du curseur (lettre en filigrane, puces en cascade) · compteurs · capture du projet survolé en fond de section (fondu entre deux calques, autres projets estompés) · bouton « copier l'adresse » · e-mail écrit lettre par lettre · transitions entre pages.
+Règle de progression au défilement · mot du titre qui change · lettres du titre au survol · grille de points animée derrière le titre (canvas, réagit à la souris) · curseur personnalisé · titres et traits de section qui apparaissent · chiffres de la méthode remplis · trait de la méthode qui se remplit au défilement · étape de la méthode survolée qui s'élargit (bulle sous le chiffre, scène animée : ondes, devis, code, courbe) · cartes de services remplies depuis le point d'entrée du curseur (picto retracé, puces en cascade) · compteurs · capture du projet survolé en fond de section (fondu entre deux calques, autres projets, titre et chiffres estompés) · bouton « copier l'adresse » · e-mail écrit lettre par lettre · transitions entre pages.
 
 ## Compteurs (Worker + D1)
 
@@ -44,7 +44,7 @@ Depuis `worker/`, créer la base avec `npx wrangler d1 create compteurs`, puis r
 Appliquer le schéma avec `npx wrangler d1 execute compteurs --remote --file=schema.sql`, puis déployer avec `npx wrangler deploy`.
 Pour travailler localement : `npx wrangler d1 execute compteurs --local --file=schema.sql`, puis `npx wrangler dev`.
 
-`POST /hit` cumule les joueurs par nouvelle partie Undercover+ et les liens valides soumis à PasteTok (pas les téléchargements confirmés). `GET /stats` fournit les deux totaux, avec un cache de 60 secondes. Seuls ces totaux sont stockés. Origines d’écriture autorisées : `https://trk78.github.io` et `http://localhost:*` ; incréments Undercover bornés à 3–20, PasteTok forcé à 1. Pas de limite par IP : ces garde-fous ne bloquent pas des appels répétés depuis un client qui usurpe l’origine.
+`POST /hit` compte les parties Undercover+ lancées et les liens valides soumis à PasteTok (pas les téléchargements confirmés). `GET /stats` fournit les deux totaux, avec un cache de 60 secondes. Seuls ces totaux sont stockés. Origines d’écriture autorisées : `https://trk78.github.io` et `http://localhost:*` ; chaque appel ajoute 1. Pas de limite par IP : ces garde-fous ne bloquent pas des appels répétés depuis un client qui usurpe l’origine.
 
 Après déploiement, ajuster si nécessaire les URL dans `src/data/contenu.ts`, `undercover-plus/script.js` et `pastetok/lib/tiktok.ts`.
 

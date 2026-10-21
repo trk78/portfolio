@@ -1,4 +1,5 @@
-const NOMS = ['undercover-joueurs', 'pastetok-videos'];
+// Chaque appel ajoute 1 : une partie Undercover+ lancée, un lien PasteTok soumis.
+const NOMS = ['undercover-parties', 'pastetok-videos'];
 
 function origineAutorisee(origin) {
   return origin === 'https://trk78.github.io' || /^http:\/\/localhost(?::\d+)?$/.test(origin || '');
@@ -14,7 +15,7 @@ export default {
         ).bind(...NOMS).all();
         const valeurs = Object.fromEntries(results.map(({ nom, valeur }) => [nom, valeur]));
         return Response.json({
-          undercoverJoueurs: valeurs[NOMS[0]] || 0,
+          undercoverParties: valeurs[NOMS[0]] || 0,
           pastetokVideos: valeurs[NOMS[1]] || 0,
         }, { headers: { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=60' } });
       } catch {
@@ -35,7 +36,7 @@ export default {
     }
     if (request.method !== 'POST') return new Response('Méthode interdite', { status: 405, headers });
 
-    // Garde-fous simples : origine obligatoire, corps limité, noms et incréments bornés.
+    // Garde-fous simples : origine obligatoire, corps limité, noms en liste blanche, incrément fixe.
     // Shortcut : pas de limite par IP ; une origine peut être usurpée hors navigateur.
     // Aucun identifiant ni IP n'est conservé ; les appels répétés restent possibles.
     let donnees;
@@ -61,10 +62,7 @@ export default {
     if (!donnees || !NOMS.includes(donnees.nom)) {
       return new Response('Compteur invalide', { status: 400, headers });
     }
-    if (donnees.nom === NOMS[0] && (!Number.isInteger(donnees.n) || donnees.n < 3 || donnees.n > 20)) {
-      return new Response('Incrément invalide', { status: 400, headers });
-    }
-    const n = donnees.nom === NOMS[1] ? 1 : donnees.n;
+    const n = 1;
     try {
       await env.DB.prepare(
         'INSERT INTO compteurs (nom, valeur) VALUES (?, ?) ON CONFLICT(nom) DO UPDATE SET valeur = valeur + ?'

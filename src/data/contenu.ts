@@ -109,9 +109,9 @@ export type Chiffre = { valeur: number; label: string; source?: string; champ?: 
 export const chiffres: Chiffre[] = [
   {
     valeur: 0,
-    label: 'joueurs sur Undercover+',
+    label: 'parties jouées sur Undercover+',
     source: 'https://compteurs.timeo-jeannin.workers.dev/stats',
-    champ: 'undercoverJoueurs',
+    champ: 'undercoverParties',
   },
   {
     valeur: 0,
@@ -126,5 +126,4 @@ export const chiffres: Chiffre[] = [
     source: 'https://api.ghostmails.cc/api/stats',
     champ: 'addressesCreated',
   },
-  { valeur: 24, label: 'heures max pour une réponse' },
 ];
