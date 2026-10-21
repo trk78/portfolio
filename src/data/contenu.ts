@@ -49,7 +49,7 @@ export const projets: Projet[] = [
     type: 'Service web',
     annee: '2026',
     resume:
-      "Adresses e-mail jetables qui reçoivent en direct, sans inscription. Pièces jointes, 10 langues, en production et monétisé.",
+      "Adresses e-mail jetables qui reçoivent en direct, sans inscription : valables 1 h, prolongeables jusqu'à 24 h, pièces jointes, notifications, 10 langues. 100 % Cloudflare, en production.",
     stack: ['Next.js 15', 'TypeScript', 'Hono', 'Tailwind CSS', 'Cloudflare Workers', 'Cloudflare Pages'],
     url: 'https://ghostmails.cc',
     logo: '/projets/ghostmails.svg',
@@ -60,7 +60,7 @@ export const projets: Projet[] = [
     type: 'Application web',
     annee: '2026',
     resume:
-      'Comparer le coût et la qualité de vie entre 7 674 villes dans 179 pays : loyers, immobilier, fiscalité, pollution. Uniquement des sources officielles.',
+      'Comparer le coût et la qualité de vie entre 7 674 villes dans 179 pays : fiches ville, comparateur, carte, classement et simulateur de budget. Uniquement des données publiques sourcées, sans publicité.',
     stack: ['Next.js 14', 'TypeScript', 'Prisma 7', 'Neon PostgreSQL', 'Tailwind CSS 4', 'Cloudflare'],
     url: 'https://mycitycost.com',
     logo: '/projets/mycitycost.svg',
@@ -71,7 +71,7 @@ export const projets: Projet[] = [
     type: 'Jeu web (PWA)',
     annee: '2025',
     resume:
-      "Le jeu de déduction sociale Undercover sur un seul téléphone, avec des mots générés par IA sur n'importe quel thème. Jouable hors ligne.",
+      "Le jeu de déduction sociale Undercover sur un seul téléphone, avec des paires de mots générées par IA sur n'importe quel thème. Jouable hors ligne, en français et en anglais, open source.",
     stack: ['Vanilla JavaScript', 'PWA', 'Gemini 2.5 Flash', 'Cloudflare Workers', 'GitHub Pages'],
     url: 'https://trk78.github.io/undercover-plus/',
     repo: 'https://github.com/trk78/undercover-plus',
@@ -83,12 +83,23 @@ export const projets: Projet[] = [
     type: 'Outil web',
     annee: '2026',
     resume:
-      'Télécharger une vidéo TikTok en MP4 sans filigrane ou en MP3, sans rien installer. Open source, bilingue, 100 % côté navigateur.',
+      'Télécharger une vidéo TikTok en MP4 sans filigrane, avec filigrane ou en MP3, avec aperçu avant téléchargement. Sans serveur, sans cookie, open source et bilingue.',
     stack: ['Next.js 14', 'TypeScript', 'Tailwind CSS', 'GitHub Pages'],
     url: 'https://trk78.github.io/pastetok/',
     repo: 'https://github.com/trk78/pastetok',
     logo: '/projets/pastetok.svg',
     apercu: '/projets/apercus/pastetok.webp',
+  },
+  {
+    nom: 'UniDroid',
+    type: 'App Android TV',
+    annee: '2026',
+    resume:
+      "Écran d'accueil rapide pour box Android TV et vidéoprojecteurs, sans pub, avec une télécommande sur téléphone intégrée : appairage par code, souris, clavier en direct, 6 à 8 ms par touche.",
+    stack: ['Android 5+', 'Java', 'Android TV'],
+    repo: 'https://github.com/trk78/unidroid-suite',
+    logo: '/projets/unidroid-suite.webp',
+    apercu: '/projets/apercus/unidroid-suite.webp',
   },
 ];
 

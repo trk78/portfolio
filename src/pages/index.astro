@@ -41,10 +41,11 @@ const annee = new Date().getFullYear();
           services.map((s, i) => (
             <li class="card reveal" style={`--i: ${i}`}>
               <span class="mono card__ref">{String.fromCharCode(65 + i)}</span>
+              <span class="card__lettre" aria-hidden="true">{String.fromCharCode(65 + i)}</span>
               <h3>{s.titre}</h3>
               <p>{s.texte}</p>
               <ul class="mono card__pts">
-                {s.points.map((p) => <li>{p}</li>)}
+                {s.points.map((p, k) => <li style={`--k: ${k}`}>{p}</li>)}
               </ul>
             </li>
           ))
@@ -124,6 +125,9 @@ const annee = new Date().getFullYear();
     }
 
     <section id="contact" class="contact" aria-labelledby="t-contact">
+      <div class="contact__defile" aria-hidden="true">
+        <span>{'Parlons de votre projet — '.repeat(4)}</span><span>{'Parlons de votre projet — '.repeat(4)}</span>
+      </div>
       <div class="wrap">
         <div class="block__head title-reveal">
           <span class="mono block__num">{num('contact')}</span>
@@ -202,88 +206,46 @@ const annee = new Date().getFullYear();
     });
   }
 
-  // Cartes de services inclinables, avec reflet sous le curseur.
+  // Cartes de services : reflet sous le curseur, et le remplissage part du point par lequel on entre.
   if (souris) {
     document.querySelectorAll<HTMLElement>('.card').forEach((card) => {
-      card.addEventListener('pointermove', (e) => {
+      const pos = (e: PointerEvent) => {
         const r = card.getBoundingClientRect();
-        const px = (e.clientX - r.left) / r.width;
-        const py = (e.clientY - r.top) / r.height;
-        card.style.setProperty('--px', `${px * 100}%`);
-        card.style.setProperty('--py', `${py * 100}%`);
-        card.style.setProperty('--rx', `${(0.5 - py) * 10}deg`);
-        card.style.setProperty('--ry', `${(px - 0.5) * 10}deg`);
-      });
-      card.addEventListener('pointerleave', () => {
-        card.style.setProperty('--rx', '0deg');
-        card.style.setProperty('--ry', '0deg');
-      });
+        card.style.setProperty('--px', `${((e.clientX - r.left) / r.width) * 100}%`);
+        card.style.setProperty('--py', `${((e.clientY - r.top) / r.height) * 100}%`);
+      };
+      card.addEventListener('pointerenter', pos);
+      card.addEventListener('pointermove', pos);
     });
   }
 
-  // Chiffres en direct : on lit la valeur, puis on affiche le chiffre (il reste masqué si la source ne répond pas).
-  document.querySelectorAll<HTMLElement>('.chiffre[data-source]').forEach(async (li) => {
-    try {
-      const json = await (await fetch(li.dataset.source!)).json();
-      const n = Number(json[li.dataset.champ!]);
-      if (!Number.isFinite(n) || n <= 0) return;
-      const el = li.querySelector<HTMLElement>('.compteur')!;
-      el.dataset.valeur = String(n);
-      el.textContent = n.toLocaleString('fr-FR');
-      li.hidden = false;
-    } catch {
-      // Source indisponible : le chiffre reste masqué.
-    }
-  });
+  // Méthode : le trait au-dessus des étapes se remplit en violet au fil du défilement.
+  const steps = document.querySelector<HTMLElement>('.steps');
+  if (steps && animer) {
+    const maj = () => {
+      const r = steps.getBoundingClientRect();
+      // 0 quand la liste entre par le bas de l'écran, 1 quand elle atteint le tiers haut.
+      const p = (innerHeight - r.top) / (innerHeight * 0.67);
+      steps.style.setProperty('--p', String(Math.min(Math.max(p, 0), 1)));
+    };
+    maj();
+    addEventListener('scroll', maj, { passive: true });
+    addEventListener('resize', maj);
+  }
 
-  // Survol d'un projet : la capture de son site devient le fond de toute la section.
-  // Deux calques qui se relaient pour un fondu enchaîné d'une capture à l'autre.
-  const fonds = [...document.querySelectorAll<HTMLElement>('.projets__fond')];
-  const liste = document.querySelector<HTMLElement>('.projets');
-  if (fonds.length === 2 && liste && matchMedia('(hover: hover)').matches) {
-    let actif = 0;
-    let courant = '';
-    // Précharge toutes les captures dès qu'on approche de la liste : pas de trou au premier survol.
-    liste.addEventListener('pointerenter', () => {
-      liste.querySelectorAll<HTMLElement>('.projet[data-apercu]').forEach((li) => (new Image().src = li.dataset.apercu!));
-    }, { once: true });
-    liste.querySelectorAll<HTMLElement>('.projet[data-apercu]').forEach((li) => {
-      li.addEventListener('pointerenter', () => {
-        const src = li.dataset.apercu!;
-        if (src !== courant) {
-          actif = 1 - actif;
-          fonds[actif].style.setProperty('--fond', `url(${src})`);
-          courant = src;
-        }
-        fonds[actif].classList.add('is-on');
-        fonds[1 - actif].classList.remove('is-on');
-      });
+  // Contact : la flèche est attirée par le curseur tant qu'il survole le bloc de l'e-mail.
+  const mail = document.querySelector<HTMLElement>('.contact__mail');
+  if (mail && souris) {
+    mail.addEventListener('pointermove', (e) => {
+      const r = mail.getBoundingClientRect();
+      mail.style.setProperty('--ax', `${(e.clientX - (r.right - r.height / 2)) * 0.12}px`);
+      mail.style.setProperty('--ay', `${(e.clientY - (r.top + r.height / 2)) * 0.25}px`);
     });
-    // On n'éteint qu'en quittant toute la liste, pour ne pas clignoter entre deux lignes.
-    liste.addEventListener('pointerleave', () => fonds.forEach((f) => f.classList.remove('is-on')));
+    mail.addEventListener('pointerleave', () => {
+      mail.style.setProperty('--ax', '0px');
+      mail.style.setProperty('--ay', '0px');
+    });
   }
-
-  // Compteurs : défilent de 0 à leur valeur à l'arrivée à l'écran (valeur finale déjà dans le HTML).
-  const compteurs = document.querySelectorAll<HTMLElement>('.compteur');
-  if (animer && 'IntersectionObserver' in window) {
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
-        io.unobserve(e.target);
-        const el = e.target as HTMLElement;
-        const fin = Number(el.dataset.valeur);
-        const debut = performance.now();
-        const pas = (t: number) => {
-          const k = Math.min((t - debut) / 1400, 1);
-          el.textContent = Math.round(fin * (1 - (1 - k) ** 3)).toLocaleString('fr-FR');
-          if (k < 1) requestAnimationFrame(pas);
-        };
-        requestAnimationFrame(pas);
-      }
-    }, { threshold: 0.6 });
-    compteurs.forEach((c) => io.observe(c));
-  }
-
 
   // Curseur personnalisé : un point qui suit la souris avec un léger retard, et s'ouvre en anneau sur ce qui est cliquable.
   const curseur = document.querySelector<HTMLElement>('.curseur');
@@ -508,32 +470,76 @@ const annee = new Date().getFullYear();
   }
 
   /* ---------- Services ---------- */
+  /* Les traits sont les interstices de 1 px de la grille : aucune carte ne peut les recouvrir. */
   .grid-services {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    border-left: 1px solid var(--line);
-    border-top: 1px solid var(--line);
+    gap: 1px;
+    border: 1px solid var(--line);
+    background: var(--line);
   }
   .card {
     position: relative;
+    isolation: isolate;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     padding: 1.5rem 1.25rem 1.75rem;
     min-height: 22rem;
-    border-right: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
     background: var(--paper);
-    transition: background 0.25s, color 0.25s;
+    transition: color 0.35s;
+  }
+  /* Remplissage violet : un cercle qui grandit depuis le point d'entrée du curseur. */
+  .card::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: var(--accent);
+    clip-path: circle(0% at var(--px, 50%) var(--py, 100%));
+    transition: clip-path 0.55s cubic-bezier(0.2, 0.7, 0.1, 1);
   }
   .card:hover {
-    background: var(--accent);
     color: var(--accent-ink);
+  }
+  .card:hover::before {
+    clip-path: circle(150% at var(--px, 50%) var(--py, 100%));
   }
   .card__ref {
     font-size: 0.85rem;
+  }
+  /* Grande lettre en filigrane qui glisse et pivote au survol. */
+  .card__lettre {
+    position: absolute;
+    z-index: -1;
+    top: -0.12em;
+    right: -0.05em;
+    font-family: var(--f-display);
+    font-weight: 900;
+    font-size: 11rem;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--line);
+    transition:
+      translate 0.6s cubic-bezier(0.2, 0.7, 0.1, 1),
+      rotate 0.6s cubic-bezier(0.2, 0.7, 0.1, 1),
+      -webkit-text-stroke-color 0.35s;
+    pointer-events: none;
+  }
+  .card:hover .card__lettre {
+    translate: -0.15em 0.1em;
+    rotate: -8deg;
+    -webkit-text-stroke-color: color-mix(in srgb, var(--accent-ink) 35%, transparent);
+  }
+  .card__pts li {
+    transition: translate 0.35s cubic-bezier(0.2, 0.7, 0.1, 1);
+  }
+  .card:hover .card__pts li {
+    translate: 0.4rem 0;
+    transition-delay: calc(var(--k) * 60ms);
   }
   .card h3 {
     margin: auto 0 0.6rem;
@@ -591,8 +597,17 @@ const annee = new Date().getFullYear();
     padding-top: 1.25rem;
     border-top: 3px solid var(--ink);
   }
-  .step:first-child {
-    border-top-color: var(--accent);
+  /* Trait violet par-dessus : chaque étape prend son quart de la progression (--p de 0 à 1, posé par le script). */
+  .step::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--accent);
+    transform-origin: left;
+    scale: clamp(0, calc(var(--p, 0.25) * 4 - var(--i, 0)), 1) 1;
   }
   .step__n {
     display: block;
@@ -686,8 +701,14 @@ const annee = new Date().getFullYear();
     width: 100vw;
     height: 100%;
     translate: -50% 0;
+    /* Voile léger au milieu, plus dense en haut (titre, chiffres) et fondu dans la page en bas. */
     background:
-      linear-gradient(color-mix(in srgb, var(--paper) 80%, transparent), color-mix(in srgb, var(--paper) 80%, transparent)),
+      linear-gradient(
+        color-mix(in srgb, var(--paper) 88%, transparent),
+        color-mix(in srgb, var(--paper) 45%, transparent) 35%,
+        color-mix(in srgb, var(--paper) 45%, transparent) 75%,
+        var(--paper)
+      ),
       var(--fond, none) center top / cover no-repeat;
     opacity: 0;
     transition: opacity 0.6s ease;
@@ -698,6 +719,21 @@ const annee = new Date().getFullYear();
   }
   .projet:hover h3 a {
     color: var(--accent);
+  }
+  /* Au survol, les autres projets s'effacent pour laisser voir la capture ; la ligne survolée garde un fond lisible. */
+  .projet {
+    transition:
+      opacity 0.4s,
+      background 0.4s;
+  }
+  @media (hover: hover) {
+    .projets:hover .projet:not(:hover) {
+      opacity: 0.25;
+    }
+    .projets .projet:hover {
+      background: color-mix(in srgb, var(--paper) 72%, transparent);
+      backdrop-filter: blur(6px);
+    }
   }
   .projet:hover h3 :global(.arrow-out) {
     transform: translate(2px, -2px);
@@ -814,6 +850,42 @@ const annee = new Date().getFullYear();
     color: var(--accent);
     transform: translateX(12px);
   }
+  :global(.a-souris) .contact__arrow {
+    translate: var(--ax, 0px) var(--ay, 0px);
+    transition:
+      transform 0.3s cubic-bezier(0.2, 0.7, 0.1, 1),
+      translate 0.4s cubic-bezier(0.2, 0.7, 0.1, 1),
+      color 0.2s;
+  }
+  /* Bandeau en contour qui défile en fond de la section ; deux copies identiques pour une boucle sans saut. */
+  .contact {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .contact__defile {
+    position: absolute;
+    z-index: -1;
+    bottom: 0.5rem;
+    left: 0;
+    display: flex;
+    white-space: nowrap;
+    font-family: var(--f-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: clamp(4rem, 12vw, 10rem);
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1px color-mix(in srgb, var(--paper) 18%, transparent);
+    pointer-events: none;
+  }
+  .contact__defile span {
+    padding-right: 0.3em;
+    animation: defile 40s linear infinite;
+  }
+  @keyframes defile {
+    to { translate: -100% 0; }
+  }
 
   /* ---------- Pied ---------- */
   .footer {
@@ -849,16 +921,6 @@ const annee = new Date().getFullYear();
   }
 
 
-  :global(.a-souris) .card {
-    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-    transition:
-      background 0.25s,
-      color 0.25s,
-      transform 0.3s ease-out;
-  }
-  :global(.a-souris) .card:hover {
-    z-index: 1;
-  }
   .card::after {
     content: '';
     position: absolute;
