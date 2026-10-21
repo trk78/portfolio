@@ -885,10 +885,17 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     6%, 90% { opacity: 1; translate: none; scale: 1; }
     100% { opacity: 0; translate: none; scale: 1; }
   }
+  /* Les scènes occupent toute la section ; chaque élément est placé en absolu selon son rang --j. */
+  .chat,
+  .devis,
+  .deploi {
+    position: absolute;
+    inset: 0;
+  }
   .fond .chat span,
   .fond .devis > *,
   .fond .deploi > * {
-    position: static;
+    position: absolute;
     opacity: 0;
   }
   #methode[data-actif='0'] .chat span,
@@ -898,79 +905,69 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     animation-delay: calc(var(--j, 0) * 0.9s);
   }
 
-  /* 1. Appel : l'échange qui sert à comprendre le besoin, à droite (l'étape est à gauche). */
-  .chat {
-    position: absolute;
-    right: 6vw;
-    top: 8%;
-    width: min(38vw, 32rem);
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-    font-size: clamp(0.95rem, 1.35vw, 1.25rem);
-  }
+  /* 1. Appel : l'échange qui sert à comprendre le besoin, en zigzag sur toute la section. */
   .chat span {
-    max-width: 80%;
-    padding: 0.7em 1.1em;
+    top: calc(5% + var(--j) * 22%);
+    max-width: min(40vw, 40rem);
+    padding: 0.6em 1.1em;
     border-radius: 1.2em;
+    font-size: clamp(1.1rem, 2.1vw, 2rem);
+    line-height: 1.25;
   }
+  /* Les messages du client commencent après la colonne de l'étape survolée, pour ne pas couvrir son texte. */
   .chat .client {
-    align-self: flex-start;
+    left: 30vw;
     border-bottom-left-radius: 0.3em;
     border: 1.5px solid color-mix(in srgb, var(--ink) 12%, transparent);
-    color: color-mix(in srgb, var(--ink) 28%, transparent);
+    color: color-mix(in srgb, var(--ink) 24%, transparent);
   }
   .chat .moi {
-    align-self: flex-end;
+    right: 6vw;
     border-bottom-right-radius: 0.3em;
-    background: color-mix(in srgb, var(--accent) 13%, transparent);
-    color: color-mix(in srgb, var(--ink) 34%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: color-mix(in srgb, var(--accent) 55%, transparent);
   }
 
-  /* 2. Devis : la feuille se remplit ligne par ligne, puis le tampon tombe. */
+  /* 2. Devis : titre en grand, lignes sur toute la largeur, puis le tampon tombe. */
   .devis {
-    position: absolute;
-    right: 8vw;
-    top: 8%;
-    width: min(32vw, 26rem);
-    padding: 1.5rem 1.75rem 2rem;
-    border: 1.5px solid color-mix(in srgb, var(--ink) 15%, transparent);
-    border-radius: 6px;
-    display: grid;
-    gap: 0.9rem;
-    font-size: clamp(0.95rem, 1.4vw, 1.25rem);
-    color: color-mix(in srgb, var(--ink) 40%, transparent);
+    font-size: clamp(1.1rem, 2.2vw, 2rem);
+    color: color-mix(in srgb, var(--ink) 22%, transparent);
   }
   .devis b {
+    right: 8vw;
+    top: 3%;
     font-family: var(--f-display);
-    font-size: 2.2em;
+    font-size: clamp(3rem, 8vw, 7rem);
     text-transform: uppercase;
     line-height: 1;
-    color: color-mix(in srgb, var(--ink) 25%, transparent);
+    color: color-mix(in srgb, var(--ink) 8%, transparent);
   }
   .devis span {
+    left: 8vw;
+    right: 8vw;
+    top: calc(8% + var(--j) * 15%);
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
-    padding-bottom: 0.6rem;
-    border-bottom: 1px dashed color-mix(in srgb, var(--ink) 15%, transparent);
+    gap: 2rem;
+    padding-bottom: 0.4em;
+    border-bottom: 1.5px dashed color-mix(in srgb, var(--ink) 12%, transparent);
   }
   .devis em {
     font-style: normal;
-    color: color-mix(in srgb, var(--ink) 25%, transparent);
+    color: color-mix(in srgb, var(--ink) 14%, transparent);
   }
   .fond .devis strong {
-    position: absolute;
-    right: -1.5rem;
-    bottom: -1.5rem;
-    padding: 0.2em 0.6em;
-    border: 3px solid color-mix(in srgb, var(--accent) 70%, transparent);
-    border-radius: 6px;
+    right: 12vw;
+    bottom: 5%;
+    padding: 0.1em 0.5em;
+    border: 4px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    border-radius: 8px;
     font-family: var(--f-display);
-    font-size: 2.4em;
+    font-size: clamp(3rem, 7vw, 6rem);
+    line-height: 1;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--accent) 70%, transparent);
-    rotate: -12deg;
+    color: color-mix(in srgb, var(--accent) 55%, transparent);
+    rotate: -10deg;
   }
   #methode[data-actif='1'] .devis strong {
     animation-name: tampon;
@@ -1005,33 +1002,29 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     100% { clip-path: inset(0 0 0 0); opacity: 0; }
   }
 
-  /* 4. Mise en ligne : la checklist de déploiement à gauche (l'étape est à droite), barre de progression, pastille « En ligne ». */
-  .deploi {
-    position: absolute;
-    left: 40vw;
-    right: 6vw;
-    top: 10%;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.6rem 1.6rem;
+  /* 4. Mise en ligne : la checklist de déploiement en grand sur toute la hauteur, barre de progression, pastille « En ligne ». */
+  .deploi span {
+    left: 8vw;
+    top: calc(4% + var(--j) * 15%);
     font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
-    font-size: clamp(0.95rem, 1.4vw, 1.3rem);
-    color: color-mix(in srgb, var(--ink) 26%, transparent);
+    font-size: clamp(1.1rem, 2.4vw, 2.2rem);
+    color: color-mix(in srgb, var(--ink) 16%, transparent);
   }
-  .deploi strong {
+  .fond .deploi strong {
     display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
-    padding: 0.35em 0.9em;
+    gap: 0.5em;
+    left: 8vw;
+    top: 66%;
+    padding: 0.25em 0.8em;
     border-radius: 999px;
-    background: color-mix(in srgb, #3ddc84 14%, transparent);
-    color: color-mix(in srgb, #3ddc84 75%, transparent);
-    font-family: var(--f-body);
+    background: color-mix(in srgb, #3ddc84 12%, transparent);
+    color: color-mix(in srgb, #3ddc84 65%, transparent);
+    font-size: clamp(1.4rem, 3vw, 2.8rem);
   }
   .deploi strong::before {
     content: '';
-    width: 0.55em;
+    width: 0.45em;
     aspect-ratio: 1;
     border-radius: 50%;
     background: #3ddc84;
