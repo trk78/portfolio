@@ -49,19 +49,6 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
 ---
 
 <Base>
-  <script is:inline>
-    // Intro once per visit, before the overlay is painted (no flash on later pages).
-    try {
-      if (!sessionStorage.getItem('intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        document.documentElement.classList.add('avec-intro');
-        sessionStorage.setItem('intro', '1');
-      }
-    } catch {}
-  </script>
-  <div class="intro" aria-hidden="true">
-    <span class="intro__nom">{lettres(SITE.nom).map((c, k) => <span class="l" style={`--k: ${k}`}>{c}</span>)}</span>
-    <span class="mono intro__sous">Développeur freelance</span>
-  </div>
   <Header home />
   <div class="curseur" aria-hidden="true"></div>
 
@@ -161,16 +148,14 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
               <ul class="galerie__piste">
                 {projets.map((p, i) => (
                   <li class="diapo">
-                    {p.apercu ? (
-                      <img class="diapo__img" src={p.apercu} alt="" width="1920" height="1200" loading="lazy" decoding="async" />
-                    ) : (
-                      <span class="diapo__img" />
-                    )}
-                    <span class="mono diapo__meta">
-                      <span>{String(i + 1).padStart(2, '0')} / {String(projets.length).padStart(2, '0')}</span>
-                      <span>{p.annee} · {p.type}</span>
-                    </span>
+                    <div class="diapo__visuel">
+                      {p.apercu && <img src={p.apercu} alt="" width="1920" height="1200" loading="lazy" decoding="async" />}
+                    </div>
                     <div class="diapo__txt">
+                      <span class="mono diapo__meta">
+                        <span>{String(i + 1).padStart(2, '0')} / {String(projets.length).padStart(2, '0')}</span>
+                        <span>{p.annee} · {p.type}</span>
+                      </span>
                       <h3>
                         {p.logo && <img class="diapo__logo" src={p.logo} alt="" width="64" height="64" loading="lazy" decoding="async" />}
                         {p.url || p.repo ? (
@@ -371,7 +356,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       if (animer) {
         for (const d of diapos) {
           const b = d.getBoundingClientRect();
-          d.style.setProperty('--dx', `${((b.left + b.width / 2) / innerWidth - 0.5) * -10}%`);
+          d.style.setProperty('--dx', `${((b.left + b.width / 2) / innerWidth - 0.5) * -4}%`);
         }
       }
     }
@@ -428,7 +413,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       curseur.classList.add('is-on');
       const cible = e.target as Element;
       curseur.classList.toggle('is-actif', !!cible.closest('a, button, .card'));
-      curseur.classList.toggle('is-titre', !!cible.closest('h1, h2, .diapo h3, .contact__addr'));
+      curseur.classList.toggle('is-titre', !!cible.closest('.hero__title'));
     });
     document.addEventListener('pointerleave', () => curseur.classList.remove('is-on'));
     addEventListener('pointerdown', () => curseur.classList.add('is-clic'));
@@ -610,48 +595,6 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     to { translate: 14vw 10vh; scale: 1.3; }
   }
 
-  /* Intro (first visit): the name rises letter by letter, then the curtain lifts onto the site. */
-  .intro {
-    display: none;
-  }
-  :global(.avec-intro) .intro {
-    position: fixed;
-    inset: 0;
-    z-index: 200;
-    display: grid;
-    place-content: center;
-    justify-items: center;
-    gap: 1rem;
-    background: var(--ink);
-    color: var(--paper);
-    pointer-events: none;
-    animation: intro-out 0.9s cubic-bezier(0.8, 0, 0.2, 1) 1.4s forwards;
-  }
-  .intro__nom {
-    overflow: hidden;
-    font-family: var(--f-display);
-    font-weight: 900;
-    text-transform: uppercase;
-    font-size: clamp(4rem, 18vw, 16rem);
-    line-height: 0.85;
-  }
-  .intro__nom .l {
-    animation: intro-l 0.7s cubic-bezier(0.2, 0.7, 0.1, 1) both;
-    animation-delay: calc(var(--k) * 70ms + 0.1s);
-  }
-  .intro__sous {
-    color: var(--accent-inv);
-    animation: fade 0.6s 0.6s both;
-  }
-  @keyframes intro-l {
-    from { translate: 0 100%; }
-  }
-  @keyframes intro-out {
-    to { clip-path: inset(0 0 100% 0); }
-  }
-  :global(.avec-intro) .hero__title .line {
-    animation-delay: calc(var(--d) * 110ms + 1.8s);
-  }
   .hero__title .line {
     display: block;
     padding-bottom: 0.04em;
@@ -918,6 +861,9 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     font-weight: 900;
     font-size: clamp(4rem, 8vw, 6.5rem);
     line-height: 0.8;
+    /* Padding extends the background to the whole glyph (taller than the 0.8 line box). */
+    padding: 0.15em 0;
+    margin: -0.15em 0;
     color: transparent;
     -webkit-text-stroke: 1.5px var(--ink);
     /* Bottom-to-top fill on reveal: a hard-edged gradient slides through the text. */
@@ -1229,69 +1175,60 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     scroll-padding: 0 var(--gutter);
     scrollbar-width: none;
   }
+  /* Card: text on the left, the site screenshot fully visible on the right (stacked on phones). */
   .diapo {
     position: relative;
-    flex: 0 0 min(86vw, 68rem);
-    aspect-ratio: 16 / 10;
+    flex: 0 0 min(86vw, 34rem);
+    display: flex;
+    flex-direction: column;
     scroll-snap-align: start;
-    isolation: isolate;
     overflow: hidden;
+    border: 1px solid var(--hair);
     border-radius: clamp(0.9rem, 1.6vw, 1.5rem);
     background: var(--paper-2);
-    color: #f3efe6;
   }
-  .diapo__img {
-    position: absolute;
-    z-index: -2;
-    inset: 0;
+  .diapo__visuel {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .diapo__visuel img {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center top;
-    scale: 1.14;
+    /* Slight zoom leaves room for the parallax without cropping the site. */
+    scale: 1.05;
     translate: var(--dx, 0) 0;
     transition: scale 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);
   }
-  .diapo:hover .diapo__img {
-    scale: 1.2;
+  .diapo:hover .diapo__visuel img {
+    scale: 1.09;
   }
-  /* Dark gradients at the top and bottom keep the text readable over any screenshot. */
-  .diapo::after {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    inset: 0;
-    background:
-      linear-gradient(rgba(12, 11, 10, 0.55), transparent 22%),
-      linear-gradient(to top, rgba(12, 11, 10, 0.94), rgba(12, 11, 10, 0.6) 38%, transparent 72%);
+  .diapo__txt {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: clamp(1.25rem, 2.4vw, 2rem);
   }
   .diapo__meta {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
     display: flex;
     justify-content: space-between;
     gap: 1rem;
-    padding: clamp(1rem, 2.4vw, 1.75rem) clamp(1.25rem, 3vw, 2.5rem);
-  }
-  .diapo__txt {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: clamp(1.25rem, 3vw, 2.5rem);
+    color: var(--accent);
   }
   .diapo h3 {
     display: flex;
     align-items: center;
     gap: 0.25em;
-    margin: 0 0 0.6rem;
+    margin: auto 0 0;
     font-family: var(--f-display);
     font-weight: 900;
     text-transform: uppercase;
-    font-size: clamp(2.2rem, 6vw, 5.5rem);
+    font-size: clamp(2rem, 3.4vw, 3.4rem);
     line-height: 0.9;
+    overflow-wrap: anywhere;
   }
   .diapo h3 a {
     text-decoration: none;
@@ -1305,12 +1242,13 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     z-index: 1;
   }
   .diapo:hover h3 a {
-    color: var(--violet-light);
+    color: var(--accent);
   }
   .diapo:hover h3 :global(.arrow-out) {
     transform: translate(3px, -3px);
   }
   .diapo__logo {
+    flex: none;
     width: 0.8em;
     height: 0.8em;
     border-radius: 22%;
@@ -1321,30 +1259,35 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     rotate: -8deg;
   }
   .diapo p {
-    max-width: 44rem;
     margin: 0;
-    color: rgba(243, 239, 230, 0.8);
+    color: var(--ink-soft);
   }
   .diapo__stack {
-    margin-top: 0.75rem !important;
     text-transform: none !important;
-    color: rgba(243, 239, 230, 0.6) !important;
   }
   .diapo__liens {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem 1.5rem;
-    margin-top: 0.75rem !important;
   }
   .diapo__liens a {
     position: relative;
     z-index: 2;
-    color: var(--violet-light);
+    color: var(--accent);
     text-decoration: none;
     border-bottom: 1px solid currentColor;
   }
   .diapo__liens a:hover {
-    color: #f3efe6;
+    color: var(--ink);
+  }
+  @media (min-width: 761px) {
+    .diapo {
+      flex-basis: min(86vw, 78rem);
+      flex-direction: row-reverse;
+    }
+    .diapo__visuel {
+      flex: 0 0 64%;
+    }
   }
   .galerie__barre {
     height: 2px;
@@ -1377,17 +1320,9 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     overflow: visible;
     will-change: translate;
   }
+  /* Card height = screenshot height (64% of the width at 16:10), kept within the screen. */
   .galerie.is-epingle .diapo {
-    flex-basis: min(74vw, calc((100svh - 9rem) * 1.6));
-  }
-  @media (max-width: 760px) {
-    /* Phone: portrait cards, swiped sideways. */
-    .diapo {
-      aspect-ratio: 4 / 5;
-    }
-    .diapo__stack {
-      display: none;
-    }
+    flex-basis: min(84vw, calc((100svh - 10rem) * 2.5));
   }
 
   /* ---------- Contact: dark curtain revealed under the rounded bottom of the page ---------- */
@@ -1551,9 +1486,8 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     height: 10px;
     margin: -5px 0 0 -5px;
     border-radius: 50%;
-    /* Inverts whatever is underneath. */
-    background: #fff;
-    mix-blend-mode: difference;
+    background: var(--accent);
+    border: 1.5px solid var(--accent);
     pointer-events: none;
     opacity: 0;
     transition:
@@ -1570,7 +1504,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     position: absolute;
     inset: -1.5px;
     border-radius: 50%;
-    border: 1px solid #fff;
+    border: 1px solid var(--accent);
     animation: onde 1.8s ease-out infinite;
   }
   @keyframes onde {
@@ -1584,11 +1518,16 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     width: 44px;
     height: 44px;
     margin: -22px 0 0 -22px;
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
   }
+  /* Over the hero heading: large white disc inverting the letters underneath. */
   .curseur.is-titre {
     width: 120px;
     height: 120px;
     margin: -60px 0 0 -60px;
+    background: #fff;
+    border-color: #fff;
+    mix-blend-mode: difference;
   }
   .curseur.is-actif::after,
   .curseur.is-titre::after {

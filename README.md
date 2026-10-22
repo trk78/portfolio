@@ -22,11 +22,11 @@
 | Static portfolio | Astro 7 static site for Timéo, a freelance web and application developer (sole proprietor), deployed on Cloudflare Pages (project `timeo`). |
 | Content-driven sections | Services, method steps, projects (hidden when empty), and animated project counters with live data sources. |
 | Animations and interactions | CSS and plain JavaScript, without an animation library, in `src/pages/index.astro` and `src/components/Header.astro`. Disabled with reduced motion; mouse effects (`html.a-souris`) only run with an actual mouse. |
-| Heading and navigation | Scroll progress ruler, cycling heading word, heading letters reacting on hover, first-visit intro, animated dot grid and drifting purple lights behind the heading (canvas, reacts to the mouse, scatters on scroll), heading that stays in place and blurs out as the sections slide over it, inverting custom cursor, and curtain page transitions. |
+| Heading and navigation | Scroll progress ruler, cycling heading word, heading letters reacting on hover, animated dot grid and drifting purple lights behind the heading (canvas, reacts to the mouse, scatters on scroll), heading that stays in place and blurs out as the sections slide over it, custom cursor (inverting disc over the heading), and curtain page transitions. |
 | Section reveals | Section headings and dividers animate in; method numbers fill in and the method line fills as the page scrolls. |
 | Method interactions | The hovered step expands (bubble behind the number, other steps fade, large background scene: client conversation, quote filled in then stamped, typed code, deployment checklist and live status badge). |
 | Service cards | Fill from the cursor entry point, with icons redrawn and enlarged and staggered bullet points. |
-| Projects gallery | Counters, then large screenshot cards: on large screens the section is pinned and vertical scroll moves the cards sideways (with parallax); on phones, native swipe with snapping. |
+| Projects gallery | Counters, then large cards (text beside the full site screenshot): on large screens the section is pinned and vertical scroll moves the cards sideways (with parallax); on phones, native swipe with snapping. |
 | Contact | Dark curtain revealed under the rounded bottom of the page, email letters rising one by one, magnetic arrow. |
 | Contact | Copy-address button and email typed character by character. |
 
