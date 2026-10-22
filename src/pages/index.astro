@@ -49,11 +49,25 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
 ---
 
 <Base>
+  <script is:inline>
+    // Intro once per visit, before the overlay is painted (no flash on later pages).
+    try {
+      if (!sessionStorage.getItem('intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('avec-intro');
+        sessionStorage.setItem('intro', '1');
+      }
+    } catch {}
+  </script>
+  <div class="intro" aria-hidden="true">
+    <span class="intro__nom">{lettres(SITE.nom).map((c, k) => <span class="l" style={`--k: ${k}`}>{c}</span>)}</span>
+    <span class="mono intro__sous">Développeur freelance</span>
+  </div>
   <Header home />
   <div class="curseur" aria-hidden="true"></div>
 
   <main>
     <section class="hero wrap" aria-labelledby="hero-titre">
+      <div class="halos" aria-hidden="true"><i></i><i></i><i></i></div>
       <canvas class="hero__fond" aria-hidden="true"></canvas>
       <h1 id="hero-titre" class="hero__title" aria-label={`Je construis vos sites et vos ${mots.join(', ')}.`}>
         <span class="line" style="--d: 0" aria-hidden="true">{lettres('Je construis').map((c) => (c === ' ' ? ' ' : <span class="l">{c}</span>))}</span>
@@ -127,59 +141,68 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
 
     {
       projets.length > 0 && (
-        <section id="projets" class="block wrap" aria-labelledby="t-projets">
-          <div class="block__head title-reveal">
-            <span class="mono block__num">{num('projets')}</span>
-            <h2 id="t-projets"><span>Projets</span></h2>
+        <section id="projets" aria-labelledby="t-projets">
+          <div class="block wrap">
+            <div class="block__head title-reveal">
+              <span class="mono block__num">{num('projets')}</span>
+              <h2 id="t-projets"><span>Projets</span></h2>
+            </div>
+            <ul class="chiffres">
+              {chiffres.map((c, i) => (
+                <li class="chiffre reveal" style={`--i: ${i}`} hidden={!!c.source} data-source={c.source} data-champ={c.champ}>
+                  <strong class="compteur" data-valeur={c.valeur}>{nombre(c.valeur)}</strong>
+                  <span class="mono">{c.label}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <div class="projets__fond" aria-hidden="true"></div>
-          <div class="projets__fond" aria-hidden="true"></div>
-          <ul class="chiffres">
-            {chiffres.map((c, i) => (
-              <li class="chiffre reveal" style={`--i: ${i}`} hidden={!!c.source} data-source={c.source} data-champ={c.champ}>
-                <strong class="compteur" data-valeur={c.valeur}>{nombre(c.valeur)}</strong>
-                <span class="mono">{c.label}</span>
-              </li>
-            ))}
-          </ul>
-          <ul class="projets">
-            {projets.map((p) => (
-              <li class="projet reveal" data-apercu={p.apercu}>
-                <span class="mono projet__an">{p.annee}</span>
-                {p.logo ? (
-                  <img class="projet__logo" src={p.logo} alt="" width="64" height="64" loading="lazy" decoding="async" />
-                ) : (
-                  <span class="projet__logo" aria-hidden="true" />
-                )}
-                <div>
-                  <h3>
-                    {p.url || p.repo ? (
-                      <a href={p.url ?? p.repo} target="_blank" rel="noopener">
-                        {p.nom}<ArrowOut />
-                      </a>
+          <div class="galerie">
+            <div class="galerie__colle">
+              <ul class="galerie__piste">
+                {projets.map((p, i) => (
+                  <li class="diapo">
+                    {p.apercu ? (
+                      <img class="diapo__img" src={p.apercu} alt="" width="1920" height="1200" loading="lazy" decoding="async" />
                     ) : (
-                      p.nom
+                      <span class="diapo__img" />
                     )}
-                  </h3>
-                  <p>{p.resume}</p>
-                  <p class="mono projet__liens">
-                    {p.url && <a href={p.url} target="_blank" rel="noopener">Voir le site<ArrowOut /></a>}
-                    {p.repo && <a href={p.repo} target="_blank" rel="noopener">Code sur GitHub<ArrowOut /></a>}
-                  </p>
-                </div>
-                <div class="mono projet__side">
-                  <span>{p.type}</span>
-                  <span class="projet__stack">{p.stack.join(' · ')}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
+                    <span class="mono diapo__meta">
+                      <span>{String(i + 1).padStart(2, '0')} / {String(projets.length).padStart(2, '0')}</span>
+                      <span>{p.annee} · {p.type}</span>
+                    </span>
+                    <div class="diapo__txt">
+                      <h3>
+                        {p.logo && <img class="diapo__logo" src={p.logo} alt="" width="64" height="64" loading="lazy" decoding="async" />}
+                        {p.url || p.repo ? (
+                          <a href={p.url ?? p.repo} target="_blank" rel="noopener">
+                            {p.nom}<ArrowOut />
+                          </a>
+                        ) : (
+                          p.nom
+                        )}
+                      </h3>
+                      <p>{p.resume}</p>
+                      <p class="mono diapo__stack">{p.stack.join(' · ')}</p>
+                      <p class="mono diapo__liens">
+                        {p.url && <a href={p.url} target="_blank" rel="noopener">Voir le site<ArrowOut /></a>}
+                        {p.repo && <a href={p.repo} target="_blank" rel="noopener">Code sur GitHub<ArrowOut /></a>}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div class="galerie__barre" aria-hidden="true"><i></i></div>
+            </div>
+          </div>
         </section>
       )
     }
+  </main>
 
-    <section id="contact" class="contact" aria-labelledby="t-contact">
-      <div class="wrap">
+  <footer class="rideau">
+    <div class="halos" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="rideau__in wrap">
+      <section id="contact" class="contact" aria-labelledby="t-contact">
         <div class="block__head title-reveal">
           <span class="mono block__num">{num('contact')}</span>
           <h2 id="t-contact"><span>Contact</span></h2>
@@ -189,13 +212,12 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
           <span class="contact__addr reveal-lettres">{lettres(SITE.email).map((c, k) => <span class="l" style={`--k: ${k}`} aria-hidden="true">{c}</span>)}</span>
           <span class="contact__arrow" aria-hidden="true">→</span>
         </a>
+      </section>
+      <div class="footer mono">
+        <span>© {annee} {SITE.nom} — {SITE.statut}</span>
+        <a href="/mentions-legales">Mentions légales</a>
       </div>
-    </section>
-  </main>
-
-  <footer class="footer wrap mono">
-    <span>© {annee} {SITE.nom} — {SITE.statut}</span>
-    <a href="/mentions-legales">Mentions légales</a>
+    </div>
   </footer>
 </Base>
 
@@ -322,37 +344,57 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     }
   });
 
-  // Project hover: its screenshot becomes the background of the entire section.
-  // Two alternating layers crossfade between screenshots.
-  const fonds = [...document.querySelectorAll<HTMLElement>('.projets__fond')];
-  const liste = document.querySelector<HTMLElement>('.projets');
-  const section = document.querySelector<HTMLElement>('#projets');
-  if (fonds.length === 2 && liste && matchMedia('(hover: hover)').matches) {
-    let actif = 0;
-    let courant = '';
-    // Preload all screenshots when approaching the list to avoid a gap on first hover.
-    liste.addEventListener('pointerenter', () => {
-      liste.querySelectorAll<HTMLElement>('.projet[data-apercu]').forEach((li) => (new Image().src = li.dataset.apercu!));
-    }, { once: true });
-    liste.querySelectorAll<HTMLElement>('.projet[data-apercu]').forEach((li) => {
-      li.addEventListener('pointerenter', () => {
-        const src = li.dataset.apercu!;
-        if (src !== courant) {
-          actif = 1 - actif;
-          fonds[actif].style.setProperty('--fond', `url(${src})`);
-          courant = src;
+  // Scroll effects: hero fades under the next sections, projects gallery, contact curtain.
+  let defil = 0; // hero progress, 0 at the top, 1 once fully covered
+  const heroSec = document.querySelector<HTMLElement>('.hero');
+  const galerie = document.querySelector<HTMLElement>('.galerie');
+  const piste = galerie?.querySelector<HTMLElement>('.galerie__piste');
+  const diapos = piste ? [...piste.children] as HTMLElement[] : [];
+  const rideau = document.querySelector<HTMLElement>('.rideau');
+  const grand = matchMedia('(min-width: 761px)');
+  let dist = 0;
+  const surDefil = () => {
+    if (heroSec && animer) {
+      defil = Math.min(Math.max(scrollY / heroSec.offsetHeight, 0), 1);
+      heroSec.style.setProperty('--h', defil.toFixed(3));
+    }
+    if (galerie && piste) {
+      let p: number;
+      if (galerie.classList.contains('is-epingle')) {
+        p = dist ? Math.min(Math.max(-galerie.getBoundingClientRect().top / dist, 0), 1) : 0;
+        piste.style.translate = `${-p * dist}px 0`;
+      } else {
+        p = piste.scrollLeft / Math.max(1, piste.scrollWidth - piste.clientWidth);
+      }
+      galerie.style.setProperty('--gp', p.toFixed(4));
+      // Parallax: each screenshot shifts against the movement, by its distance from the screen center.
+      if (animer) {
+        for (const d of diapos) {
+          const b = d.getBoundingClientRect();
+          d.style.setProperty('--dx', `${((b.left + b.width / 2) / innerWidth - 0.5) * -10}%`);
         }
-        fonds[actif].classList.add('is-on');
-        fonds[1 - actif].classList.remove('is-on');
-        section?.classList.add('a-fond');
-      });
-    });
-    // Clear only when leaving the entire list to avoid flickering between rows.
-    liste.addEventListener('pointerleave', () => {
-      fonds.forEach((f) => f.classList.remove('is-on'));
-      section?.classList.remove('a-fond');
-    });
-  }
+      }
+    }
+    if (rideau && animer) {
+      const t = (innerHeight - rideau.getBoundingClientRect().top) / rideau.offsetHeight;
+      rideau.style.setProperty('--r', Math.min(Math.max(t, 0), 1).toFixed(3));
+    }
+  };
+  // Large screens: vertical scroll drives the gallery sideways; otherwise native swipe with snapping.
+  const mesurer = () => {
+    if (galerie && piste) {
+      const epingle = animer && grand.matches;
+      galerie.classList.toggle('is-epingle', epingle);
+      dist = epingle ? Math.max(0, piste.scrollWidth - document.documentElement.clientWidth) : 0;
+      galerie.style.height = epingle ? `${innerHeight + dist}px` : '';
+      if (!epingle) piste.style.translate = '';
+    }
+    surDefil();
+  };
+  mesurer();
+  addEventListener('scroll', surDefil, { passive: true });
+  addEventListener('resize', mesurer);
+  piste?.addEventListener('scroll', surDefil, { passive: true });
 
   // Counters: animate from 0 to their value on entering the viewport (final value already in HTML).
   const compteurs = document.querySelectorAll<HTMLElement>('.compteur');
@@ -384,7 +426,9 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       x = e.clientX;
       y = e.clientY;
       curseur.classList.add('is-on');
-      curseur.classList.toggle('is-actif', !!(e.target as Element).closest('a, button, .card'));
+      const cible = e.target as Element;
+      curseur.classList.toggle('is-actif', !!cible.closest('a, button, .card'));
+      curseur.classList.toggle('is-titre', !!cible.closest('h1, h2, .diapo h3, .contact__addr'));
     });
     document.addEventListener('pointerleave', () => curseur.classList.remove('is-on'));
     addEventListener('pointerdown', () => curseur.classList.add('is-clic'));
@@ -426,10 +470,10 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
           const d = Math.hypot(dx, dy) || 1;
           const proche = Math.max(0, 1 - d / RAYON);
           const vague = animer ? Math.sin(x * 0.012 + y * 0.018 + t * 0.0012) * 0.5 + 0.5 : 0.5;
-          const px = x + (dx / d) * proche * 16;
-          const py = y + (dy / d) * proche * 16;
+          const px = x + (dx / d) * proche * 16 + (x - w / 2) * defil * 0.6;
+          const py = y + (dy / d) * proche * 16 + (y - h / 2) * defil * 0.6;
           const r = 0.8 + vague * 0.7 + proche * 2.4;
-          ctx.globalAlpha = 0.14 + vague * 0.12;
+          ctx.globalAlpha = (0.14 + vague * 0.12) * (1 - defil);
           ctx.fillStyle = encre;
           ctx.beginPath();
           ctx.arc(px, py, r, 0, Math.PI * 2);
@@ -444,7 +488,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     };
     const tour = (t: number) => {
       dessiner(t);
-      if (animer && visible && !document.hidden) requestAnimationFrame(tour);
+      if (animer && visible && defil < 1 && !document.hidden) requestAnimationFrame(tour);
       else boucle = false;
     };
     const lancer = () => {
@@ -461,6 +505,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       if (visible && animer) lancer();
     }).observe(fond);
     document.addEventListener('visibilitychange', () => animer && visible && lancer());
+    addEventListener('scroll', () => animer && visible && defil < 1 && lancer(), { passive: true });
     if (souris) {
       addEventListener('pointermove', (e) => {
         const r = fond.getBoundingClientRect();
@@ -473,8 +518,11 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
 
 <style>
   /* ---------- Hero ---------- */
+  /* The hero stays in place; the next sections slide over it while it fades (--h set on scroll). */
   .hero {
-    position: relative;
+    position: sticky;
+    top: 0;
+    z-index: 0;
     isolation: isolate;
     padding-top: clamp(2.5rem, 7vw, 6rem);
     padding-bottom: clamp(3rem, 7vw, 6rem);
@@ -499,6 +547,110 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     font-size: clamp(3.6rem, 15.5vw, 13.5rem);
     line-height: 0.84;
     letter-spacing: -0.01em;
+    transform-origin: 20% 100%;
+    scale: calc(1 + var(--h, 0) * 0.2);
+    filter: blur(calc(var(--h, 0) * 10px));
+    opacity: calc(1 - var(--h, 0) * 1.2);
+  }
+  main {
+    position: relative;
+    z-index: 1;
+    overflow: clip;
+    background: var(--paper);
+    border-radius: 0 0 clamp(1.5rem, 4vw, 3rem) clamp(1.5rem, 4vw, 3rem);
+    box-shadow: 0 2.5rem 5rem rgba(0, 0, 0, 0.35);
+  }
+  /* Opaque full-width background so the sections cover the hero. */
+  main > :not(.hero) {
+    position: relative;
+    z-index: 1;
+    background: var(--paper);
+    box-shadow: 0 0 0 100vmax var(--paper);
+    clip-path: inset(0 -100vmax);
+  }
+
+  /* Soft purple lights drifting slowly (hero and contact). */
+  .halos {
+    position: absolute;
+    z-index: -2;
+    inset: 0 auto 0 50%;
+    width: 100vw;
+    translate: -50% 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .halos i {
+    position: absolute;
+    width: 48vmax;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 38%, transparent), transparent);
+    animation: derive 22s ease-in-out infinite alternate;
+  }
+  .halos i:nth-child(1) {
+    left: -12%;
+    top: -25%;
+  }
+  .halos i:nth-child(2) {
+    right: -14%;
+    top: 5%;
+    width: 40vmax;
+    background: radial-gradient(closest-side, color-mix(in srgb, #5b8cff 26%, transparent), transparent);
+    animation-duration: 27s;
+    animation-direction: alternate-reverse;
+  }
+  .halos i:nth-child(3) {
+    left: 35%;
+    bottom: -35%;
+    width: 36vmax;
+    animation-duration: 31s;
+    animation-delay: -12s;
+  }
+  @keyframes derive {
+    to { translate: 14vw 10vh; scale: 1.3; }
+  }
+
+  /* Intro (first visit): the name rises letter by letter, then the curtain lifts onto the site. */
+  .intro {
+    display: none;
+  }
+  :global(.avec-intro) .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 1rem;
+    background: var(--ink);
+    color: var(--paper);
+    pointer-events: none;
+    animation: intro-out 0.9s cubic-bezier(0.8, 0, 0.2, 1) 1.4s forwards;
+  }
+  .intro__nom {
+    overflow: hidden;
+    font-family: var(--f-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: clamp(4rem, 18vw, 16rem);
+    line-height: 0.85;
+  }
+  .intro__nom .l {
+    animation: intro-l 0.7s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+    animation-delay: calc(var(--k) * 70ms + 0.1s);
+  }
+  .intro__sous {
+    color: var(--accent-inv);
+    animation: fade 0.6s 0.6s both;
+  }
+  @keyframes intro-l {
+    from { translate: 0 100%; }
+  }
+  @keyframes intro-out {
+    to { clip-path: inset(0 0 100% 0); }
+  }
+  :global(.avec-intro) .hero__title .line {
+    animation-delay: calc(var(--d) * 110ms + 1.8s);
   }
   .hero__title .line {
     display: block;
@@ -1061,173 +1213,206 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     }
   }
 
-  /* ---------- Projects ---------- */
-  .projets {
+  /* ---------- Projects: gallery ---------- */
+  .galerie {
+    position: relative;
+    padding-bottom: clamp(3rem, 7vw, 6rem);
+  }
+  .galerie__piste {
     list-style: none;
     margin: 0;
-    padding: 0;
-    border-top: 1px solid var(--line);
+    padding: 0 var(--gutter);
+    display: flex;
+    gap: clamp(1rem, 2.5vw, 2rem);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 var(--gutter);
+    scrollbar-width: none;
   }
-  .projet {
+  .diapo {
     position: relative;
-    display: grid;
-    grid-template-columns: 5rem 4rem 1fr 16rem;
-    gap: 1.5rem;
-    padding: 1.5rem 0;
-    border-bottom: 1px solid var(--line);
+    flex: 0 0 min(86vw, 68rem);
+    aspect-ratio: 16 / 10;
+    scroll-snap-align: start;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: clamp(0.9rem, 1.6vw, 1.5rem);
+    background: var(--paper-2);
+    color: #f3efe6;
   }
-  .projet h3 {
-    margin: 0 0 0.3rem;
+  .diapo__img {
+    position: absolute;
+    z-index: -2;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    scale: 1.14;
+    translate: var(--dx, 0) 0;
+    transition: scale 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);
+  }
+  .diapo:hover .diapo__img {
+    scale: 1.2;
+  }
+  /* Dark gradients at the top and bottom keep the text readable over any screenshot. */
+  .diapo::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background:
+      linear-gradient(rgba(12, 11, 10, 0.55), transparent 22%),
+      linear-gradient(to top, rgba(12, 11, 10, 0.94), rgba(12, 11, 10, 0.6) 38%, transparent 72%);
+  }
+  .diapo__meta {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: clamp(1rem, 2.4vw, 1.75rem) clamp(1.25rem, 3vw, 2.5rem);
+  }
+  .diapo__txt {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: clamp(1.25rem, 3vw, 2.5rem);
+  }
+  .diapo h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.25em;
+    margin: 0 0 0.6rem;
     font-family: var(--f-display);
-    font-weight: 700;
+    font-weight: 900;
     text-transform: uppercase;
-    font-size: 2rem;
-    line-height: 1;
+    font-size: clamp(2.2rem, 6vw, 5.5rem);
+    line-height: 0.9;
   }
-  .projet h3 a {
+  .diapo h3 a {
     text-decoration: none;
-    transition: color 0.2s;
+    transition: color 0.25s;
   }
-  /* Entire row clickable (stretched link); smaller links stay above it. */
-  .projet h3 a::after {
+  /* Entire card clickable (stretched link); smaller links stay above it. */
+  .diapo h3 a::after {
     content: '';
     position: absolute;
     inset: 0;
     z-index: 1;
   }
-  #projets {
-    position: relative;
-    isolation: isolate;
+  .diapo:hover h3 a {
+    color: var(--violet-light);
   }
-  /* Full viewport width behind all section content; overlay keeps text readable. */
-  .projets__fond {
-    position: absolute;
-    z-index: -1;
-    top: 0;
-    left: 50%;
-    width: 100vw;
-    height: 100%;
-    translate: -50% 0;
-    /* Light overlay in the middle, denser at the top (heading, counters), fading into the page at the bottom. */
-    background:
-      linear-gradient(
-        color-mix(in srgb, var(--paper) 88%, transparent),
-        color-mix(in srgb, var(--paper) 45%, transparent) 35%,
-        color-mix(in srgb, var(--paper) 45%, transparent) 75%,
-        var(--paper)
-      ),
-      var(--fond, none) center top / cover no-repeat;
-    opacity: 0;
-    transition: opacity 0.6s ease;
-    pointer-events: none;
+  .diapo:hover h3 :global(.arrow-out) {
+    transform: translate(3px, -3px);
   }
-  .projets__fond.is-on {
-    opacity: 1;
+  .diapo__logo {
+    width: 0.8em;
+    height: 0.8em;
+    border-radius: 22%;
+    object-fit: cover;
+    transition: rotate 0.4s cubic-bezier(0.2, 0.7, 0.1, 1);
   }
-  /* Background screenshot: heading and counters fade to reveal it. */
-  #projets > .block__head,
-  #projets > .chiffres {
-    transition: opacity 0.5s;
+  .diapo:hover .diapo__logo {
+    rotate: -8deg;
   }
-  #projets.a-fond > .block__head,
-  #projets.a-fond > .chiffres {
-    opacity: 0.15;
-  }
-  .projet:hover h3 a {
-    color: var(--accent);
-  }
-  /* On hover, other projects fade to reveal the screenshot; hovered row keeps a readable background. */
-  .projet {
-    transition:
-      filter 0.4s,
-      background 0.4s;
-  }
-  @media (hover: hover) {
-    /* Use filter because the reveal animation (fill both) retains control of opacity, leaving the logo opaque. */
-    .projets:hover .projet:not(:hover) {
-      filter: opacity(0.15);
-    }
-    .projets .projet:hover {
-      background: color-mix(in srgb, var(--paper) 72%, transparent);
-      backdrop-filter: blur(6px);
-    }
-  }
-  .projet:hover h3 :global(.arrow-out) {
-    transform: translate(2px, -2px);
-  }
-  .projet p {
+  .diapo p {
+    max-width: 44rem;
     margin: 0;
-    color: var(--ink-soft);
+    color: rgba(243, 239, 230, 0.8);
   }
-  .projet__liens {
+  .diapo__stack {
+    margin-top: 0.75rem !important;
+    text-transform: none !important;
+    color: rgba(243, 239, 230, 0.6) !important;
+  }
+  .diapo__liens {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem 1.5rem;
     margin-top: 0.75rem !important;
   }
-  .projet__liens a {
+  .diapo__liens a {
     position: relative;
     z-index: 2;
-    color: var(--accent);
+    color: var(--violet-light);
     text-decoration: none;
     border-bottom: 1px solid currentColor;
   }
-  .projet__liens a:hover {
-    color: var(--ink);
+  .diapo__liens a:hover {
+    color: #f3efe6;
   }
-  .projet__logo {
+  .galerie__barre {
+    height: 2px;
+    margin: clamp(1.25rem, 2.5vw, 2rem) var(--gutter) 0;
+    background: var(--hair);
+  }
+  .galerie__barre i {
     display: block;
-    width: 4rem;
-    height: 4rem;
-    border-radius: 22%;
-    object-fit: cover;
-    transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.1, 1);
+    height: 100%;
+    background: var(--accent);
+    transform-origin: left;
+    scale: var(--gp, 0) 1;
   }
-  .projet:hover .projet__logo {
-    transform: rotate(-6deg) scale(1.06);
+  /* Pinned mode (large screens, set by the script): the track moves sideways while the section scrolls by. */
+  .galerie.is-epingle {
+    padding-bottom: 0;
   }
-  .projet__an {
-    color: var(--accent);
+  .galerie.is-epingle .galerie__colle {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: 3.5rem;
+    overflow: hidden;
   }
-  .projet__side {
-    display: grid;
-    gap: 0.3rem;
-    align-content: start;
-    text-align: right;
+  .galerie.is-epingle .galerie__piste {
+    width: max-content;
+    overflow: visible;
+    will-change: translate;
   }
-  .projet__stack {
-    color: var(--ink-soft);
-    text-transform: none;
+  .galerie.is-epingle .diapo {
+    flex-basis: min(74vw, calc((100svh - 9rem) * 1.6));
   }
   @media (max-width: 760px) {
-    /* Mobile: logo left of content, year and technical details spanning the full width. */
-    .projet {
-      grid-template-columns: 3rem 1fr;
-      gap: 0.5rem 1rem;
+    /* Phone: portrait cards, swiped sideways. */
+    .diapo {
+      aspect-ratio: 4 / 5;
     }
-    .projet__an,
-    .projet__side {
-      grid-column: 1 / -1;
-    }
-    .projet__logo {
-      width: 3rem;
-      height: 3rem;
-    }
-    .projet__side {
-      text-align: left;
+    .diapo__stack {
+      display: none;
     }
   }
 
-  /* ---------- Contact ---------- */
-  .contact {
+  /* ---------- Contact: dark curtain revealed under the rounded bottom of the page ---------- */
+  .rideau {
     /* Inverted background: use the accent shade for the other theme to preserve contrast. */
     --accent: var(--accent-inv);
-    padding: clamp(3rem, 7vw, 6rem) 0;
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    display: flex;
+    min-height: 85svh;
+    margin-top: -3rem;
+    padding-top: 3rem;
     background: var(--ink);
     color: var(--paper);
   }
-  .contact .block__aside {
-    color: color-mix(in srgb, var(--paper) 65%, transparent);
+  /* Content rises from below the page edge as it is revealed (--r set on scroll). */
+  .rideau__in {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-top: clamp(3rem, 8vw, 7rem);
+    translate: 0 calc((1 - var(--r, 1)) * -35%);
+    opacity: calc(0.2 + var(--r, 1) * 0.8);
   }
   .contact__mail {
     display: grid;
@@ -1274,15 +1459,14 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       translate 0.4s cubic-bezier(0.2, 0.7, 0.1, 1),
       color 0.2s;
   }
-  /* ---------- Footer ---------- */
   .footer {
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 1rem;
-    padding-top: 1.5rem;
+    padding-top: 3rem;
     padding-bottom: 1.5rem;
-    color: var(--ink-soft);
+    color: color-mix(in srgb, var(--paper) 60%, transparent);
   }
 
   /* ---------- Reveal ---------- */
@@ -1367,8 +1551,9 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     height: 10px;
     margin: -5px 0 0 -5px;
     border-radius: 50%;
-    background: var(--accent);
-    border: 1.5px solid var(--accent);
+    /* Inverts whatever is underneath. */
+    background: #fff;
+    mix-blend-mode: difference;
     pointer-events: none;
     opacity: 0;
     transition:
@@ -1385,7 +1570,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     position: absolute;
     inset: -1.5px;
     border-radius: 50%;
-    border: 1px solid var(--accent);
+    border: 1px solid #fff;
     animation: onde 1.8s ease-out infinite;
   }
   @keyframes onde {
@@ -1399,9 +1584,14 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     width: 44px;
     height: 44px;
     margin: -22px 0 0 -22px;
-    background: color-mix(in srgb, var(--accent) 15%, transparent);
   }
-  .curseur.is-actif::after {
+  .curseur.is-titre {
+    width: 120px;
+    height: 120px;
+    margin: -60px 0 0 -60px;
+  }
+  .curseur.is-actif::after,
+  .curseur.is-titre::after {
     animation: none;
     opacity: 0;
   }
