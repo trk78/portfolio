@@ -10,7 +10,7 @@
   --ink-soft: #57524a;
   --line: #151412;
   --hair: rgba(21, 20, 18, 0.18);
-  /* Violet : teinte foncée sur fond clair, claire sur fond sombre (contraste). */
+  /* Purple: dark shade on light backgrounds, light shade on dark backgrounds (contrast). */
   --violet-deep: #6a2ee8;
   --violet-light: #ab8cff;
   --accent: var(--violet-deep);
@@ -62,7 +62,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Grain papier, posé au-dessus de tout sans capter les clics. */
+/* Paper grain, layered above everything without intercepting clicks. */
 body::after {
   content: '';
   position: fixed;
@@ -100,7 +100,7 @@ a {
   text-transform: uppercase;
 }
 
-/* Transition fluide entre les pages (navigateurs compatibles) ; la barre du haut reste en place. */
+/* Smooth page transitions (supported browsers); the top bar stays in place. */
 @media (prefers-reduced-motion: no-preference) {
   @view-transition {
     navigation: auto;

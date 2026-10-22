@@ -1,5 +1,5 @@
-# Compile et déploie sur Cloudflare Pages (projet « timeo », envoi direct via Wrangler) à chaque push sur main.
-# Secret requis : CLOUDFLARE_API_TOKEN (droit « Cloudflare Pages : Edit »). Variable : CLOUDFLARE_ACCOUNT_ID.
+# Build and deploy to Cloudflare Pages (project "timeo", direct upload via Wrangler) on every push to main.
+# Required secret: CLOUDFLARE_API_TOKEN ("Cloudflare Pages: Edit" permission). Variable: CLOUDFLARE_ACCOUNT_ID.
 name: Déploiement
 
 on:

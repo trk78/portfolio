@@ -1,6 +1,6 @@
 import { projets } from './contenu';
 
-// Numérotation calculée : masquer « Projets » ne laisse pas de trou dans la séquence.
+// Calculated numbering: hiding the Projects section leaves no gap in the sequence.
 export const sections = [
   { id: 'services', titre: 'Services' },
   { id: 'methode', titre: 'Méthode' },

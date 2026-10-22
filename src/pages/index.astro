@@ -6,25 +6,25 @@ import { SITE } from '../config';
 import { services, etapes, projets, chiffres } from '../data/contenu';
 import { num } from '../data/sections';
 
-// Mots qui défilent à la fin du titre (le premier est celui affiché sans JS).
+// Cycling heading words (the first is displayed without JS).
 const mots = ['apps', 'bots', 'outils', 'jeux'];
 const nombre = (n: number) => n.toLocaleString('fr-FR');
 const lettres = (t: string) => [...t];
 
 const annee = new Date().getFullYear();
 
-// Pictos des services, dans l'ordre de `services` ; pathLength=1 pour les tracer au survol quelle que soit leur longueur.
+// Service icons in `services` order; pathLength=1 animates strokes on hover regardless of length.
 const pictos = [
-  // Site vitrine : fenêtre de navigateur
+  // Business website: browser window
   '<rect x="3" y="5" width="42" height="34" rx="3" pathLength="1"/><path d="M3 13h42" pathLength="1"/><path d="M10 22h18M10 28h28M10 33h14" pathLength="1"/>',
-  // Application web : fenêtre avec barre latérale, deux cartes de chiffres et une courbe
+  // Web application: window with sidebar, two metric cards and a chart
   '<rect x="3" y="5" width="42" height="34" rx="3" pathLength="1"/><path d="M3 12h42M14 12v27M7 8.5h1M10.5 8.5h1M6.5 17h4M6.5 21h4M6.5 25h4" pathLength="1"/><path d="M18 16h10v6H18zM31 16h10v6H31zM18 34l5-5 4 3 6-6 8 4" pathLength="1"/>',
-  // Application mobile : téléphone
+  // Mobile application: phone
   '<rect x="13" y="2" width="22" height="42" rx="4" pathLength="1"/><path d="M21 7h6M22 38h4" pathLength="1"/><path d="M18 16h12M18 21h8M18 26h12" pathLength="1"/>',
-  // Automatisation & IA : robot
+  // Automation & AI: robot
   '<rect x="8" y="14" width="32" height="24" rx="5" pathLength="1"/><path d="M24 14V7M20 5h8M3 24v6M45 24v6" pathLength="1"/><path d="M17 23v4M31 23v4M18 32h12" pathLength="1"/>',
 ];
-// Méthode : lignes de code tapées en fond pendant le survol de « Développement ».
+// Method: background code typed while hovering over Development.
 const code = [
   'const projet = await concevoir(besoin);',
   'for (const sprint of planning) {',
@@ -33,7 +33,7 @@ const code = [
   'await tester(projet, { mobile: true });',
   'deployer(projet);',
 ];
-// Scènes des autres étapes : un échange type, un devis, un déploiement. Illustration, aucun chiffre réel.
+// Other step scenes: sample conversation, quote and deployment. Illustrative, no real figures.
 const chat = [
   { qui: 'client', texte: "J'ai besoin d'un site pour mon restaurant." },
   { qui: 'moi', texte: "Qu'est-ce qui compte le plus pour vous ?" },
@@ -202,7 +202,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
 <script>
   const animer = !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Apparition au défilement ; sans JS ou avec mouvement réduit, tout reste visible.
+  // Reveal on scroll; everything stays visible without JS or with reduced motion.
   const items = document.querySelectorAll<HTMLElement>('.reveal, .title-reveal, .block, .reveal-lettres');
   if ('IntersectionObserver' in window && animer) {
     document.documentElement.classList.add('js-reveal');
@@ -220,7 +220,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     items.forEach((el) => io.observe(el));
   }
 
-  // Dernier mot du titre qui change : sort par le haut, le suivant monte par le bas.
+  // Cycling final heading word: exits above, next word rises from below.
   const swap = document.querySelector<HTMLElement>('.swap');
   const mots = swap?.dataset.mots?.split(',') ?? [];
   if (swap && mots.length > 1 && animer && 'animate' in swap) {
@@ -239,25 +239,25 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
         { duration: 620, easing, fill: 'forwards' },
       );
     };
-    // On attend la fin de l'arrivée du titre avant de commencer.
+    // Wait for the heading entrance to finish before starting.
     setTimeout(() => setInterval(suivant, 2600), 1400);
   }
 
-  // Effets liés à la souris : seulement avec une vraie souris (pas sur mobile) et sans « mouvement réduit ».
+  // Mouse effects: only with an actual mouse (not mobile) and without reduced motion.
   const souris = animer && matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-  // Titre en profondeur : on suit le curseur dans toute la fenêtre.
+  // Heading depth: track the cursor throughout the window.
   const hero = document.querySelector<HTMLElement>('.hero__title');
   if (souris) {
     document.documentElement.classList.add('a-souris');
     addEventListener('pointermove', (e) => {
-      // Position de -1 à 1 par rapport au centre de l'écran.
+      // Position from -1 to 1 relative to the screen center.
       hero?.style.setProperty('--mx', (e.clientX / innerWidth - 0.5) * 2 + '');
       hero?.style.setProperty('--my', (e.clientY / innerHeight - 0.5) * 2 + '');
     });
   }
 
-  // Cartes de services : reflet sous le curseur, et le remplissage part du point par lequel on entre.
+  // Service cards: highlight under the cursor; fill starts at the entry point.
   if (souris) {
     document.querySelectorAll<HTMLElement>('.card').forEach((card) => {
       const pos = (e: PointerEvent) => {
@@ -270,12 +270,12 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     });
   }
 
-  // Méthode : le trait au-dessus des étapes se remplit en violet au fil du défilement.
+  // Method: the line above the steps fills purple on scroll.
   const steps = document.querySelector<HTMLElement>('.steps');
   if (steps && animer) {
     const maj = () => {
       const r = steps.getBoundingClientRect();
-      // 0 quand la liste entre par le bas de l'écran, 1 quand elle atteint le tiers haut.
+      // 0 when the list enters from the screen bottom, 1 when it reaches the upper third.
       const p = (innerHeight - r.top) / (innerHeight * 0.67);
       steps.style.setProperty('--p', String(Math.min(Math.max(p, 0), 1)));
     };
@@ -284,7 +284,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     addEventListener('resize', maj);
   }
 
-  // Méthode : l'étape survolée s'élargit et lance sa scène en fond de toute la section.
+  // Method: the hovered step expands and starts its scene behind the entire section.
   const methode = document.querySelector<HTMLElement>('#methode');
   if (steps && methode && souris) {
     steps.querySelectorAll<HTMLElement>('.step').forEach((li, i) => {
@@ -293,7 +293,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     steps.addEventListener('pointerleave', () => delete methode.dataset.actif);
   }
 
-  // Contact : la flèche est attirée par le curseur tant qu'il survole le bloc de l'e-mail.
+  // Contact: the arrow follows the cursor while hovering over the email block.
   const mail = document.querySelector<HTMLElement>('.contact__mail');
   if (mail && souris) {
     mail.addEventListener('pointermove', (e) => {
@@ -307,7 +307,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     });
   }
 
-  // Chiffres en direct : on lit la valeur, puis on affiche le chiffre (il reste masqué si la source ne répond pas).
+  // Live counters: fetch the value, then show the counter (hidden if the source does not respond).
   document.querySelectorAll<HTMLElement>('.chiffre[data-source]').forEach(async (li) => {
     try {
       const json = await (await fetch(li.dataset.source!)).json();
@@ -318,19 +318,19 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       el.textContent = n.toLocaleString('fr-FR');
       li.hidden = false;
     } catch {
-      // Source indisponible : le chiffre reste masqué.
+      // Source unavailable: keep the counter hidden.
     }
   });
 
-  // Survol d'un projet : la capture de son site devient le fond de toute la section.
-  // Deux calques qui se relaient pour un fondu enchaîné d'une capture à l'autre.
+  // Project hover: its screenshot becomes the background of the entire section.
+  // Two alternating layers crossfade between screenshots.
   const fonds = [...document.querySelectorAll<HTMLElement>('.projets__fond')];
   const liste = document.querySelector<HTMLElement>('.projets');
   const section = document.querySelector<HTMLElement>('#projets');
   if (fonds.length === 2 && liste && matchMedia('(hover: hover)').matches) {
     let actif = 0;
     let courant = '';
-    // Précharge toutes les captures dès qu'on approche de la liste : pas de trou au premier survol.
+    // Preload all screenshots when approaching the list to avoid a gap on first hover.
     liste.addEventListener('pointerenter', () => {
       liste.querySelectorAll<HTMLElement>('.projet[data-apercu]').forEach((li) => (new Image().src = li.dataset.apercu!));
     }, { once: true });
@@ -347,14 +347,14 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
         section?.classList.add('a-fond');
       });
     });
-    // On n'éteint qu'en quittant toute la liste, pour ne pas clignoter entre deux lignes.
+    // Clear only when leaving the entire list to avoid flickering between rows.
     liste.addEventListener('pointerleave', () => {
       fonds.forEach((f) => f.classList.remove('is-on'));
       section?.classList.remove('a-fond');
     });
   }
 
-  // Compteurs : défilent de 0 à leur valeur à l'arrivée à l'écran (valeur finale déjà dans le HTML).
+  // Counters: animate from 0 to their value on entering the viewport (final value already in HTML).
   const compteurs = document.querySelectorAll<HTMLElement>('.compteur');
   if (animer && 'IntersectionObserver' in window) {
     const io = new IntersectionObserver((entries) => {
@@ -376,7 +376,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   }
 
 
-  // Curseur personnalisé : un point qui suit la souris avec un léger retard, et s'ouvre en anneau sur ce qui est cliquable.
+  // Custom cursor: a dot follows the mouse with a slight delay, opening into a ring over clickable elements.
   const curseur = document.querySelector<HTMLElement>('.curseur');
   if (curseur && souris) {
     let x = -100, y = -100, cx = -100, cy = -100;
@@ -398,12 +398,12 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     requestAnimationFrame(suivre);
   }
 
-  // Fond du titre : grille de points qui ondule, et que la souris repousse et colore en violet.
+  // Heading background: undulating dot grid, repelled by the mouse and colored purple.
   const fond = document.querySelector<HTMLCanvasElement>('.hero__fond');
   const ctx = fond?.getContext('2d');
   if (fond && ctx) {
-    const ESP = 26; // espacement des points, en px
-    const RAYON = 180; // zone d'influence de la souris, en px
+    const ESP = 26; // dot spacing, in px
+    const RAYON = 180; // mouse influence radius, in px
     let w = 0, h = 0, mx = -1e4, my = -1e4, visible = true, boucle = false;
     let encre = '#000', accent = '#000';
     const taille = () => {
@@ -479,7 +479,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     padding-top: clamp(2.5rem, 7vw, 6rem);
     padding-bottom: clamp(3rem, 7vw, 6rem);
   }
-  /* Toile pleine largeur derrière le titre, fondue sur les bords. */
+  /* Full-width canvas behind the heading, faded at the edges. */
   .hero__fond {
     position: absolute;
     z-index: -1;
@@ -515,7 +515,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   }
   @keyframes rise {
     from { transform: translateY(40%); opacity: 0; clip-path: inset(0 0 100% 0); }
-    /* Découpe finale plus large que la ligne : les lettres peuvent sauter au survol sans être rognées. */
+    /* Final clip wider than the line: letters can jump on hover without cropping. */
     to { transform: none; opacity: 1; clip-path: inset(-30% -5% -30% -5%); }
   }
 
@@ -523,13 +523,13 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: none; }
   }
-  /* ---------- Blocs ---------- */
+  /* ---------- Blocks ---------- */
   .block {
     position: relative;
     padding-top: clamp(3rem, 7vw, 6rem);
     padding-bottom: clamp(3rem, 7vw, 6rem);
   }
-  /* Trait de séparation : se dessine de gauche à droite quand la section arrive. */
+  /* Divider: draws left to right when the section enters the viewport. */
   .block::before {
     content: '';
     position: absolute;
@@ -573,7 +573,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   .block__head h2 > span {
     display: block;
   }
-  /* Titres de section : même montée que le grand titre, numéro et aparté en fondu juste après. */
+  /* Section headings: same rise as the main heading, number and aside fade in just after. */
   :global(.js-reveal) .title-reveal h2 > span,
   :global(.js-reveal) .title-reveal .block__num,
   :global(.js-reveal) .title-reveal .block__aside {
@@ -582,7 +582,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   :global(.js-reveal) .title-reveal.is-in h2 > span {
     animation: rise-titre 0.9s cubic-bezier(0.2, 0.7, 0.1, 1) both;
   }
-  /* Comme « rise », mais la découpe déborde de la ligne : sinon l'accent de « MÉTHODE » est rogné. */
+  /* Like rise, but clipping extends beyond the line to preserve the accent in MÉTHODE. */
   @keyframes rise-titre {
     from { transform: translateY(40%); opacity: 0; clip-path: inset(-40% -5% 100% -5%); }
     to { transform: none; opacity: 1; clip-path: inset(-40% -5% -20% -5%); }
@@ -599,7 +599,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   }
 
   /* ---------- Services ---------- */
-  /* Les traits sont les interstices de 1 px de la grille : aucune carte ne peut les recouvrir. */
+  /* Lines are the 1 px grid gaps: no card can cover them. */
   .grid-services {
     list-style: none;
     margin: 0;
@@ -621,7 +621,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     background: var(--paper);
     transition: color 0.35s;
   }
-  /* Remplissage violet : un cercle qui grandit depuis le point d'entrée du curseur. */
+  /* Purple fill: a circle grows from the cursor entry point. */
   .card::before {
     content: '';
     position: absolute;
@@ -640,7 +640,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   .card__ref {
     font-size: 0.85rem;
   }
-  /* Picto en trait fin, retracé au survol. */
+  /* Thin-stroke icon, redrawn on hover. */
   .card__picto {
     position: absolute;
     top: 1.25rem;
@@ -727,7 +727,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     }
   }
 
-  /* ---------- Méthode ---------- */
+  /* ---------- Method ---------- */
   .steps {
     list-style: none;
     margin: 0;
@@ -744,7 +744,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     border-top: 3px solid var(--ink);
     transition: filter 0.4s;
   }
-  /* Trait violet par-dessus : chaque étape prend son quart de la progression (--p de 0 à 1, posé par le script). */
+  /* Purple line on top: each step takes a quarter of progress (--p from 0 to 1, set by the script). */
   .step::before {
     content: '';
     position: absolute;
@@ -768,7 +768,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     line-height: 0.8;
     color: transparent;
     -webkit-text-stroke: 1.5px var(--ink);
-    /* Remplissage de bas en haut à l'apparition : un dégradé net glisse dans le texte. */
+    /* Bottom-to-top fill on reveal: a hard-edged gradient slides through the text. */
     background: linear-gradient(to top, var(--ink) 50%, transparent 50%) top / 100% 200% no-repeat;
     -webkit-background-clip: text;
     background-clip: text;
@@ -784,7 +784,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   @keyframes remplir {
     to { background-position: bottom; }
   }
-  /* Bulle violette qui gonfle derrière le chiffre survolé ; hors du chiffre, sinon son « scale » la ferait passer devant. */
+  /* Purple bubble behind the hovered number; outside it so the number's scale does not bring the bubble forward. */
   .step__tete {
     position: relative;
     display: block;
@@ -810,11 +810,11 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   }
   .step p {
     margin: 0;
-    /* Trois lignes réservées : la section ne saute pas quand les colonnes changent de largeur au survol. */
+    /* Reserve three lines to prevent jumps when columns change width on hover. */
     min-height: 4.8em;
     color: var(--ink-soft);
   }
-  /* ---------- Méthode : survol (vraie souris, data-actif posé par le script) ---------- */
+  /* ---------- Method: hover (actual mouse, data-actif set by the script) ---------- */
   #methode {
     isolation: isolate;
   }
@@ -827,7 +827,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     #methode[data-actif='2'] .steps { grid-template-columns: 1fr 1fr 1.8fr 1fr; }
     #methode[data-actif='3'] .steps { grid-template-columns: 1fr 1fr 1fr 1.8fr; }
   }
-  /* filter et non opacity : l'animation d'apparition (fill both) garde la main sur opacity. */
+  /* Use filter because the reveal animation (fill both) retains control of opacity. */
   #methode[data-actif] .step {
     filter: opacity(0.35);
   }
@@ -837,7 +837,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   #methode[data-actif='3'] .step:nth-child(4) {
     filter: none;
   }
-  /* Chiffre survolé : grossit, bulle violette derrière, chiffre en couleur d'encre d'accent. */
+  /* Hovered number: grows, purple bubble behind it, accent ink color. */
   .step:hover .step__n {
     scale: 1.2;
   }
@@ -850,7 +850,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     scale: 1;
   }
 
-  /* Calque pleine largeur derrière la section ; une scène par étape. */
+  /* Full-width layer behind the section; one scene per step. */
   .methode__fond {
     position: absolute;
     z-index: -1;
@@ -879,13 +879,13 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     opacity: 1;
   }
 
-  /* Apparition commune des éléments des scènes : l'un après l'autre (--j), puis tout s'efface et ça recommence. */
+  /* Shared scene reveal: elements appear in sequence (--j), then everything fades and repeats. */
   @keyframes scene-in {
     0% { opacity: 0; translate: 0 1rem; scale: 0.96; }
     6%, 90% { opacity: 1; translate: none; scale: 1; }
     100% { opacity: 0; translate: none; scale: 1; }
   }
-  /* Les scènes occupent toute la section ; chaque élément est placé en absolu selon son rang --j. */
+  /* Scenes span the entire section; each element is positioned absolutely by its --j index. */
   .chat,
   .devis,
   .deploi {
@@ -905,7 +905,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     animation-delay: calc(var(--j, 0) * 0.9s);
   }
 
-  /* 1. Appel : l'échange qui sert à comprendre le besoin, en zigzag sur toute la section. */
+  /* 1. Call: conversation to understand the needs, zigzagging across the section. */
   .chat span {
     top: calc(5% + var(--j) * 22%);
     max-width: min(40vw, 40rem);
@@ -914,7 +914,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     font-size: clamp(1.1rem, 2.1vw, 2rem);
     line-height: 1.25;
   }
-  /* Les messages du client commencent après la colonne de l'étape survolée, pour ne pas couvrir son texte. */
+  /* Client messages start after the hovered step column to avoid covering its text. */
   .chat .client {
     left: 30vw;
     border-bottom-left-radius: 0.3em;
@@ -928,7 +928,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     color: color-mix(in srgb, var(--accent) 55%, transparent);
   }
 
-  /* 2. Devis : titre en grand, lignes sur toute la largeur, puis le tampon tombe. */
+  /* 2. Quote: large heading, full-width lines, then the stamp drops. */
   .devis {
     font-size: clamp(1.1rem, 2.2vw, 2rem);
     color: color-mix(in srgb, var(--ink) 22%, transparent);
@@ -978,7 +978,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     100% { opacity: 0; scale: 1; }
   }
 
-  /* 3. Développement : du code tapé lettre par lettre en grand. */
+  /* 3. Development: large code typed character by character. */
   .fond-2 span {
     left: 8vw;
     top: calc(8% + var(--j) * 14%);
@@ -1002,7 +1002,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     100% { clip-path: inset(0 0 0 0); opacity: 0; }
   }
 
-  /* 4. Mise en ligne : la checklist de déploiement en grand sur toute la hauteur, barre de progression, pastille « En ligne ». */
+  /* 4. Launch: full-height deployment checklist, progress bar and live status badge. */
   .deploi span {
     left: 8vw;
     top: calc(4% + var(--j) * 15%);
@@ -1061,7 +1061,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     }
   }
 
-  /* ---------- Projets ---------- */
+  /* ---------- Projects ---------- */
   .projets {
     list-style: none;
     margin: 0;
@@ -1088,7 +1088,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     text-decoration: none;
     transition: color 0.2s;
   }
-  /* Toute la ligne est cliquable (lien étiré) ; les petits liens restent au-dessus. */
+  /* Entire row clickable (stretched link); smaller links stay above it. */
   .projet h3 a::after {
     content: '';
     position: absolute;
@@ -1099,7 +1099,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     position: relative;
     isolation: isolate;
   }
-  /* Pleine largeur d'écran, derrière tout le contenu de la section ; voile pour garder le texte lisible. */
+  /* Full viewport width behind all section content; overlay keeps text readable. */
   .projets__fond {
     position: absolute;
     z-index: -1;
@@ -1108,7 +1108,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     width: 100vw;
     height: 100%;
     translate: -50% 0;
-    /* Voile léger au milieu, plus dense en haut (titre, chiffres) et fondu dans la page en bas. */
+    /* Light overlay in the middle, denser at the top (heading, counters), fading into the page at the bottom. */
     background:
       linear-gradient(
         color-mix(in srgb, var(--paper) 88%, transparent),
@@ -1124,7 +1124,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   .projets__fond.is-on {
     opacity: 1;
   }
-  /* Capture en fond : le titre et les chiffres s'effacent pour la laisser voir. */
+  /* Background screenshot: heading and counters fade to reveal it. */
   #projets > .block__head,
   #projets > .chiffres {
     transition: opacity 0.5s;
@@ -1136,14 +1136,14 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   .projet:hover h3 a {
     color: var(--accent);
   }
-  /* Au survol, les autres projets s'effacent pour laisser voir la capture ; la ligne survolée garde un fond lisible. */
+  /* On hover, other projects fade to reveal the screenshot; hovered row keeps a readable background. */
   .projet {
     transition:
       filter 0.4s,
       background 0.4s;
   }
   @media (hover: hover) {
-    /* filter et non opacity : l'animation d'apparition (fill both) garde la main sur opacity, le logo restait opaque. */
+    /* Use filter because the reveal animation (fill both) retains control of opacity, leaving the logo opaque. */
     .projets:hover .projet:not(:hover) {
       filter: opacity(0.15);
     }
@@ -1200,7 +1200,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     text-transform: none;
   }
   @media (max-width: 760px) {
-    /* Mobile : logo à gauche du contenu, année et fiche technique sur toute la largeur. */
+    /* Mobile: logo left of content, year and technical details spanning the full width. */
     .projet {
       grid-template-columns: 3rem 1fr;
       gap: 0.5rem 1rem;
@@ -1220,7 +1220,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
 
   /* ---------- Contact ---------- */
   .contact {
-    /* Fond inversé : on prend la teinte d'accent prévue pour l'autre thème, sinon le contraste s'effondre. */
+    /* Inverted background: use the accent shade for the other theme to preserve contrast. */
     --accent: var(--accent-inv);
     padding: clamp(3rem, 7vw, 6rem) 0;
     background: var(--ink);
@@ -1247,7 +1247,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     font-family: var(--f-display);
     font-weight: 900;
     text-transform: uppercase;
-    /* Toujours sur une ligne : la taille suit la largeur d'écran. */
+    /* Always one line: size follows viewport width. */
     font-size: clamp(1.25rem, 6.4vw, 6.25rem);
     line-height: 0.9;
     white-space: nowrap;
@@ -1274,7 +1274,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       translate 0.4s cubic-bezier(0.2, 0.7, 0.1, 1),
       color 0.2s;
   }
-  /* ---------- Pied ---------- */
+  /* ---------- Footer ---------- */
   .footer {
     display: flex;
     justify-content: space-between;
@@ -1285,8 +1285,8 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     color: var(--ink-soft);
   }
 
-  /* ---------- Apparition ---------- */
-  /* Animation plutôt que transition : le délai de cascade ne doit pas retarder les survols. */
+  /* ---------- Reveal ---------- */
+  /* Use animation so the stagger delay does not delay hover effects. */
   :global(.js-reveal) .reveal {
     opacity: 0;
   }
@@ -1294,15 +1294,15 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     animation: reveal 0.65s cubic-bezier(0.2, 0.7, 0.1, 1) both;
     animation-delay: calc(var(--i, 0) * 80ms);
   }
-  /* « translate » et non « transform » : transform reste libre pour l'inclinaison des cartes. */
+  /* Use translate to keep transform available for card tilting. */
   @keyframes reveal {
     from { opacity: 0; translate: 0 18px; }
     to { opacity: 1; translate: none; }
   }
 
-  /* ---------- Interactions à la souris (classe posée par le script) ---------- */
+  /* ---------- Mouse interactions (class set by the script) ---------- */
   :global(.a-souris) .hero__title .line {
-    /* Chaque ligne bouge un peu plus que la précédente : effet de profondeur. */
+    /* Each line moves slightly more than the previous one for depth. */
     translate: calc(var(--mx, 0) * (var(--d) + 1) * -6px) calc(var(--my, 0) * (var(--d) + 1) * -3px);
     transition: translate 0.6s cubic-bezier(0.2, 0.7, 0.1, 1);
   }
@@ -1321,13 +1321,13 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     opacity: 1;
   }
 
-  /* ---------- Chiffres ---------- */
+  /* ---------- Counters ---------- */
   .chiffres {
     list-style: none;
     margin: 0 0 clamp(2rem, 4vw, 3rem);
     padding: 0;
     display: grid;
-    /* auto-fit : la grille se resserre tant qu'un chiffre en direct n'est pas arrivé. */
+    /* auto-fit: grid contracts while a live counter has not arrived. */
     grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
     gap: 1.5rem;
   }
@@ -1337,7 +1337,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     padding-top: 1rem;
     border-top: 1px solid var(--line);
   }
-  /* Sinon « display: grid » l'emporte sur l'attribut hidden. */
+  /* Otherwise display: grid overrides the hidden attribute. */
   .chiffre[hidden] {
     display: none;
   }
@@ -1353,7 +1353,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     color: var(--ink-soft);
   }
 
-  /* ---------- Curseur personnalisé ---------- */
+  /* ---------- Custom cursor ---------- */
   :global(.a-souris),
   :global(.a-souris) * {
     cursor: none !important;
@@ -1379,7 +1379,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       opacity 0.3s,
       scale 0.15s;
   }
-  /* Onde qui pulse autour du point au repos. */
+  /* Wave pulsing around the idle dot. */
   .curseur::after {
     content: '';
     position: absolute;
@@ -1410,11 +1410,11 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   }
 
 
-  /* ---------- Lettres ---------- */
+  /* ---------- Letters ---------- */
   .l {
     display: inline-block;
   }
-  /* Titre : chaque lettre saute et passe en violet au survol. */
+  /* Heading: each letter jumps and turns purple on hover. */
   .hero__title .l {
     transition:
       translate 0.5s cubic-bezier(0.3, 1.8, 0.5, 1),
@@ -1425,7 +1425,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     color: var(--accent);
     transition-duration: 0.15s;
   }
-  /* E-mail : les lettres montent l'une après l'autre à l'arrivée de la section Contact. */
+  /* Email: letters rise in sequence when the Contact section enters the viewport. */
   :global(.js-reveal) .reveal-lettres .l {
     opacity: 0;
   }

@@ -2,14 +2,14 @@ export type Service = { titre: string; texte: string; points: string[] };
 export type Etape = { titre: string; texte: string };
 export type Projet = {
   nom: string;
-  type: string; // ex. « Application web », « App mobile »
+  type: string; // e.g. "Web application", "Mobile app"
   annee: string;
   resume: string;
-  stack: string[]; // mêmes libellés que les badges du README du projet
-  url?: string; // site en ligne
-  repo?: string; // dépôt GitHub public
-  logo?: string; // chemin dans public/, ex. /projets/nom.svg
-  apercu?: string; // capture du site affichée au survol (public/projets/apercus/)
+  stack: string[]; // same labels as the badges in the project README
+  url?: string; // live site
+  repo?: string; // public GitHub repository
+  logo?: string; // path under public/, e.g. /projets/name.svg
+  apercu?: string; // site screenshot displayed on hover (public/projets/apercus/)
 };
 
 export const services: Service[] = [
@@ -42,7 +42,7 @@ export const etapes: Etape[] = [
   { titre: 'Mise en ligne', texte: 'Déploiement, passation, et suivi après lancement.' },
 ];
 
-// La section « Projets » n'apparaît que si la liste contient au moins un projet.
+// The Projects section only appears when the list contains at least one project.
 export const projets: Projet[] = [
   {
     nom: 'Ghostmails',
@@ -103,8 +103,8 @@ export const projets: Projet[] = [
   },
 ];
 
-// Chiffres animés en tête de la section Projets. Avec `source`, la valeur est lue en direct (JSON, champ `champ`)
-// et le chiffre reste masqué tant qu'elle n'est pas arrivée.
+// Animated counters at the top of the Projects section. With `source`, the value is fetched live (JSON, field `champ`)
+// and the counter stays hidden until the value arrives.
 export type Chiffre = { valeur: number; label: string; source?: string; champ?: string };
 export const chiffres: Chiffre[] = [
   {

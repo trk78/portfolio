@@ -1,4 +1,4 @@
-// Capture simple d'une page : node page.mjs <url> <sortie.webp> [attente_ms]
+// Simple page capture: node page.mjs <url> <output.webp> [wait_ms]
 import puppeteer from 'puppeteer-core';
 
 const [url, sortie, attente = '6000'] = process.argv.slice(2);

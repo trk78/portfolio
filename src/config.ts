@@ -1,4 +1,4 @@
-// Identité et coordonnées affichées sur le site.
+// Identity and contact details displayed on the site.
 export const SITE = {
   nom: 'Timéo',
   statut: 'Auto-entrepreneur',
@@ -7,7 +7,7 @@ export const SITE = {
     "Développeur freelance : sites, applications web et mobiles, automatisations. Du premier appel à la mise en ligne.",
 };
 
-// Mentions légales obligatoires pour un entrepreneur individuel (LCEN, art. 6). Mêmes infos que Ghostmails.
+// Mandatory legal information for a sole proprietor (LCEN, art. 6). Same details as Ghostmails.
 export const LEGAL = {
   editeur: 'Timéo Jeannin',
   nomCommercial: 'Nextia Services',

@@ -1,5 +1,5 @@
-// Capture de ghostmails.cc avec une boîte de réception fictive : toutes les requêtes vers l'API sont simulées
-// (aucune adresse réelle créée, compteur public intact).
+// Capture ghostmails.cc with a fake inbox: all API requests are mocked
+// (no real address created, public counter unchanged).
 import puppeteer from 'puppeteer-core';
 
 const SORTIE = process.argv[2] ?? 'public/projets/apercus/ghostmails.webp';
@@ -42,7 +42,7 @@ await page.setRequestInterception(true);
 page.on('request', (req) => {
   const url = new URL(req.url());
   if (url.hostname !== 'api.ghostmails.cc' && !url.hostname.endsWith('workers.dev')) {
-    // Pas de régies publicitaires dans la capture.
+    // Keep ad networks out of the capture.
     if (/googlesyndication|doubleclick|adservice|profitablecpm/.test(url.hostname)) return req.abort();
     return req.continue();
   }
@@ -63,7 +63,7 @@ page.on('request', (req) => {
 
 await page.goto('https://ghostmails.cc/', { waitUntil: 'networkidle2', timeout: 60_000 });
 await new Promise((r) => setTimeout(r, 1500));
-// Ouvre le premier e-mail (celui au contenu HTML).
+// Open the first email (the one with HTML content).
 await page.locator('::-p-text(Confirmez votre inscription)').click();
 const ouvert = true;
 await new Promise((r) => setTimeout(r, 2500));

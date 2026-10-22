@@ -3,7 +3,7 @@ import { SITE } from '../config';
 import { sections } from '../data/sections';
 
 interface Props {
-  // Hors de l'accueil, les ancres repassent par la page d'accueil.
+  // Outside the home page, anchors point back to the home page.
   home?: boolean;
 }
 
@@ -22,7 +22,7 @@ const base = home ? '' : '/';
 </header>
 
 <script>
-  // Menu actif : allume le lien de la section qui occupe le milieu de l'écran.
+  // Active menu: highlight the link for the section occupying the middle of the screen.
   const links = new Map(
     [...document.querySelectorAll<HTMLAnchorElement>('.nav a[data-section]')].map((a) => [a.dataset.section, a]),
   );
@@ -51,7 +51,7 @@ const base = home ? '' : '/';
     background: color-mix(in srgb, var(--paper) 88%, transparent);
     backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--line);
-    /* Reste en place pendant la transition entre pages. */
+    /* Stay in place during page transitions. */
     view-transition-name: topbar;
   }
   .topbar__in {
@@ -106,7 +106,7 @@ const base = home ? '' : '/';
     }
   }
 
-  /* Règle graduée qui se remplit avec le défilement (navigateurs compatibles uniquement). */
+  /* Graduated ruler that fills as the page scrolls (supported browsers only). */
   .progress {
     display: none;
   }
@@ -125,7 +125,7 @@ const base = home ? '' : '/';
         repeating-linear-gradient(90deg, var(--accent) 0 1px, transparent 1px 8px) bottom / 100% 4px no-repeat;
       animation: fill linear both;
       animation-timeline: scroll(root);
-      /* La règle globale « mouvement réduit » écrase les durées : on rend la main à la timeline. */
+      /* The global reduced-motion rule overrides durations: hand control back to the timeline. */
       animation-duration: auto !important;
     }
     @keyframes fill {

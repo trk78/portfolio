@@ -1,4 +1,4 @@
-// Chaque appel ajoute 1 : une partie Undercover+ lancée, un lien PasteTok soumis.
+// Each call adds 1: one Undercover+ game started, one PasteTok link submitted.
 const NOMS = ['undercover-parties', 'pastetok-videos'];
 
 function origineAutorisee(origin) {
@@ -36,9 +36,9 @@ export default {
     }
     if (request.method !== 'POST') return new Response('Méthode interdite', { status: 405, headers });
 
-    // Garde-fous simples : origine obligatoire, corps limité, noms en liste blanche, incrément fixe.
-    // Shortcut : pas de limite par IP ; une origine peut être usurpée hors navigateur.
-    // Aucun identifiant ni IP n'est conservé ; les appels répétés restent possibles.
+    // Simple safeguards: origin required, body size capped, allow-listed names, fixed increment.
+    // shortcut: no per-IP rate limit; the origin can be spoofed outside a browser.
+    // No identifier or IP is stored; repeated calls remain possible.
     let donnees;
     try {
       const lecteur = request.body?.getReader();

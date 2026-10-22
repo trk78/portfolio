@@ -1,61 +1,107 @@
+<div align="center">
+
 # Portfolio
 
-Site vitrine de Timéo, développeur web & applications (auto-entrepreneur). Astro 7 statique, déployé sur Cloudflare Pages (projet `timeo`) → https://jeannin.dev
+**Timéo’s portfolio — freelance web and application developer.**
 
-## Commandes
+### [▶ Visit: jeannin.dev](https://jeannin.dev)
+
+[![Deploy](https://github.com/trk78/portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/trk78/portfolio/actions/workflows/deploy.yml)
+![Astro](https://img.shields.io/badge/Astro-7-BC52EE?logo=astro&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?logo=cloudflare&logoColor=white)
+
+</div>
+
+---
+
+## ✨ Features
+
+| Feature | Details |
+|---|---|
+| Static portfolio | Astro 7 static site for Timéo, a freelance web and application developer (sole proprietor), deployed on Cloudflare Pages (project `timeo`). |
+| Content-driven sections | Services, method steps, projects (hidden when empty), and animated project counters with live data sources. |
+| Animations and interactions | CSS and plain JavaScript, without an animation library, in `src/pages/index.astro` and `src/components/Header.astro`. Disabled with reduced motion; mouse effects (`html.a-souris`) only run with an actual mouse. |
+| Heading and navigation | Scroll progress ruler, cycling heading word, heading letters reacting on hover, animated dot grid behind the heading (canvas, reacts to the mouse), custom cursor, and page transitions. |
+| Section reveals | Section headings and dividers animate in; method numbers fill in and the method line fills as the page scrolls. |
+| Method interactions | The hovered step expands (bubble behind the number, other steps fade, large background scene: client conversation, quote filled in then stamped, typed code, deployment checklist and live status badge). |
+| Service cards | Fill from the cursor entry point, with icons redrawn and enlarged and staggered bullet points. |
+| Project interactions | Counters and the hovered project’s screenshot behind the section (crossfade between two layers; other projects, heading and counters fade). |
+| Contact | Copy-address button and email typed character by character. |
+
+## ⚙️ How it works
+
+### Editing content
+
+| What | Where |
+|---|---|
+| Name, occupation, email, availability | `src/config.ts` → `SITE` |
+| Legal information (SIRET, address) | `src/config.ts` → `LEGAL` |
+| Services, method steps | `src/data/contenu.ts` |
+| Projects (section hidden when empty) | `src/data/contenu.ts` → `projets` (logo, site link, GitHub link, `apercu` screenshot) |
+| Animated counters in the Projects section | `src/data/contenu.ts` → `chiffres` (with `source`, fetched live; e.g. Ghostmails `GET https://api.ghostmails.cc/api/stats`) |
+| Project logos / screenshots | `public/projets/` and `public/projets/apercus/` (1920×1200 WebP) |
+| Colors, fonts | `src/styles/global.css` (`:root`) |
+
+Fontsource fonts: import `@fontsource/<font>/<weight>` **without** `.css` (the package export already adds it).
+
+### Project captures
+
+`npm run captures` regenerates 4 of the screenshots shown in the background when hovering over a project (requires Edge installed, controlled by `puppeteer-core`; no browser is downloaded):
+
+- `scripts/captures/ghostmails.mjs`: inbox with 4 fake emails, with an HTML email open. The API is mocked through request interception: no real address is created.
+- `scripts/captures/undercover.mjs`: game in progress (6 players, one civilian eliminated), with state injected through the app’s functions.
+- `scripts/captures/page.mjs <url> <output.webp>`: simple capture (MyCityCost `/map`, PasteTok home page).
+
+### Counters (Worker + D1)
+
+`POST /hit` counts Undercover+ games started and valid links submitted to PasteTok (not confirmed downloads). `GET /stats` provides both totals, with a 60-second cache. Only these totals are stored. Allowed write origins: `https://trk78.github.io` and `http://localhost:*`; each call adds 1.
+
+From `worker/`, create the database with `npx wrangler d1 create compteurs`, then replace the `database_id` placeholder in `wrangler.toml` with the returned ID.
+Apply the schema with `npx wrangler d1 execute compteurs --remote --file=schema.sql`, then deploy with `npx wrangler deploy`.
+For local development: `npx wrangler d1 execute compteurs --local --file=schema.sql`, then `npx wrangler dev`.
+
+After deployment, adjust the URLs if needed in `src/data/contenu.ts`, `undercover-plus/script.js` and `pastetok/lib/tiktok.ts`.
+
+## 🚀 Run locally
 
 ```bash
 npm install
 npm run dev      # http://localhost:4321
-npm run build    # astro check + build dans dist/
+npm run build    # astro check + build into dist/
 npm run preview
 ```
 
-## Modifier le contenu
+## 🌍 Deployment
 
-| Quoi | Où |
-|---|---|
-| Nom, métier, e-mail, disponibilité | `src/config.ts` → `SITE` |
-| Mentions légales (SIRET, adresse) | `src/config.ts` → `LEGAL` |
-| Services, étapes de la méthode | `src/data/contenu.ts` |
-| Projets (section masquée si vide) | `src/data/contenu.ts` → `projets` (logo, lien site, lien GitHub, capture `apercu`) |
-| Chiffres animés de la section Projets | `src/data/contenu.ts` → `chiffres` (avec `source`, lu en direct ; ex. Ghostmails `GET https://api.ghostmails.cc/api/stats`) |
-| Logos / captures des projets | `public/projets/` et `public/projets/apercus/` (1920×1200 webp) |
-| Couleurs, polices | `src/styles/global.css` (`:root`) |
+Deployment runs automatically on every push to `main` (GitHub Actions, `.github/workflows/deploy.yml`) to Cloudflare Pages (project `timeo`).
+Configure the GitHub secret `CLOUDFLARE_API_TOKEN` (with “Cloudflare Pages: Edit” permission) and variable `CLOUDFLARE_ACCOUNT_ID`.
 
-## Captures des projets
+Manual deployment: `npm run deploy` (build + `wrangler pages deploy`). Never pass `--force` to Wrangler.
 
-`npm run captures` régénère 4 des captures affichées en fond au survol d'un projet (Edge installé, piloté par `puppeteer-core`, pas de navigateur téléchargé) :
+- Domain: `jeannin.dev`, with DNS hosted by Cloudflare (Cloudflare registrar).
+- `PUBLIC_SITE_URL` overrides the public URL (canonical + sitemap); defaults to `https://jeannin.dev`.
 
-- `scripts/captures/ghostmails.mjs` : boîte avec 4 e-mails fictifs, un e-mail HTML ouvert. L'API est simulée par interception : aucune adresse réelle créée.
-- `scripts/captures/undercover.mjs` : partie en cours (6 joueurs, un civil éliminé), état injecté via les fonctions de l'app.
-- `scripts/captures/page.mjs <url> <sortie.webp>` : capture simple (carte MyCityCost `/map`, accueil PasteTok).
+## 🗂️ Project structure
 
-## Animations et interactions
+```text
+.github/workflows/deploy.yml  # Automatic Cloudflare Pages deployment
+astro.config.mjs             # Astro configuration and public site URL
+public/projets/              # Project logos and apercus/ screenshots
+scripts/captures/            # Project capture scripts
+src/components/             # Shared components, including Header.astro
+src/config.ts               # Identity, contact details and legal information
+src/data/                   # Content and section numbering
+src/layouts/                # Shared page layout
+src/pages/                  # Home and legal pages
+src/styles/global.css       # Global styles, colors and fonts
+worker/                     # Counters Worker, D1 schema and Wrangler configuration
+```
 
-Tout est en CSS ou en JS sans bibliothèque, dans `src/pages/index.astro` et `src/components/Header.astro`.
-Coupé si « mouvement réduit » ; les effets souris (`html.a-souris`) seulement avec une vraie souris.
+## ⚠️ Known limitations
 
-Règle de progression au défilement · mot du titre qui change · lettres du titre au survol · grille de points animée derrière le titre (canvas, réagit à la souris) · curseur personnalisé · titres et traits de section qui apparaissent · chiffres de la méthode remplis · trait de la méthode qui se remplit au défilement · étape de la méthode survolée qui s'élargit (bulle sous le chiffre, autres étapes estompées, grande scène en fond de section : échange avec le client, devis rempli puis tamponné, code tapé, checklist de déploiement et pastille « En ligne ») · cartes de services remplies depuis le point d'entrée du curseur (picto retracé et agrandi, puces en cascade) · compteurs · capture du projet survolé en fond de section (fondu entre deux calques, autres projets, titre et chiffres estompés) · bouton « copier l'adresse » · e-mail écrit lettre par lettre · transitions entre pages.
+The counters Worker has no per-IP rate limit. Its safeguards do not prevent repeated calls from a client spoofing the origin. No identifiers or IP addresses are stored.
 
-## Compteurs (Worker + D1)
+## 📄 License
 
-Depuis `worker/`, créer la base avec `npx wrangler d1 create compteurs`, puis remplacer le placeholder `database_id` dans `wrangler.toml` par l’identifiant obtenu.
-Appliquer le schéma avec `npx wrangler d1 execute compteurs --remote --file=schema.sql`, puis déployer avec `npx wrangler deploy`.
-Pour travailler localement : `npx wrangler d1 execute compteurs --local --file=schema.sql`, puis `npx wrangler dev`.
-
-`POST /hit` compte les parties Undercover+ lancées et les liens valides soumis à PasteTok (pas les téléchargements confirmés). `GET /stats` fournit les deux totaux, avec un cache de 60 secondes. Seuls ces totaux sont stockés. Origines d’écriture autorisées : `https://trk78.github.io` et `http://localhost:*` ; chaque appel ajoute 1. Pas de limite par IP : ces garde-fous ne bloquent pas des appels répétés depuis un client qui usurpe l’origine.
-
-Après déploiement, ajuster si nécessaire les URL dans `src/data/contenu.ts`, `undercover-plus/script.js` et `pastetok/lib/tiktok.ts`.
-
-## Déploiement du portfolio (Cloudflare Pages)
-
-Automatique à chaque push sur `main` (GitHub Actions, `.github/workflows/deploy.yml`).
-Secret GitHub `CLOUDFLARE_API_TOKEN` (droit « Cloudflare Pages : Edit »), variable `CLOUDFLARE_ACCOUNT_ID`.
-
-À la main : `npm run deploy` (build + `wrangler pages deploy`). Ne jamais passer `--force` à wrangler.
-
-- Domaine : `jeannin.dev`, DNS chez Cloudflare (registrar Cloudflare)
-- `PUBLIC_SITE_URL` surcharge l'URL publique (canonical + sitemap), défaut `https://jeannin.dev`
-
-Polices Fontsource : importer `@fontsource/<police>/<poids>` **sans** `.css` (l'export du paquet l'ajoute déjà).
+All rights reserved © Timéo Jeannin. The code is public for reference; the content (texts, images, personal information) may not be reused.
