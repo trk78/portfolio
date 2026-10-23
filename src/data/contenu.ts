@@ -76,7 +76,7 @@ export const projets: Projet[] = [
     url: 'https://trk78.github.io/undercover-plus/',
     repo: 'https://github.com/trk78/undercover-plus',
     logo: '/projets/undercover-plus.webp',
-    apercu: '/projets/apercus/undercover-plus.webp',
+    apercu: '/projets/apercus/undercover-plus.webp?v=2',
   },
   {
     nom: 'PasteTok',
@@ -99,7 +99,7 @@ export const projets: Projet[] = [
     stack: ['Android 5+', 'Java', 'Android TV'],
     repo: 'https://github.com/trk78/unidroid-suite',
     logo: '/projets/unidroid-suite.webp',
-    apercu: '/projets/apercus/unidroid-suite.webp',
+    apercu: '/projets/apercus/unidroid-suite.webp?v=2',
   },
 ];
 
