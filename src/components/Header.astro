@@ -148,7 +148,7 @@ const base = home ? '' : '/';
     height: 1px;
     background: currentColor;
     transform: scaleX(0);
-    transform-origin: left;
+    transform-origin: var(--o, left);
     transition: transform 0.25s ease;
   }
   .nav a:hover:not([aria-current])::after {

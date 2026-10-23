@@ -35,3 +35,79 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   </body>
 </html>
 
+<script>
+  const animer = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Links: underline origin follows the side the mouse enters (and leaves) from.
+  const cote = (e: PointerEvent, el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    el.style.setProperty('--o', e.clientX < r.left + r.width / 2 ? 'left' : 'right');
+  };
+  document.addEventListener('pointerover', (e) => {
+    const a = (e.target as Element).closest<HTMLElement>('.trait, .nav a');
+    if (a && !a.contains(e.relatedTarget as Node)) cote(e, a);
+  });
+  document.addEventListener('pointerout', (e) => {
+    const a = (e.target as Element).closest<HTMLElement>('.trait, .nav a');
+    if (a && !a.contains(e.relatedTarget as Node)) cote(e, a);
+  });
+
+  // Uppercase labels and menu links: letters shuffle, then settle from left to right.
+  const signes = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*';
+  const decoder = (el: HTMLElement) => {
+    if (el.dataset.decode) return;
+    el.dataset.decode = '1';
+    const noeuds: [Text, string][] = [];
+    const parcours = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    while (parcours.nextNode()) noeuds.push([parcours.currentNode as Text, parcours.currentNode.textContent ?? '']);
+    let pas = 0;
+    const tour = () => {
+      pas++;
+      let fini = true;
+      for (const [n, t] of noeuds) {
+        n.textContent = [...t]
+          .map((c, k) => (c.trim() === '' || k < pas ? c : ((fini = false), signes[(Math.random() * signes.length) | 0])))
+          .join('');
+      }
+      if (fini) delete el.dataset.decode;
+      else setTimeout(tour, 30);
+    };
+    tour();
+  };
+  if (animer && matchMedia('(hover: hover)').matches) {
+    document.addEventListener('pointerover', (e) => {
+      const a = (e.target as Element).closest<HTMLElement>('.nav a, a.mono, .mono a');
+      if (a && !a.contains(e.relatedTarget as Node)) decoder(a);
+    });
+  }
+
+  // Tab: a message and a blinking icon while the visitor is on another tab.
+  const titre = document.title;
+  const icone = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+  const normale = icone?.href ?? '';
+  const inverse =
+    'data:image/svg+xml,' +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#f6f2ff"/><path d="M7.5 7.5h17v4.5h-6.2v12.5h-4.6V12H7.5z" fill="#6a2ee8"/></svg>',
+    );
+  let clignote = 0;
+  document.addEventListener('visibilitychange', () => {
+    clearInterval(clignote);
+    if (document.hidden) {
+      document.title = '← Revenez !';
+      let on = false;
+      clignote = window.setInterval(() => icone && (icone.href = (on = !on) ? inverse : normale), 1000);
+    } else {
+      document.title = titre;
+      if (icone) icone.href = normale;
+    }
+  });
+
+  // For developers who open the console.
+  console.log(
+    '%cTIMÉO%c\nTu inspectes le code ? On devrait parler : timeo@jeannin.dev\nSource : https://github.com/trk78/portfolio',
+    'font: 900 48px "Big Shoulders Display", sans-serif; color: #ab8cff',
+    'font: 13px monospace; color: inherit',
+  );
+</script>
+

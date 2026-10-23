@@ -7,7 +7,8 @@ import { SITE, LEGAL } from '../config';
 <Base title="Mentions légales" noindex>
   <Header />
   <main class="wrap legal">
-    <a href="/" class="mono back">← Retour</a>
+    <div class="halos" aria-hidden="true"><i></i><i></i><i></i></div>
+    <a href="/" class="mono back trait">← Retour</a>
     <h1>Mentions légales</h1>
 
     <h2>Éditeur</h2>
@@ -17,7 +18,7 @@ import { SITE, LEGAL } from '../config';
       SIRET : {LEGAL.siret}<br />
       Code APE : {LEGAL.ape}<br />
       {LEGAL.adresse}<br />
-      Contact : <a href={`mailto:${SITE.email}`}>{SITE.email}</a><br />
+      Contact : <a class="trait" href={`mailto:${SITE.email}`}>{SITE.email}</a><br />
       {LEGAL.tva}
     </p>
     <p>Directeur de la publication : {LEGAL.editeur}.</p>
@@ -36,6 +37,8 @@ import { SITE, LEGAL } from '../config';
 
 <style>
   .legal {
+    position: relative;
+    isolation: isolate;
     max-width: 760px;
     padding-top: 3rem;
     padding-bottom: 5rem;
@@ -51,6 +54,17 @@ import { SITE, LEGAL } from '../config';
     text-transform: uppercase;
     font-size: clamp(2.8rem, 9vw, 5rem);
     line-height: 0.9;
+    /* Outline that fills from left to right on load, like the home page section titles. */
+    width: fit-content;
+    color: transparent;
+    -webkit-text-stroke: 1.5px currentColor;
+    background: linear-gradient(90deg, var(--ink) 50%, transparent 50%) 100% 0 / 200% 100% no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: remplir-titre 1.2s 0.3s cubic-bezier(0.6, 0, 0.2, 1) forwards;
+  }
+  @keyframes remplir-titre {
+    to { background-position: 0 0; }
   }
   h2 {
     margin: 2.5rem 0 0.5rem;

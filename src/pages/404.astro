@@ -1,0 +1,77 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+---
+
+<Base title="Page introuvable" noindex>
+  <Header />
+  <main class="wrap perdu">
+    <div class="halos" aria-hidden="true"><i></i><i></i><i></i></div>
+    <h1 aria-label="Erreur 404">
+      {['4', '0', '4'].map((c, k) => <span style={`--k: ${k}`} aria-hidden="true">{c}</span>)}
+    </h1>
+    <p>Cette page n'existe pas, ou plus.</p>
+    <a href="/" class="mono trait">← Retour à l'accueil</a>
+  </main>
+</Base>
+
+<script>
+  // The digits follow the mouse, each at its own depth.
+  const titre = document.querySelector<HTMLElement>('.perdu h1');
+  if (titre && matchMedia('(hover: hover) and (pointer: fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    addEventListener('pointermove', (e) => {
+      titre.style.setProperty('--mx', String((e.clientX / innerWidth - 0.5) * 2));
+      titre.style.setProperty('--my', String((e.clientY / innerHeight - 0.5) * 2));
+    });
+  }
+</script>
+
+<style>
+  .perdu {
+    position: relative;
+    isolation: isolate;
+    min-height: calc(100svh - 57px);
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 1rem;
+    text-align: center;
+    padding-bottom: 4rem;
+  }
+  h1 {
+    margin: 0;
+    display: flex;
+    font-family: var(--f-display);
+    font-weight: 900;
+    font-size: clamp(9rem, 38vw, 26rem);
+    line-height: 0.8;
+    perspective: 800px;
+  }
+  /* Outlined digits, the middle one filled purple; each moves and tilts with the mouse. */
+  h1 span {
+    color: transparent;
+    -webkit-text-stroke: 2px var(--ink);
+    translate: calc(var(--mx, 0) * (var(--k) + 1) * 12px) calc(var(--my, 0) * (var(--k) + 1) * 8px);
+    rotate: y calc(var(--mx, 0) * 18deg);
+    transition:
+      translate 0.5s cubic-bezier(0.2, 0.7, 0.1, 1),
+      rotate 0.5s cubic-bezier(0.2, 0.7, 0.1, 1);
+    animation: monte 0.9s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+    animation-delay: calc(var(--k) * 110ms);
+  }
+  h1 span:nth-child(2) {
+    color: var(--accent);
+    -webkit-text-stroke-color: var(--accent);
+  }
+  @keyframes monte {
+    from { opacity: 0; transform: translateY(30%); }
+  }
+  p {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--ink-soft);
+  }
+  a {
+    color: var(--accent);
+  }
+</style>

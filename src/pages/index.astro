@@ -181,8 +181,8 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
                       <p>{p.resume}</p>
                       <p class="mono diapo__stack">{p.stack.join(' · ')}</p>
                       <p class="mono diapo__liens">
-                        {p.url && <a href={p.url} target="_blank" rel="noopener">Voir le site<ArrowOut /></a>}
-                        {p.repo && <a href={p.repo} target="_blank" rel="noopener">Code sur GitHub<ArrowOut /></a>}
+                        {p.url && <a class="trait" href={p.url} target="_blank" rel="noopener">Voir le site<ArrowOut /></a>}
+                        {p.repo && <a class="trait" href={p.repo} target="_blank" rel="noopener">Code sur GitHub<ArrowOut /></a>}
                       </p>
                     </div>
                   </li>
@@ -212,8 +212,9 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       </section>
       <div class="footer mono">
         <span>© {annee} {SITE.nom} — {SITE.statut}</span>
-        <a href="/mentions-legales">Mentions légales</a>
+        <a class="trait" href="/mentions-legales">Mentions légales</a>
       </div>
+      <div class="rideau__nom" aria-hidden="true">{SITE.nom}</div>
     </div>
   </footer>
 </Base>
@@ -401,6 +402,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
           d.style.setProperty('--s', c.toFixed(3));
           d.style.setProperty('--c', Math.abs(c).toFixed(3));
           d.style.setProperty('--dx', `${c * -2}%`);
+          d.style.setProperty('--v', Math.min(Math.max((c - 0.35) / 0.6, 0), 1).toFixed(3));
         }
       }
     }
@@ -432,7 +434,8 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   addEventListener('resize', mesurer);
   piste?.addEventListener('scroll', surDefil, { passive: true });
 
-  // Counters: animate from 0 to their value on entering the viewport (final value already in HTML).
+  // Counters: each digit rolls like an odometer on entering the viewport (final value already in HTML).
+  // A wheel holds 0-9 twice, so every digit makes at least one full turn before stopping.
   const compteurs = document.querySelectorAll<HTMLElement>('.compteur');
   if (animer && 'IntersectionObserver' in window) {
     const io = new IntersectionObserver((entries) => {
@@ -440,14 +443,26 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
         if (!e.isIntersecting) continue;
         io.unobserve(e.target);
         const el = e.target as HTMLElement;
-        const fin = Number(el.dataset.valeur);
-        const debut = performance.now();
-        const pas = (t: number) => {
-          const k = Math.min((t - debut) / 1400, 1);
-          el.textContent = Math.round(fin * (1 - (1 - k) ** 3)).toLocaleString('fr-FR');
-          if (k < 1) requestAnimationFrame(pas);
-        };
-        requestAnimationFrame(pas);
+        const texte = Number(el.dataset.valeur).toLocaleString('fr-FR');
+        el.setAttribute('aria-label', texte);
+        el.textContent = '';
+        const roues: [HTMLElement, number][] = [];
+        [...texte].forEach((c, k) => {
+          const span = document.createElement('span');
+          span.setAttribute('aria-hidden', 'true');
+          if (/\d/.test(c)) {
+            span.className = 'roue';
+            const col = document.createElement('span');
+            col.style.transitionDelay = `${k * 90}ms`;
+            col.append(...'01234567890123456789'.split('').map((d) => Object.assign(document.createElement('span'), { textContent: d })));
+            span.append(col);
+            roues.push([col, 10 + Number(c)]);
+          } else {
+            span.textContent = c;
+          }
+          el.append(span);
+        });
+        requestAnimationFrame(() => requestAnimationFrame(() => roues.forEach(([col, v]) => col.style.setProperty('--v', String(v)))));
       }
     }, { threshold: 0.6 });
     compteurs.forEach((c) => io.observe(c));
@@ -605,46 +620,6 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     clip-path: inset(0 -100vmax);
   }
 
-  /* Soft purple lights drifting slowly (hero and contact). */
-  .halos {
-    position: absolute;
-    z-index: -2;
-    inset: 0 auto 0 50%;
-    width: 100vw;
-    translate: -50% 0;
-    overflow: hidden;
-    pointer-events: none;
-  }
-  .halos i {
-    position: absolute;
-    width: 48vmax;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 38%, transparent), transparent);
-    animation: derive 22s ease-in-out infinite alternate;
-  }
-  .halos i:nth-child(1) {
-    left: -12%;
-    top: -25%;
-  }
-  .halos i:nth-child(2) {
-    right: -14%;
-    top: 5%;
-    width: 40vmax;
-    background: radial-gradient(closest-side, color-mix(in srgb, #5b8cff 26%, transparent), transparent);
-    animation-duration: 27s;
-    animation-direction: alternate-reverse;
-  }
-  .halos i:nth-child(3) {
-    left: 35%;
-    bottom: -35%;
-    width: 36vmax;
-    animation-duration: 31s;
-    animation-delay: -12s;
-  }
-  @keyframes derive {
-    to { translate: 14vw 10vh; scale: 1.3; }
-  }
 
   .hero__title .line {
     display: block;
@@ -1243,6 +1218,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     flex: 0 0 min(86vw, 68rem);
     transform: perspective(1600px) rotateY(calc(var(--s, 0) * -10deg)) scale(calc(1 - var(--c, 0) * 0.12));
     filter: brightness(calc(1 - var(--c, 0) * 0.5));
+    clip-path: inset(calc(var(--v, 0) * 100%) 0 0 0 round clamp(0.9rem, 1.6vw, 1.5rem));
     aspect-ratio: 16 / 10;
     scroll-snap-align: start;
     isolation: isolate;
@@ -1275,7 +1251,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     height: 100%;
     object-fit: cover;
     object-position: center top;
-    scale: 1.14;
+    scale: calc(1.14 + var(--v, 0) * 0.35);
     translate: var(--dx, 0) 0;
     transition: scale 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);
   }
@@ -1367,8 +1343,6 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     position: relative;
     z-index: 2;
     color: var(--violet-light);
-    text-decoration: none;
-    border-bottom: 1px solid currentColor;
   }
   .diapo__liens a:hover {
     color: #f3efe6;
@@ -1486,6 +1460,20 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       translate 0.4s cubic-bezier(0.2, 0.7, 0.1, 1),
       color 0.2s;
   }
+  .rideau__nom {
+    margin: 1rem 0 -0.32em;
+    font-family: var(--f-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: 37vw;
+    line-height: 0.8;
+    letter-spacing: -0.02em;
+    text-align: center;
+    color: color-mix(in srgb, var(--paper) 9%, transparent);
+    translate: 0 calc((1 - var(--r, 1)) * 40%);
+    pointer-events: none;
+    user-select: none;
+  }
   .footer {
     display: flex;
     justify-content: space-between;
@@ -1559,6 +1547,22 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     line-height: 0.9;
     color: var(--accent);
     font-variant-numeric: tabular-nums;
+  }
+  .roue {
+    display: inline-block;
+    height: 1em;
+    overflow: hidden;
+    vertical-align: top;
+  }
+  .roue > span {
+    display: block;
+    translate: 0 calc(var(--v, 0) * -1em);
+    transition: translate 1.8s cubic-bezier(0.25, 1, 0.3, 1);
+  }
+  .roue > span > span {
+    display: block;
+    height: 1em;
+    line-height: 1;
   }
   .chiffre .mono {
     color: var(--ink-soft);

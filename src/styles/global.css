@@ -95,6 +95,69 @@ a {
   padding: 0 var(--gutter);
 }
 
+/* Soft purple lights drifting slowly (home hero, contact, other pages). */
+.halos {
+  position: absolute;
+  z-index: -2;
+  inset: 0 auto 0 50%;
+  width: 100vw;
+  translate: -50% 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.halos i {
+  position: absolute;
+  width: 48vmax;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 38%, transparent), transparent);
+  animation: derive 22s ease-in-out infinite alternate;
+}
+.halos i:nth-child(1) {
+  left: -12%;
+  top: -25%;
+}
+.halos i:nth-child(2) {
+  right: -14%;
+  top: 5%;
+  width: 40vmax;
+  background: radial-gradient(closest-side, color-mix(in srgb, #5b8cff 26%, transparent), transparent);
+  animation-duration: 27s;
+  animation-direction: alternate-reverse;
+}
+.halos i:nth-child(3) {
+  left: 35%;
+  bottom: -35%;
+  width: 36vmax;
+  animation-duration: 31s;
+  animation-delay: -12s;
+}
+@keyframes derive {
+  to { translate: 14vw 10vh; scale: 1.3; }
+}
+
+/* Underline redrawn from the side the mouse comes in (--o set by the layout script). */
+.trait {
+  position: relative;
+  text-decoration: none;
+}
+.trait::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: currentColor;
+  transform-origin: var(--o, left);
+}
+.trait:hover::after {
+  animation: trait 0.5s cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+@keyframes trait {
+  from { scale: 0 1; }
+}
+
 .mono {
   font-family: var(--f-body);
   font-size: 0.75rem;
