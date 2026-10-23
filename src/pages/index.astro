@@ -697,6 +697,9 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   .block__head h2 > span {
     display: block;
     width: fit-content;
+    /* Extends the fill above the 0.9 line box, where the accent of MÉTHODE sits. */
+    padding-top: 0.25em;
+    margin-top: -0.25em;
     color: transparent;
     -webkit-text-stroke: 1.5px var(--titre, var(--ink));
     background: linear-gradient(90deg, var(--titre, var(--ink)) 50%, transparent 50%) calc((1 - var(--t, 1)) * 100%) 0 / 200% 100% no-repeat;
