@@ -48,10 +48,12 @@ Fontsource fonts: import `@fontsource/<font>/<weight>` **without** `.css` (the p
 
 ### Project captures
 
-`npm run captures` regenerates 4 of the screenshots shown in the projects gallery (requires Edge installed, controlled by `puppeteer-core`; no browser is downloaded):
+`npm run captures` regenerates all the screenshots shown in the projects gallery (requires Edge installed, controlled by `puppeteer-core`; no browser is downloaded):
 
 - `scripts/captures/ghostmails.mjs`: inbox with 4 fake emails, with an HTML email open. The API is mocked through request interception: no real address is created.
-- `scripts/captures/undercover.mjs`: game in progress (6 players, one civilian eliminated), with state injected through the app’s functions.
+- `scripts/captures/undercover.mjs`: three phone screens (players, secret word, game in progress with one civilian eliminated), state injected through the app’s functions, composed side by side.
+- `scripts/captures/unidroid.mjs [screenshots folder]`: UniDroid has no website; composes its README screenshots (launcher on a TV, remote on a phone) from `../unidroid-suite/docs/screenshots` by default.
+- `scripts/captures/cadre.mjs`: shared composition helpers (`sharp`): dark 1920×1200 canvas with a colored glow, screens on the right where the card text does not cover them.
 - `scripts/captures/page.mjs <url> <output.webp>`: simple capture (MyCityCost `/map`, PasteTok home page).
 
 ### Counters (Worker + D1)
