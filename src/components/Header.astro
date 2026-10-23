@@ -16,6 +16,7 @@ const base = home ? '' : '/';
     <a href="/" class="brand">{SITE.nom}</a>
     <nav class="nav mono" aria-label="Sections">
       {sections.map((s) => <a href={`${base}#${s.id}`} data-section={s.id}><span>{s.num}</span> {s.titre}</a>)}
+      <span class="nav__indic" aria-hidden="true"></span>
     </nav>
   </div>
   <div class="progress" aria-hidden="true"></div>
@@ -36,11 +37,25 @@ const base = home ? '' : '/';
           if (e.isIntersecting) link.setAttribute('aria-current', 'true');
           else link.removeAttribute('aria-current');
         }
+        // A single underline slides to the active link.
+        const actif = document.querySelector<HTMLElement>('.nav a[aria-current]');
+        const nav = document.querySelector<HTMLElement>('.nav');
+        nav?.style.setProperty('--io', actif ? '1' : '0');
+        if (actif) {
+          nav?.style.setProperty('--il', `${actif.offsetLeft}px`);
+          nav?.style.setProperty('--iw', `${actif.offsetWidth}px`);
+        }
       },
       { rootMargin: '-45% 0px -50% 0px' },
     );
     targets.forEach((t) => io.observe(t));
   }
+
+  // Once scrolled, the bar shrinks into a floating pill.
+  const topbar = document.querySelector<HTMLElement>('.topbar');
+  const pilule = () => topbar?.classList.toggle('is-pilule', scrollY > 80);
+  pilule();
+  addEventListener('scroll', pilule, { passive: true });
 </script>
 
 <style>
@@ -53,6 +68,15 @@ const base = home ? '' : '/';
     border-bottom: 1px solid var(--line);
     /* Stay in place during page transitions. */
     view-transition-name: topbar;
+    transition:
+      background 0.4s,
+      border-color 0.4s,
+      backdrop-filter 0.4s;
+  }
+  .topbar.is-pilule {
+    background: transparent;
+    border-bottom-color: transparent;
+    backdrop-filter: none;
   }
   .topbar__in {
     display: flex;
@@ -60,6 +84,26 @@ const base = home ? '' : '/';
     justify-content: space-between;
     gap: 1rem;
     height: 56px;
+    border: 1px solid transparent;
+    border-radius: 0;
+    transition:
+      max-width 0.6s cubic-bezier(0.2, 0.7, 0.1, 1),
+      height 0.6s cubic-bezier(0.2, 0.7, 0.1, 1),
+      translate 0.6s cubic-bezier(0.2, 0.7, 0.1, 1),
+      border-radius 0.6s cubic-bezier(0.2, 0.7, 0.1, 1),
+      background 0.4s,
+      border-color 0.4s,
+      box-shadow 0.4s;
+  }
+  .is-pilule .topbar__in {
+    max-width: 52rem;
+    height: 46px;
+    translate: 0 8px;
+    border-radius: 999px;
+    border-color: var(--hair);
+    background: color-mix(in srgb, var(--paper) 72%, transparent);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.25);
   }
   .brand {
     font-family: var(--f-display);
@@ -70,8 +114,22 @@ const base = home ? '' : '/';
     text-decoration: none;
   }
   .nav {
+    position: relative;
     display: flex;
     gap: 1.5rem;
+  }
+  .nav__indic {
+    position: absolute;
+    bottom: -4px;
+    left: var(--il, 0);
+    width: var(--iw, 0);
+    height: 2px;
+    background: var(--accent);
+    opacity: var(--io, 0);
+    transition:
+      left 0.5s cubic-bezier(0.2, 0.7, 0.1, 1),
+      width 0.5s cubic-bezier(0.2, 0.7, 0.1, 1),
+      opacity 0.3s;
   }
   .nav a {
     text-decoration: none;
@@ -93,8 +151,7 @@ const base = home ? '' : '/';
     transform-origin: left;
     transition: transform 0.25s ease;
   }
-  .nav a:hover::after,
-  .nav a[aria-current]::after {
+  .nav a:hover:not([aria-current])::after {
     transform: scaleX(1);
   }
   .nav a[aria-current] {
@@ -123,10 +180,15 @@ const base = home ? '' : '/';
         linear-gradient(var(--accent), var(--accent)) bottom / 100% 2px no-repeat,
         repeating-linear-gradient(90deg, var(--accent) 0 1px, transparent 1px 80px) bottom / 100% 7px no-repeat,
         repeating-linear-gradient(90deg, var(--accent) 0 1px, transparent 1px 8px) bottom / 100% 4px no-repeat;
+      transition: opacity 0.4s;
       animation: fill linear both;
       animation-timeline: scroll(root);
       /* The global reduced-motion rule overrides durations: hand control back to the timeline. */
       animation-duration: auto !important;
+    }
+    .is-pilule .progress {
+      bottom: auto;
+      top: 0;
     }
     @keyframes fill {
       from { clip-path: inset(0 100% 0 0); }

@@ -5,6 +5,7 @@ import Header from '../components/Header.astro';
 import { SITE } from '../config';
 import { services, etapes, projets, chiffres } from '../data/contenu';
 import { num } from '../data/sections';
+import sharp from 'sharp';
 
 // Cycling heading words (the first is displayed without JS).
 const mots = ['apps', 'bots', 'outils', 'jeux'];
@@ -12,6 +13,15 @@ const nombre = (n: number) => n.toLocaleString('fr-FR');
 const lettres = (t: string) => [...t];
 
 const annee = new Date().getFullYear();
+
+// 24 px wide version of each screenshot, inlined: shown blurred until the real image arrives.
+const flous = await Promise.all(
+  projets.map(async (p) =>
+    p.apercu
+      ? `data:image/webp;base64,${(await sharp(`public${p.apercu.split('?')[0]}`).resize(24).webp({ quality: 40 }).toBuffer()).toString('base64')}`
+      : '',
+  ),
+);
 
 // Service icons in `services` order; pathLength=1 animates strokes on hover regardless of length.
 const pictos = [
@@ -147,7 +157,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
             <div class="galerie__colle">
               <ul class="galerie__piste">
                 {projets.map((p, i) => (
-                  <li class="diapo">
+                  <li class="diapo" style={flous[i] && `--flou: url(${flous[i]})`}>
                     {p.apercu ? (
                       <img class="diapo__img" src={p.apercu} alt="" width="1920" height="1200" loading="lazy" decoding="async" />
                     ) : (
@@ -209,7 +219,13 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
 </Base>
 
 <script>
+  import Lenis from 'lenis';
+  import 'lenis/dist/lenis.css';
+
   const animer = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Smooth scrolling with inertia (wheel only; touch keeps native scrolling). Anchors stop below the top bar.
+  if (animer) new Lenis({ autoRaf: true, anchors: { offset: -64 } });
 
   // Reveal on scroll; everything stays visible without JS or with reduced motion.
   const items = document.querySelectorAll<HTMLElement>('.reveal, .title-reveal, .block, .reveal-lettres');
@@ -279,6 +295,25 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     });
   }
 
+  // Services: purple light following the cursor along the grid lines (the 1 px gaps).
+  const grille = document.querySelector<HTMLElement>('.grid-services');
+  if (grille && souris) {
+    grille.addEventListener('pointermove', (e) => {
+      const r = grille.getBoundingClientRect();
+      grille.style.setProperty('--gx', `${e.clientX - r.left}px`);
+      grille.style.setProperty('--gy', `${e.clientY - r.top}px`);
+    });
+    grille.addEventListener('pointerleave', () => grille.style.removeProperty('--gx'));
+  }
+
+  // Screenshots: fade in over their blurred placeholder once loaded.
+  document.querySelectorAll<HTMLImageElement>('img.diapo__img').forEach((img) => {
+    const pret = () => img.classList.add('is-charge');
+    img.classList.add('a-charger');
+    if (img.complete) pret();
+    else img.addEventListener('load', pret);
+  });
+
   // Method: the line above the steps fills purple on scroll.
   const steps = document.querySelector<HTMLElement>('.steps');
   if (steps && animer) {
@@ -339,6 +374,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   const diapos = piste ? [...piste.children] as HTMLElement[] : [];
   const rideau = document.querySelector<HTMLElement>('.rideau');
   const grand = matchMedia('(min-width: 761px)');
+  const titres = [...document.querySelectorAll<HTMLElement>('.block__head h2')];
   let dist = 0;
   const surDefil = () => {
     if (heroSec && animer) {
@@ -356,12 +392,23 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
         p = piste.scrollLeft / Math.max(1, piste.scrollWidth - piste.clientWidth);
       }
       galerie.style.setProperty('--gp', p.toFixed(4));
+      // Depth: the centered card is full size, the others shrink, darken and turn towards the center.
       // Parallax: each screenshot shifts against the movement, by its distance from the screen center.
       if (animer) {
         for (const d of diapos) {
           const b = d.getBoundingClientRect();
-          d.style.setProperty('--dx', `${((b.left + b.width / 2) / innerWidth - 0.5) * -4}%`);
+          const c = Math.min(Math.max(((b.left + b.width / 2) / innerWidth - 0.5) * 2, -1), 1);
+          d.style.setProperty('--s', c.toFixed(3));
+          d.style.setProperty('--c', Math.abs(c).toFixed(3));
+          d.style.setProperty('--dx', `${c * -2}%`);
         }
+      }
+    }
+    // Section titles: outline filled from left to right while they come up the screen.
+    if (animer) {
+      for (const t of titres) {
+        const v = (innerHeight - t.getBoundingClientRect().top) / (innerHeight * 0.55);
+        t.style.setProperty('--t', Math.min(Math.max(v, 0), 1).toFixed(3));
       }
     }
     if (rideau && animer) {
@@ -669,8 +716,18 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     margin: 0;
     color: var(--ink-soft);
   }
+  /* Outline filled from left to right as the title comes up (--t set on scroll, filled without JS). */
   .block__head h2 > span {
     display: block;
+    width: fit-content;
+    color: transparent;
+    -webkit-text-stroke: 1.5px currentColor;
+    background: linear-gradient(90deg, currentColor 50%, transparent 50%) calc((1 - var(--t, 1)) * 100%) 0 / 200% 100% no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  .block__head h2 {
+    translate: calc((1 - var(--t, 1)) * 5vw) 0;
   }
   /* Section headings: same rise as the main heading, number and aside fade in just after. */
   :global(.js-reveal) .title-reveal h2 > span,
@@ -706,8 +763,10 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 1px;
-    border: 1px solid var(--line);
-    background: var(--line);
+    padding: 1px;
+    background:
+      radial-gradient(18rem circle at var(--gx, -100rem) var(--gy, -100rem), var(--accent), transparent 70%),
+      var(--line);
   }
   .card {
     position: relative;
@@ -1182,6 +1241,8 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   .diapo {
     position: relative;
     flex: 0 0 min(86vw, 68rem);
+    transform: perspective(1600px) rotateY(calc(var(--s, 0) * -10deg)) scale(calc(1 - var(--c, 0) * 0.12));
+    filter: brightness(calc(1 - var(--c, 0) * 0.5));
     aspect-ratio: 16 / 10;
     scroll-snap-align: start;
     isolation: isolate;
@@ -1189,6 +1250,22 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     border-radius: clamp(0.9rem, 1.6vw, 1.5rem);
     background: var(--paper-2);
     color: #f3efe6;
+  }
+  /* Blurred placeholder under the screenshot. */
+  .diapo::before {
+    content: '';
+    position: absolute;
+    z-index: -3;
+    inset: -10%;
+    background: var(--flou, none) center top / cover;
+    filter: blur(24px);
+  }
+  .diapo__img.a-charger {
+    opacity: 0;
+    transition: opacity 0.7s ease, scale 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);
+  }
+  .diapo__img.is-charge {
+    opacity: 1;
   }
   .diapo__img {
     position: absolute;

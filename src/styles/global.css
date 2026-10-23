@@ -47,6 +47,8 @@
 }
 
 html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--paper);
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
 }
