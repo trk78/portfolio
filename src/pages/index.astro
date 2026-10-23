@@ -377,6 +377,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   const grand = matchMedia('(min-width: 761px)');
   const titres = [...document.querySelectorAll<HTMLElement>('.block__head h2')];
   let dist = 0;
+  const VITESSE = 0.5; // scroll needed per pixel of sideways movement in the gallery
   const surDefil = () => {
     if (heroSec && animer) {
       defil = Math.min(Math.max(scrollY / heroSec.offsetHeight, 0), 1);
@@ -387,7 +388,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     if (galerie && piste) {
       let p: number;
       if (galerie.classList.contains('is-epingle')) {
-        p = dist ? Math.min(Math.max(-galerie.getBoundingClientRect().top / dist, 0), 1) : 0;
+        p = dist ? Math.min(Math.max(-galerie.getBoundingClientRect().top / (dist * VITESSE), 0), 1) : 0;
         piste.style.translate = `${-p * dist}px 0`;
       } else {
         p = piste.scrollLeft / Math.max(1, piste.scrollWidth - piste.clientWidth);
@@ -424,7 +425,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       const epingle = animer && grand.matches;
       galerie.classList.toggle('is-epingle', epingle);
       dist = epingle ? Math.max(0, piste.scrollWidth - document.documentElement.clientWidth) : 0;
-      galerie.style.height = epingle ? `${innerHeight + dist}px` : '';
+      galerie.style.height = epingle ? `${innerHeight + dist * VITESSE}px` : '';
       if (!epingle) piste.style.translate = '';
     }
     surDefil();
@@ -696,8 +697,8 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     display: block;
     width: fit-content;
     color: transparent;
-    -webkit-text-stroke: 1.5px currentColor;
-    background: linear-gradient(90deg, currentColor 50%, transparent 50%) calc((1 - var(--t, 1)) * 100%) 0 / 200% 100% no-repeat;
+    -webkit-text-stroke: 1.5px var(--titre, var(--ink));
+    background: linear-gradient(90deg, var(--titre, var(--ink)) 50%, transparent 50%) calc((1 - var(--t, 1)) * 100%) 0 / 200% 100% no-repeat;
     -webkit-background-clip: text;
     background-clip: text;
   }
@@ -1404,6 +1405,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     padding-top: 3rem;
     background: var(--ink);
     color: var(--paper);
+    --titre: var(--paper);
   }
   /* Content rises from below the page edge as it is revealed (--r set on scroll). */
   .rideau__in {
@@ -1548,18 +1550,18 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     color: var(--accent);
     font-variant-numeric: tabular-nums;
   }
-  .roue {
+  .compteur :global(.roue) {
     display: inline-block;
     height: 1em;
     overflow: hidden;
     vertical-align: top;
   }
-  .roue > span {
+  .compteur :global(.roue > span) {
     display: block;
     translate: 0 calc(var(--v, 0) * -1em);
     transition: translate 1.8s cubic-bezier(0.25, 1, 0.3, 1);
   }
-  .roue > span > span {
+  .compteur :global(.roue > span > span) {
     display: block;
     height: 1em;
     line-height: 1;
