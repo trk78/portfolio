@@ -9,6 +9,7 @@
     "preview": "astro preview",
     "check": "astro check",
     "deploy": "npm run build && wrangler pages deploy dist --project-name timeo --branch main",
+    "videos": "node scripts/captures/videos.mjs",
     "captures": "node scripts/captures/ghostmails.mjs && node scripts/captures/undercover.mjs && node scripts/captures/unidroid.mjs && node scripts/captures/page.mjs https://mycitycost.com/map public/projets/apercus/mycitycost.webp && node scripts/captures/page.mjs https://trk78.github.io/pastetok/ public/projets/apercus/pastetok.webp"
   },
   "dependencies": {

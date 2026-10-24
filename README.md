@@ -53,6 +53,7 @@ Fontsource fonts: import `@fontsource/<font>/<weight>` **without** `.css` (the p
 - `scripts/captures/ghostmails.mjs`: inbox with 4 fake emails, with an HTML email open. The API is mocked through request interception: no real address is created.
 - `scripts/captures/undercover.mjs`: three phone screens (players, secret word, game in progress with one civilian eliminated), state injected through the app’s functions, composed side by side.
 - `scripts/captures/unidroid.mjs [screenshots folder]`: UniDroid has no website; composes its README screenshots (launcher on a TV, remote on a phone) from `../unidroid-suite/docs/screenshots` by default.
+- `npm run videos` (`scripts/captures/videos.mjs [project...]`, also needs ffmpeg in PATH): records a 6-8 s silent loop of each product in action (Ghostmails and PasteTok with mocked APIs, MyCityCost map zoom and pan, three Undercover+ phones as iframes, UniDroid screens crossfading), crossfaded end-to-start so it loops seamlessly, H.264 in `public/projets/videos/`. Only the centered card plays its video; the screenshot stays as the poster and with reduced motion.
 - `scripts/captures/cadre.mjs`: shared composition helpers (`sharp`): dark 1920×1200 canvas with a colored glow, screens on the right where the card text does not cover them.
 - `scripts/captures/page.mjs <url> <output.webp>`: simple capture (MyCityCost `/map`, PasteTok home page).
 

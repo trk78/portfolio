@@ -9,7 +9,8 @@ export type Projet = {
   url?: string; // live site
   repo?: string; // public GitHub repository
   logo?: string; // path under public/, e.g. /projets/name.svg
-  apercu?: string; // site screenshot displayed on hover (public/projets/apercus/)
+  apercu?: string; // site screenshot shown in the gallery (public/projets/apercus/)
+  video?: string; // short silent loop played over the screenshot when the card is centered (public/projets/videos/)
 };
 
 export const services: Service[] = [
@@ -54,6 +55,7 @@ export const projets: Projet[] = [
     url: 'https://ghostmails.cc',
     logo: '/projets/ghostmails.svg',
     apercu: '/projets/apercus/ghostmails.webp',
+    video: '/projets/videos/ghostmails.mp4',
   },
   {
     nom: 'MyCityCost',
@@ -65,6 +67,7 @@ export const projets: Projet[] = [
     url: 'https://mycitycost.com',
     logo: '/projets/mycitycost.svg',
     apercu: '/projets/apercus/mycitycost.webp',
+    video: '/projets/videos/mycitycost.mp4',
   },
   {
     nom: 'Undercover+',
@@ -77,6 +80,7 @@ export const projets: Projet[] = [
     repo: 'https://github.com/trk78/undercover-plus',
     logo: '/projets/undercover-plus.webp',
     apercu: '/projets/apercus/undercover-plus.webp?v=2',
+    video: '/projets/videos/undercover-plus.mp4',
   },
   {
     nom: 'PasteTok',
@@ -89,6 +93,7 @@ export const projets: Projet[] = [
     repo: 'https://github.com/trk78/pastetok',
     logo: '/projets/pastetok.svg',
     apercu: '/projets/apercus/pastetok.webp',
+    video: '/projets/videos/pastetok.mp4',
   },
   {
     nom: 'UniDroid',
@@ -100,6 +105,7 @@ export const projets: Projet[] = [
     repo: 'https://github.com/trk78/unidroid-suite',
     logo: '/projets/unidroid-suite.webp',
     apercu: '/projets/apercus/unidroid-suite.webp?v=2',
+    video: '/projets/videos/unidroid-suite.mp4',
   },
 ];
 

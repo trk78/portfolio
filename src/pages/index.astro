@@ -163,6 +163,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
                     ) : (
                       <span class="diapo__img" />
                     )}
+                    {p.video && <video class="diapo__img diapo__video" src={p.video} muted loop playsinline preload="none" aria-hidden="true" />}
                     <span class="mono diapo__meta">
                       <span>{String(i + 1).padStart(2, '0')} / {String(projets.length).padStart(2, '0')}</span>
                       <span>{p.annee} · {p.type}</span>
@@ -307,6 +308,9 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     grille.addEventListener('pointerleave', () => grille.style.removeProperty('--gx'));
   }
 
+  // Videos fade in over the screenshot once they actually play.
+  document.querySelectorAll<HTMLVideoElement>('.diapo__video').forEach((v) => v.addEventListener('playing', () => v.classList.add('is-on'), { once: true }));
+
   // Screenshots: fade in over their blurred placeholder once loaded.
   document.querySelectorAll<HTMLImageElement>('img.diapo__img').forEach((img) => {
     const pret = () => img.classList.add('is-charge');
@@ -404,6 +408,13 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
           d.style.setProperty('--c', Math.abs(c).toFixed(3));
           d.style.setProperty('--dx', `${c * -2}%`);
           d.style.setProperty('--v', Math.min(Math.max((c - 0.35) / 0.6, 0), 1).toFixed(3));
+          // Only the centered, on-screen card plays its video (loaded on first play).
+          const video = d.querySelector('video');
+          if (video) {
+            const actif = Math.abs(c) < 0.4 && b.bottom > 0 && b.top < innerHeight;
+            if (actif && video.paused) video.play().catch(() => {});
+            else if (!actif && !video.paused) video.pause();
+          }
         }
       }
     }
@@ -1240,6 +1251,14 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     inset: -10%;
     background: var(--flou, none) center top / cover;
     filter: blur(24px);
+  }
+  /* Element + class: wins over the later .diapo__img transition. */
+  video.diapo__video {
+    opacity: 0;
+    transition: opacity 0.6s ease, scale 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);
+  }
+  video.diapo__video.is-on {
+    opacity: 1;
   }
   .diapo__img.a-charger {
     opacity: 0;
