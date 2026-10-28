@@ -308,7 +308,7 @@ const etoiles = '★★★★★';
           </div>
           <ul class="pizzas">
             {carte.map((p, i) => (
-              <li class="pizza" data-cat={p.cat} style={`view-transition-name: pizza-${i}`}>
+              <li class="pizza" data-cat={p.cat} data-base={p.base} data-g={p.g.join(',')} data-nom={p.nom} style={`view-transition-name: pizza-${i}`}>
                 <svg viewBox="0 0 200 200" aria-hidden="true" set:html={pizza(`p${i}`, p.graine, p.base, [...p.g])} />
                 <div>
                   <div class="pizza__ligne">
@@ -455,8 +455,17 @@ const etoiles = '★★★★★';
           etiquette.classList.add('change');
         },
         secours,
+        () => {},
       ),
     )
+    .then((api) => {
+      // Hovering a menu pizza previews it on the 3D one; leaving the menu goes back to the scroll state.
+      const liste = document.querySelector<HTMLElement>('.pizzas')!;
+      liste.querySelectorAll<HTMLElement>('.pizza').forEach((li) =>
+        li.addEventListener('pointerenter', () => api.montrer({ base: li.dataset.base!, g: li.dataset.g!.split(',') })),
+      );
+      liste.addEventListener('pointerleave', () => api.montrer(null));
+    })
     .catch(secours);
 
   // Embers rising over the scene, stronger while the pizza bakes (--cuisson set by the 3D script).

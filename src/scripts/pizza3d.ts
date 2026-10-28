@@ -100,8 +100,18 @@ const bosseler = (geo: THREE.BufferGeometry, force: number, graine: number) => {
   return geo;
 };
 
+// A menu pizza previewed on the 3D one (hover on the menu): its base and toppings, by name.
+export type Apercu = { base: string; g: string[] } | null;
+
 // echec: called once if WebGL breaks after start (render error or context lost); errors at start are thrown.
-export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEtape: (i: number, cuisson: number) => void, echec: (e: unknown) => void) {
+// pret: called after the first frame is drawn. Returns montrer(), which previews a menu pizza (null to go back).
+export function demarrer(
+  canvas: HTMLCanvasElement,
+  ancres: HTMLElement[],
+  surEtape: (i: number, cuisson: number) => void,
+  echec: (e: unknown) => void,
+  pret: () => void,
+) {
   const animer = !matchMedia('(prefers-reduced-motion: reduce)').matches;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
@@ -273,10 +283,10 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
 
   // Blisters on the rim: small bubbles that char in the oven.
   const matBulle = new THREE.MeshStandardMaterial({ color: '#e8d2a6', roughness: 0.8 });
-  const brule = new THREE.Color('#2a1206'), pale = new THREE.Color('#e8d2a6');
+  const brule = new THREE.Color('#a8601f'), pale = new THREE.Color('#e8d2a6');
   for (let i = 0; i < 22; i++) {
     const a = R() * Math.PI * 2, r = 1.72 + R() * 0.2;
-    const b = new THREE.Mesh(bosseler(new THREE.SphereGeometry(0.05 + R() * 0.06, 16, 12), 0.6, R() * 9), matBulle);
+    const b = new THREE.Mesh(bosseler(new THREE.SphereGeometry(0.035 + R() * 0.04, 16, 12), 0.6, R() * 9), matBulle);
     b.position.set(Math.cos(a) * r, 0.22 + R() * 0.06, Math.sin(a) * r);
     b.scale.y = 0.6;
     b.castShadow = true;
@@ -353,7 +363,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
     const m = new THREE.Mesh(bosseler(new THREE.IcosahedronGeometry(0.2 + R() * 0.09, 5), 1.7, R() * 10), matMozza);
     m.castShadow = m.receiveShadow = true;
     const a = R() * Math.PI * 2, d = 1.22 * Math.sqrt(R());
-    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.27 + i * 0.0052, rot: R() * Math.PI * 2, h: 2.6 + R() * 1.5 };
+    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.27 + i * 0.0052, rot: R() * Math.PI * 2, h: 2.6 + R() * 1.5, y: 0.1 };
     pizza.add(m);
     return m;
   });
@@ -401,7 +411,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
     m.castShadow = m.receiveShadow = true;
     const [k, n, r] = i === 0 ? [0, 1, 0] : i <= 6 ? [i - 1, 6, 0.62] : [i - 7, 11, 1.17];
     const a = (k / n) * Math.PI * 2 + (r > 1 ? 0.3 : 0) + (R() - 0.5) * 0.25, d = r + (R() - 0.5) * 0.1;
-    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.42 + i * 0.0045, h: 2.4 + R() * 1.2 };
+    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.42 + i * 0.0045, h: 2.4 + R() * 1.2, y: 0.15, rot: i };
     pizza.add(m);
     return m;
   });
@@ -414,7 +424,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
     const m = new THREE.Mesh(oliveGeo, matOlive);
     m.castShadow = true;
     const a = (i / 14) * Math.PI * 2 + R() * 0.4, d = 0.3 + ((i % 3) / 2) * 0.95 + R() * 0.1;
-    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.5 + i * 0.003, h: 2 + R() };
+    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.5 + i * 0.003, h: 2 + R(), y: 0.17, base: [1, 0.7, 1] };
     m.scale.y = 0.7;
     pizza.add(m);
     return m;
@@ -469,10 +479,95 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
     const m = new THREE.Mesh(feuilleGeo, matBasilic);
     m.castShadow = true;
     const a = (i / 10) * Math.PI * 2 + R(), d = 0.25 + R() * 0.95;
-    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.55 + i * 0.01, rot: R() * Math.PI * 2, s: 0.9 + R() * 0.5 };
+    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.55 + i * 0.01, rot: R() * Math.PI * 2, s: 0.9 + R() * 0.5, y: 0.2 };
     pizza.add(m);
     return m;
   });
+
+  // ---------- Extra toppings, only shown when a menu pizza is previewed
+  const creme = new THREE.Mesh(sauceGeo, new THREE.MeshPhysicalMaterial({ color: '#f1e0bd', roughness: 0.4, clearcoat: 0.5, bumpMap: sauceRelief, bumpScale: 0.8 }));
+  creme.rotation.x = -Math.PI / 2;
+  creme.position.y = 0.069;
+  creme.receiveShadow = true;
+  creme.visible = false;
+  pizza.add(creme);
+  const places = (n: number, rmin: number, rmax: number) =>
+    Array.from({ length: n }, (_, i) => {
+      const a = (i / n) * Math.PI * 2 + R() * 0.6, d = rmin + R() * (rmax - rmin);
+      return [Math.cos(a) * d, Math.sin(a) * d];
+    });
+  const poser = (geo: THREE.BufferGeometry, mat: THREE.Material | THREE.Material[], pos: number[][], y: number, base = [1, 1, 1]) =>
+    pos.map(([x, z]) => {
+      const m = new THREE.Mesh(geo, mat);
+      m.castShadow = true;
+      m.visible = false;
+      m.userData = { x, z, y, rot: R() * Math.PI * 2, base };
+      pizza.add(m);
+      return m;
+    });
+  // Mushroom slices: cap and stem, extruded thin.
+  const champ = new THREE.Shape();
+  champ.absarc(0, 0, 0.16, 0, Math.PI, false);
+  champ.lineTo(-0.05, 0);
+  champ.lineTo(-0.05, -0.12);
+  champ.lineTo(0.05, -0.12);
+  champ.lineTo(0.05, 0);
+  champ.lineTo(0.16, 0);
+  const champGeo = new THREE.ExtrudeGeometry(champ, { depth: 0.03, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.01, bevelSegments: 2 });
+  champGeo.rotateX(-Math.PI / 2);
+  const champignons = poser(champGeo, new THREE.MeshStandardMaterial({ color: '#d8bd96', roughness: 0.6 }), places(13, 0.3, 1.25), 0.12);
+  const tomates = poser(
+    new THREE.SphereGeometry(0.11, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.MeshPhysicalMaterial({ color: '#c8220f', roughness: 0.2, clearcoat: 1 }),
+    places(10, 0.4, 1.25),
+    0.08,
+  );
+  const burrata = poser(
+    bosseler(new THREE.IcosahedronGeometry(0.55, 5), 0.8, 3),
+    new THREE.MeshPhysicalMaterial({ color: '#fffaf0', roughness: 0.35, sheen: 1, sheenColor: new THREE.Color('#ffffff'), clearcoat: 0.5 }),
+    [[0, 0]],
+    0.12,
+    [1, 0.55, 1],
+  );
+  const roquette = poser(feuilleGeo, new THREE.MeshPhysicalMaterial({ color: '#3d7f2a', roughness: 0.4, clearcoat: 0.4, side: THREE.DoubleSide }), places(16, 0.2, 1.25), 0.24, [0.55, 1, 1.1]);
+  const jaunes = poser(
+    bosseler(new THREE.IcosahedronGeometry(0.2, 4), 1.5, 7),
+    new THREE.MeshPhysicalMaterial({ color: '#efc45a', roughness: 0.4, clearcoat: 0.4 }),
+    places(12, 0.2, 1.2),
+    0.11,
+    [1.1, 0.3, 1],
+  );
+  const courgettes = poser(
+    new THREE.CylinderGeometry(0.13, 0.13, 0.03, 28),
+    [new THREE.MeshStandardMaterial({ color: '#2f6a22', roughness: 0.5 }), new THREE.MeshStandardMaterial({ color: '#e3ebbd', roughness: 0.6 }), new THREE.MeshStandardMaterial({ color: '#e3ebbd' })],
+    places(8, 0.3, 1.2),
+    0.13,
+  );
+  const poivrons = [
+    ...poser(new THREE.BoxGeometry(0.34, 0.025, 0.07), new THREE.MeshPhysicalMaterial({ color: '#d42a17', roughness: 0.3, clearcoat: 0.8 }), places(5, 0.3, 1.2), 0.14),
+    ...poser(new THREE.BoxGeometry(0.34, 0.025, 0.07), new THREE.MeshPhysicalMaterial({ color: '#efad19', roughness: 0.3, clearcoat: 0.8 }), places(5, 0.3, 1.2), 0.14),
+  ];
+  // Chili flakes: one instanced mesh, scaled as a whole.
+  const piment = new THREE.InstancedMesh(new THREE.BoxGeometry(0.035, 0.012, 0.02), new THREE.MeshStandardMaterial({ color: '#d8351a', roughness: 0.5 }), 90);
+  {
+    const o = new THREE.Object3D();
+    for (let i = 0; i < 90; i++) {
+      const a = R() * Math.PI * 2, d = 1.35 * Math.sqrt(R());
+      o.position.set(Math.cos(a) * d, 0.2, Math.sin(a) * d);
+      o.rotation.set(0, R() * 6.28, 0);
+      o.updateMatrix();
+      piment.setMatrixAt(i, o.matrix);
+    }
+    piment.visible = false;
+    piment.userData = { base: [1, 1, 1] };
+    pizza.add(piment);
+  }
+  const groupes: Record<string, THREE.Object3D[]> = {
+    mozza: mozzas, salame: salames, olives, basilic: basilics, champignons, tomates, burrata, roquette,
+    fromages: jaunes, legumes: [...courgettes, ...poivrons], piment: [piment],
+  };
+  const fac: Record<string, number> = Object.fromEntries(Object.keys(groupes).map((k) => [k, 0]));
+  let choix: Apercu = null, apercu = 0, blanc = 0, premier = false;
 
   // ---------- Steam once baked
   const vapeur = texture(toile(128, (c, t) => {
@@ -554,7 +649,11 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
     const t = (performance.now() - debut) / 1000;
     q += (cible - q) * 0.07;
     const i = SEUILS.filter((s) => q >= s).length;
-    const cuisson = doux(etape(0.68, 0.86, q));
+    // Preview of a menu pizza: fades in over the scroll state, shown baked.
+    apercu += ((choix ? 1 : 0) - apercu) * 0.12;
+    for (const k in fac) fac[k] += ((choix?.g.includes(k) ? 1 : 0) - fac[k]) * 0.14;
+    blanc += ((choix?.base === 'bianca' ? 1 : 0) - blanc) * 0.14;
+    const cuisson = Math.max(doux(etape(0.68, 0.86, q)), apercu * 0.85);
     if (i !== derniere) surEtape((derniere = i), cuisson);
     document.documentElement.style.setProperty('--cuisson', cuisson.toFixed(3));
 
@@ -576,7 +675,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
     const vacille = 1 + Math.sin(t * 13) * 0.12 + Math.sin(t * 7.3) * 0.1;
     matPate.sheen = 0.8 * (1 - cuisson);
     matPate.emissiveIntensity = lueur * 0.18 * vacille;
-    matBulle.color.copy(pale).lerp(brule, cuisson * 0.9);
+    matBulle.color.copy(pale).lerp(brule, cuisson * 0.8);
     matBasilic.color.copy(vert).lerp(fane, cuisson * 0.5);
     matSalame.color.copy(cru).lerp(grille, cuisson * 0.6);
     matMozza.roughness = 0.45 - cuisson * 0.2;
@@ -600,12 +699,14 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
       m.position.set(x, 0.15 + (1 - rebond(k)) * h - cuisson * 0.02, z);
       m.rotation.set((1 - k) * Math.PI * 3, n, (1 - k) * 0.8);
       m.morphTargetInfluences![0] = cuisson;
+      m.scale.setScalar(1);
     }
     for (const m of olives) {
       const { x, z, debut: d0, h } = m.userData;
       const k = etape(d0, d0 + 0.06, q);
       m.visible = k > 0;
       m.position.set(x, 0.17 + (1 - rebond(k)) * h - cuisson * 0.02, z);
+      m.scale.set(1, 0.7, 1);
     }
     for (const [n, m] of basilics.entries()) {
       const { x, z, debut: d0, rot, s: sc } = m.userData;
@@ -616,7 +717,29 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
       m.rotation.set(Math.sin(k * 11 + n) * 0.9 * chute, rot + chute * 4, Math.cos(k * 8) * 0.6 * chute);
       m.scale.setScalar(sc * (1 - cuisson * 0.12));
     }
-    const fumee = etape(0.8, 0.92, q);
+    // Preview overrides the scroll state: each topping group at its resting place, popping in or out.
+    if (apercu > 0.01) {
+      for (const [nom, liste] of Object.entries(groupes)) {
+        for (const m of liste) {
+          const k = fac[nom];
+          const { x, z, y, rot, base } = m.userData;
+          m.visible = k > 0.01;
+          if (x !== undefined) m.position.set(x, y - cuisson * 0.02, z);
+          m.rotation.set(0, rot ?? 0, 0);
+          const b = nom === 'mozza' ? [1.15 + cuisson * 0.7, 0.3 - cuisson * 0.18, 1 + cuisson * 0.75] : nom === 'basilic' ? [m.userData.s, m.userData.s, m.userData.s] : base ?? [1, 1, 1];
+          m.scale.set(b[0] * k, b[1] * k, b[2] * k);
+        }
+      }
+      sauce.visible = blanc < 0.99;
+      sauce.rotation.z = 0;
+      sauce.scale.setScalar(Math.max(1 - blanc, 0.001));
+      creme.visible = blanc > 0.01;
+      creme.scale.setScalar(Math.max(blanc, 0.001));
+    } else {
+      creme.visible = false;
+      for (const nom of ['champignons', 'tomates', 'burrata', 'roquette', 'fromages', 'legumes', 'piment']) for (const m of groupes[nom]) m.visible = false;
+    }
+    const fumee = Math.max(etape(0.8, 0.92, q), apercu);
     for (const f of fumees) {
       const { x, z, phase, vitesse } = f.userData;
       const v = (t * vitesse + phase) % 1;
@@ -633,6 +756,15 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
     camera.lookAt(0, 0.08, 0);
     (flou.uniforms as Record<string, THREE.IUniform>).focus.value = camera.position.length();
     composer.render();
+    if (!premier) {
+      premier = true;
+      pret();
+    }
   };
   rendu();
+  return {
+    montrer(x: Apercu) {
+      choix = x;
+    },
+  };
 }
