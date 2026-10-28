@@ -1,5 +1,5 @@
 // 3D pizza behind the whole pizzeria demo page: it builds up as the visitor scrolls down through the sections
-// (dough, sauce, mozzarella, salame, basil, oven, olive oil). Each section carries the stage it starts (data-q).
+// (dough, sauce, mozzarella, salame and olives, basil, oven). Each section carries the stage it starts (data-q).
 // Everything is procedural (geometry and canvas textures): no model or photo to download.
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
@@ -28,7 +28,7 @@ const rebond = (t: number) => {
   return n * (t -= 2.625 / d) * t + 0.984375;
 };
 
-// Stage starts (q): sauce, mozzarella, salame, basil, oven, olive oil. The index of the current stage is reported to the page.
+// Stage starts (q): sauce, mozzarella, salame and olives, basil, oven, ready. The index of the current stage is reported to the page.
 const SEUILS = [0.12, 0.27, 0.42, 0.55, 0.68, 0.88];
 
 const toile = (taille: number, dessin: (c: CanvasRenderingContext2D, t: number) => void) => {
@@ -349,11 +349,11 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
     }),
   );
   const matMozza = new THREE.MeshPhysicalMaterial({ map: mozza.tex, roughness: 0.45, sheen: 1, sheenColor: new THREE.Color('#fffaf0'), clearcoat: 0.4, clearcoatRoughness: 0.35 });
-  const mozzas = Array.from({ length: 18 }, (_, i) => {
+  const mozzas = Array.from({ length: 26 }, (_, i) => {
     const m = new THREE.Mesh(bosseler(new THREE.IcosahedronGeometry(0.2 + R() * 0.09, 5), 1.7, R() * 10), matMozza);
     m.castShadow = m.receiveShadow = true;
     const a = R() * Math.PI * 2, d = 1.22 * Math.sqrt(R());
-    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.27 + i * 0.0075, rot: R() * Math.PI * 2, h: 2.6 + R() * 1.5 };
+    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.27 + i * 0.0052, rot: R() * Math.PI * 2, h: 2.6 + R() * 1.5 };
     pizza.add(m);
     return m;
   });
@@ -395,11 +395,27 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
     salameGeo.morphAttributes.position = [new THREE.Float32BufferAttribute(creux, 3)];
   }
   const matSalame = new THREE.MeshPhysicalMaterial({ map: salameTex, roughness: 0.45, clearcoat: 0.6, clearcoatRoughness: 0.3 });
-  const salames = Array.from({ length: 10 }, (_, i) => {
+  // Laid out like a pizzaiolo would: one in the middle, an inner ring of 6, an outer ring of 11.
+  const salames = Array.from({ length: 18 }, (_, i) => {
     const m = new THREE.Mesh(salameGeo, matSalame);
     m.castShadow = m.receiveShadow = true;
-    const a = (i / 10) * Math.PI * 2 + R() * 0.4, d = i === 0 ? 0 : 0.55 + R() * 0.7;
-    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.42 + i * 0.009, h: 2.4 + R() * 1.2 };
+    const [k, n, r] = i === 0 ? [0, 1, 0] : i <= 6 ? [i - 1, 6, 0.62] : [i - 7, 11, 1.17];
+    const a = (k / n) * Math.PI * 2 + (r > 1 ? 0.3 : 0) + (R() - 0.5) * 0.25, d = r + (R() - 0.5) * 0.1;
+    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.42 + i * 0.0045, h: 2.4 + R() * 1.2 };
+    pizza.add(m);
+    return m;
+  });
+
+  // Black olive rings, dropped right after the salame, between the slices.
+  const oliveGeo = new THREE.TorusGeometry(0.06, 0.028, 12, 28);
+  oliveGeo.rotateX(Math.PI / 2);
+  const matOlive = new THREE.MeshPhysicalMaterial({ color: '#2a1d22', roughness: 0.3, clearcoat: 0.9, clearcoatRoughness: 0.15 });
+  const olives = Array.from({ length: 14 }, (_, i) => {
+    const m = new THREE.Mesh(oliveGeo, matOlive);
+    m.castShadow = true;
+    const a = (i / 14) * Math.PI * 2 + R() * 0.4, d = 0.3 + ((i % 3) / 2) * 0.95 + R() * 0.1;
+    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.5 + i * 0.003, h: 2 + R() };
+    m.scale.y = 0.7;
     pizza.add(m);
     return m;
   });
@@ -449,28 +465,14 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
   }));
   // Thin leaves let a little light through (transmission-like sheen) and are glossy on top.
   const matBasilic = new THREE.MeshPhysicalMaterial({ map: basilicTex, roughness: 0.35, clearcoat: 0.6, clearcoatRoughness: 0.3, sheen: 0.5, sheenColor: new THREE.Color('#b8f08a'), side: THREE.DoubleSide });
-  const basilics = Array.from({ length: 7 }, (_, i) => {
+  const basilics = Array.from({ length: 10 }, (_, i) => {
     const m = new THREE.Mesh(feuilleGeo, matBasilic);
     m.castShadow = true;
-    const a = (i / 7) * Math.PI * 2 + R(), d = 0.3 + R() * 0.85;
-    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.55 + i * 0.015, rot: R() * Math.PI * 2, s: 0.9 + R() * 0.5 };
+    const a = (i / 10) * Math.PI * 2 + R(), d = 0.25 + R() * 0.95;
+    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.55 + i * 0.01, rot: R() * Math.PI * 2, s: 0.9 + R() * 0.5 };
     pizza.add(m);
     return m;
   });
-
-  // ---------- Olive oil: a thin glossy drizzle drawn progressively at the very end
-  const points: THREE.Vector3[] = [];
-  for (let k = 0; k <= 80; k++) {
-    const a = k * 0.19, r = 0.2 + k * 0.0145;
-    points.push(new THREE.Vector3(Math.cos(a) * r + (R() - 0.5) * 0.04, 0.24, Math.sin(a) * r + (R() - 0.5) * 0.04));
-  }
-  const huileGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 400, 0.014, 8);
-  const huile = new THREE.Mesh(
-    huileGeo,
-    new THREE.MeshPhysicalMaterial({ color: '#d9b43a', roughness: 0.05, clearcoat: 1, clearcoatRoughness: 0.02, transparent: true, opacity: 0.85, emissive: new THREE.Color('#5a3d00'), emissiveIntensity: 0.4 }),
-  );
-  pizza.add(huile);
-  const huileTotal = huileGeo.index!.count;
 
   // ---------- Steam once baked
   const vapeur = texture(toile(128, (c, t) => {
@@ -480,7 +482,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
     c.fillStyle = g;
     c.fillRect(0, 0, t, t);
   }));
-  const fumees = Array.from({ length: 30 }, () => {
+  const fumees = Array.from({ length: 16 }, () => {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: vapeur, transparent: true, depthWrite: false, opacity: 0 }));
     s.userData = { x: (R() - 0.5) * 2.4, z: (R() - 0.5) * 2.4, phase: R(), vitesse: 0.07 + R() * 0.08 };
     scene.add(s);
@@ -508,6 +510,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
   };
   const taille = () => {
     const w = innerWidth, h = innerHeight;
+    if (!w || !h) return;
     mobile = w <= 860;
     renderer.setSize(w, h, false);
     composer.setSize(w, h);
@@ -522,6 +525,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
   };
   taille();
   addEventListener('resize', taille);
+  new ResizeObserver(taille).observe(document.documentElement);
   addEventListener('scroll', mesure, { passive: true });
 
   const vert = new THREE.Color('#ffffff'), fane = new THREE.Color('#6a7a55');
@@ -539,7 +543,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
   const rendu = () => {
     if (arret) return;
     requestAnimationFrame(rendu);
-    if (document.hidden) return;
+    if (document.hidden || !innerWidth || !innerHeight) return;
     try {
       image();
     } catch (e) {
@@ -597,6 +601,12 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
       m.rotation.set((1 - k) * Math.PI * 3, n, (1 - k) * 0.8);
       m.morphTargetInfluences![0] = cuisson;
     }
+    for (const m of olives) {
+      const { x, z, debut: d0, h } = m.userData;
+      const k = etape(d0, d0 + 0.06, q);
+      m.visible = k > 0;
+      m.position.set(x, 0.17 + (1 - rebond(k)) * h - cuisson * 0.02, z);
+    }
     for (const [n, m] of basilics.entries()) {
       const { x, z, debut: d0, rot, s: sc } = m.userData;
       const k = etape(d0, d0 + 0.09, q);
@@ -606,17 +616,13 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
       m.rotation.set(Math.sin(k * 11 + n) * 0.9 * chute, rot + chute * 4, Math.cos(k * 8) * 0.6 * chute);
       m.scale.setScalar(sc * (1 - cuisson * 0.12));
     }
-    // Drizzle drawn from the centre outwards (index count must stay a multiple of 3).
-    const filet = etape(0.88, 0.98, q);
-    huile.visible = filet > 0;
-    huileGeo.setDrawRange(0, Math.floor((huileTotal * filet) / 3) * 3);
     const fumee = etape(0.8, 0.92, q);
     for (const f of fumees) {
       const { x, z, phase, vitesse } = f.userData;
       const v = (t * vitesse + phase) % 1;
       f.position.set(x + Math.sin(t + phase * 9) * 0.15, 0.35 + v * 2.2, z);
-      f.scale.setScalar(0.6 + v * 1.6);
-      (f.material as THREE.SpriteMaterial).opacity = fumee * Math.sin(Math.PI * v) * 0.3;
+      f.scale.setScalar(0.35 + v * 0.9);
+      (f.material as THREE.SpriteMaterial).opacity = fumee * Math.sin(Math.PI * v) * 0.1;
     }
 
     // Camera: three-quarter view of the bare dough, lower during the assembly, overhead hero shot at the end.

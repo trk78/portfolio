@@ -377,7 +377,7 @@ const etoiles = '★★★★★';
   // 3D pizza behind the page; each section (and the footer) gives the stage it starts. Hidden if WebGL fails.
   const scene = document.querySelector<HTMLCanvasElement>('.scene3d')!;
   const etiquette = document.querySelector<HTMLElement>('.etiquette')!;
-  const libelles = ['Pâte maturée 48 h', 'Sauce San Marzano DOP', 'Fior di latte', 'Salame piccante', 'Basilic du potager', '485 °C · 90 secondes', 'Huile d’olive · La Fuoco'];
+  const libelles = ['Pâte maturée 48 h', 'Sauce San Marzano DOP', 'Fior di latte', 'Salame et olives', 'Basilic du potager', '485 °C · 90 secondes', 'Prête · La Fuoco'];
   // Without WebGL (disabled acceleration, old GPU...) the drawn pizza takes its place; the cause goes to the console.
   const secours = (e: unknown) => {
     console.error('Pizza 3D indisponible, pizza dessinée affichée à la place :', e);
@@ -1135,6 +1135,7 @@ const etoiles = '★★★★★';
   }
   .minuteur svg {
     display: block;
+    overflow: visible;
     rotate: -90deg;
   }
   .minuteur circle {
@@ -1304,7 +1305,6 @@ const etoiles = '★★★★★';
   /* ---------- Footer ---------- */
   .pied {
     padding: 4rem clamp(1rem, 4vw, 3rem) 0;
-    background: linear-gradient(transparent, var(--nuit) 30%);
     overflow: hidden;
   }
   .pied__infos {
