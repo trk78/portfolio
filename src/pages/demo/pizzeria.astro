@@ -1,0 +1,1263 @@
+---
+// Demo "business website": homepage of a fictional Neapolitan pizzeria, opened from the Services section.
+// Standalone page (own fonts and colors, not the portfolio layout). Pizzas are drawn in SVG at build time.
+import '@fontsource-variable/fraunces/full.css';
+import '@fontsource-variable/fraunces/full-italic.css';
+import '@fontsource/instrument-sans/400.css';
+import '@fontsource/instrument-sans/500.css';
+import '@fontsource/instrument-sans/600.css';
+
+// Seeded random: the same pizza is drawn identically at every build.
+const alea = (graine: number) => () => {
+  graine = (graine + 0x6d2b79f5) | 0;
+  let t = Math.imul(graine ^ (graine >>> 15), 1 | graine);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+const f = (n: number) => n.toFixed(1);
+
+// Irregular closed shape: points around a circle, smoothed through their midpoints.
+const forme = (R: () => number, cx: number, cy: number, r: number, n: number, irr: number) => {
+  const p = Array.from({ length: n }, (_, k) => {
+    const a = (k / n) * Math.PI * 2;
+    const rr = r * (1 + (R() - 0.5) * 2 * irr);
+    return [cx + Math.cos(a) * rr, cy + Math.sin(a) * rr];
+  });
+  const mil = (a: number[], b: number[]) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  let d = `M${mil(p[n - 1], p[0]).map(f).join(' ')}`;
+  for (let k = 0; k < n; k++) d += `Q${p[k].map(f).join(' ')} ${mil(p[k], p[(k + 1) % n]).map(f).join(' ')}`;
+  return d + 'Z';
+};
+// Random point in a disc of radius rmax around the center.
+const point = (R: () => number, rmax: number) => {
+  const a = R() * Math.PI * 2;
+  const d = rmax * Math.sqrt(R());
+  return [100 + Math.cos(a) * d, 100 + Math.sin(a) * d];
+};
+
+type Garniture = 'mozza' | 'basilic' | 'salame' | 'piment' | 'fromages' | 'champignons' | 'truffe' | 'legumes' | 'olives' | 'burrata' | 'roquette' | 'tomates';
+
+function pizza(id: string, graine: number, base: 'rossa' | 'bianca', garnitures: Garniture[]) {
+  const R = alea(graine);
+  const g = (x: Garniture) => garnitures.includes(x);
+  let s = `<defs>
+    <radialGradient id="${id}-c"><stop offset=".72" stop-color="#f3c886"/><stop offset=".9" stop-color="#d98a3f"/><stop offset="1" stop-color="#9c5220"/></radialGradient>
+    <radialGradient id="${id}-s"><stop offset="0" stop-color="#e5482a"/><stop offset=".85" stop-color="#c22d18"/><stop offset="1" stop-color="#9e2111"/></radialGradient>
+    <radialGradient id="${id}-b"><stop offset="0" stop-color="#fbf2de"/><stop offset="1" stop-color="#e6cc98"/></radialGradient>
+    <radialGradient id="${id}-m" cx=".4" cy=".35"><stop offset="0" stop-color="#fffaf0"/><stop offset=".7" stop-color="#f6e6c2"/><stop offset="1" stop-color="#e2be7c"/></radialGradient>
+    <radialGradient id="${id}-l" cx=".35" cy=".28"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <filter id="${id}-f"><feGaussianBlur stdDeviation="1.1"/></filter>
+  </defs>
+  <circle cx="102" cy="104" r="96" fill="#000" opacity=".45" filter="url(#${id}-f)"/>
+  <path d="${forme(R, 100, 100, 95, 40, 0.03)}" fill="url(#${id}-c)"/>`;
+  // Leopard spotting on the rim (charred bubbles from the wood fire).
+  for (let k = 0; k < 26; k++) {
+    const a = R() * Math.PI * 2;
+    const d = 84 + R() * 9;
+    s += `<circle cx="${f(100 + Math.cos(a) * d)}" cy="${f(100 + Math.sin(a) * d)}" r="${f(1.4 + R() * 3)}" fill="#3b1c0d" opacity="${f(0.45 + R() * 0.45)}" filter="url(#${id}-f)"/>`;
+  }
+  s += `<path d="${forme(R, 100, 100, 79, 48, 0.045)}" fill="url(#${id}-${base === 'rossa' ? 's' : 'b'})"/>`;
+  if (base === 'rossa') {
+    for (let k = 0; k < 14; k++) {
+      const [x, y] = point(R, 70);
+      s += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(2 + R() * 5)}" fill="#8f1a0c" opacity=".35" filter="url(#${id}-f)"/>`;
+    }
+  }
+  const fromage = (x: number, y: number, r: number, couleur = `url(#${id}-m)`) =>
+    `<path d="${forme(R, x, y, r, 10, 0.28)}" fill="${couleur}"/>` +
+    (R() > 0.4 ? `<circle cx="${f(x + (R() - 0.5) * r)}" cy="${f(y + (R() - 0.5) * r)}" r="${f(1.5 + R() * 2.5)}" fill="#c98a3c" opacity=".55" filter="url(#${id}-f)"/>` : '');
+  if (g('mozza')) for (let k = 0; k < 8; k++) { const [x, y] = point(R, 58); s += fromage(x, y, 10 + R() * 7); }
+  if (g('fromages')) {
+    const couleurs = [`url(#${id}-m)`, '#f2cf6e', '#efe6d2', '#e2b55a'];
+    for (let k = 0; k < 16; k++) {
+      const [x, y] = point(R, 62);
+      s += fromage(x, y, 8 + R() * 6, couleurs[k % 4]);
+      if (k % 4 === 2) for (let j = 0; j < 4; j++) s += `<circle cx="${f(x + (R() - 0.5) * 10)}" cy="${f(y + (R() - 0.5) * 10)}" r="1.1" fill="#5d72a3" opacity=".8"/>`;
+    }
+  }
+  if (g('burrata')) s += fromage(100, 100, 27) + `<path d="${forme(R, 96, 95, 12, 8, 0.2)}" fill="#fffdf6" opacity=".9"/>`;
+  if (g('salame')) {
+    for (let k = 0; k < 10; k++) {
+      const [x, y] = point(R, 62);
+      s += `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(R() * 360)})"><ellipse rx="9.5" ry="8.6" fill="#7e1a0f"/><ellipse rx="8" ry="7.2" fill="#a8281a"/>`;
+      for (let j = 0; j < 5; j++) s += `<circle cx="${f((R() - 0.5) * 10)}" cy="${f((R() - 0.5) * 9)}" r="${f(0.7 + R())}" fill="#eaa18c"/>`;
+      s += `</g>`;
+    }
+  }
+  if (g('champignons')) {
+    for (let k = 0; k < 9; k++) {
+      const [x, y] = point(R, 60);
+      s += `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(R() * 360)})"><path d="M-8 0A8 7 0 0 1 8 0L3 0 3 6-3 6-3 0Z" fill="#d8b890" stroke="#8a6440" stroke-width="1.1"/></g>`;
+    }
+  }
+  if (g('truffe')) {
+    for (let k = 0; k < 8; k++) {
+      const [x, y] = point(R, 55);
+      s += `<path d="${forme(R, x, y, 4 + R() * 2, 7, 0.3)}" fill="#3a2a20" stroke="#6b5444" stroke-width=".6"/>`;
+    }
+  }
+  if (g('legumes')) {
+    for (let k = 0; k < 6; k++) {
+      const [x, y] = point(R, 60);
+      s += `<circle cx="${f(x)}" cy="${f(y)}" r="6.5" fill="#e4edbd" stroke="#3f7a25" stroke-width="2.2"/><circle cx="${f(x)}" cy="${f(y)}" r="2.5" fill="#cfdc94"/>`;
+    }
+    for (let k = 0; k < 7; k++) {
+      const [x, y] = point(R, 62);
+      const a = R() * 6.28;
+      s += `<path d="M${f(x)} ${f(y)}q${f(Math.cos(a) * 8)} ${f(Math.sin(a) * 8 - 4)} ${f(Math.cos(a) * 16)} ${f(Math.sin(a) * 16)}" fill="none" stroke="${k % 2 ? '#e8382a' : '#f2b51d'}" stroke-width="3.4" stroke-linecap="round"/>`;
+    }
+  }
+  if (g('olives')) for (let k = 0; k < 8; k++) { const [x, y] = point(R, 64); s += `<circle cx="${f(x)}" cy="${f(y)}" r="3.6" fill="none" stroke="#2a2220" stroke-width="2.4"/>`; }
+  if (g('tomates')) {
+    for (let k = 0; k < 6; k++) {
+      const [x, y] = point(R, 60);
+      s += `<circle cx="${f(x)}" cy="${f(y)}" r="6" fill="#d9291a"/><circle cx="${f(x - 1)}" cy="${f(y - 1)}" r="3.6" fill="#f0624a"/><circle cx="${f(x - 2)}" cy="${f(y - 2.4)}" r="1.2" fill="#fff" opacity=".5"/>`;
+    }
+  }
+  if (g('roquette')) {
+    for (let k = 0; k < 16; k++) {
+      const [x, y] = point(R, 66);
+      const a = R() * 360;
+      s += `<path transform="translate(${f(x)} ${f(y)}) rotate(${f(a)})" d="M-9 0L9 0M-5 0l-2-3M-1 0l-2 3M3 0l-2-3M6 0l-2 3" stroke="#3f8a2b" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+    }
+  }
+  if (g('basilic')) {
+    for (let k = 0; k < 5; k++) {
+      const [x, y] = point(R, 50);
+      s += `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(R() * 360)}) scale(${f(0.9 + R() * 0.5)})"><path d="M0-10Q8-3 0 10Q-8-3 0-10Z" fill="#2c7a2e"/><path d="M0-8V8" stroke="#56a64d" stroke-width=".9"/></g>`;
+    }
+  }
+  if (g('piment')) {
+    for (let k = 0; k < 34; k++) {
+      const [x, y] = point(R, 70);
+      s += `<rect x="${f(x)}" y="${f(y)}" width="2.4" height="1.2" rx=".5" fill="#d8351a" transform="rotate(${f(R() * 360)} ${f(x)} ${f(y)})"/>`;
+    }
+  }
+  return s + `<circle cx="100" cy="100" r="95" fill="url(#${id}-l)"/>`;
+}
+
+const carte = [
+  { nom: 'Margherita', desc: 'San Marzano, fior di latte, basilic, huile d’olive', prix: 12, cat: 'rosse', base: 'rossa', g: ['mozza', 'basilic'], graine: 3 },
+  { nom: 'Diavola', desc: 'Tomate, fior di latte, salame piquant, piment de Calabre', prix: 15, cat: 'piccanti', base: 'rossa', g: ['mozza', 'salame', 'piment'], graine: 7 },
+  { nom: 'Quattro formaggi', desc: 'Fior di latte, gorgonzola, parmesan 24 mois, scamorza fumée', prix: 16, cat: 'bianche', base: 'bianca', g: ['fromages'], graine: 11 },
+  { nom: 'Funghi e tartufo', desc: 'Crème de truffe, champignons, fior di latte', prix: 19, cat: 'bianche', base: 'bianca', g: ['mozza', 'champignons', 'truffe'], graine: 5 },
+  { nom: 'Burrata', desc: 'Tomate, burrata entière, roquette, tomates cerises', prix: 17, cat: 'rosse', base: 'rossa', g: ['burrata', 'tomates', 'roquette'], graine: 17 },
+  { nom: 'Ortolana', desc: 'Tomate, courgette, poivrons rôtis, olives taggiasche', prix: 14, cat: 'rosse', base: 'rossa', g: ['mozza', 'legumes', 'olives'], graine: 13 },
+] as const;
+const filtres = [['toutes', 'Toutes'], ['rosse', 'Rosse'], ['bianche', 'Bianche'], ['piccanti', 'Piccanti']];
+const heroPizza = pizza('hero', 21, 'rossa', ['mozza', 'basilic']);
+const citation = 'On ne cuit pas une pizza. On la saisit, quatre-vingt-dix secondes, dans un four à quatre cent quatre-vingt-cinq degrés.';
+const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', true], ['21:00', true], ['21:30', false]] as const;
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fuoco — Pizzeria napolitaine (démo)</title>
+    <meta name="robots" content="noindex" />
+    <meta name="description" content="Page d’accueil d’une pizzeria fictive : démo de site vitrine réalisée par Timéo." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23e8471f'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <header class="nav">
+      <a class="logo" href="#haut">Fuoco<sup>®</sup></a>
+      <nav>
+        <a href="#carte">La carte</a>
+        <a href="#four">Le four</a>
+        <a href="#reserver" class="nav__cta">Réserver</a>
+      </nav>
+    </header>
+
+    <main id="haut">
+      <section class="hero">
+        <canvas class="braises" aria-hidden="true"></canvas>
+        <div class="hero__texte">
+          <p class="sur">Pizzeria napolitaine · Versailles</p>
+          <h1 aria-label="Fuoco">
+            {[...'Fuoco'].map((c, k) => <span style={`--k: ${k}`} aria-hidden="true">{c}</span>)}
+          </h1>
+          <p class="hero__accroche">Pâte maturée 48 heures. Cuite <em>90 secondes</em> au feu de bois, à 485 °C. Rien d’autre.</p>
+          <div class="hero__boutons">
+            <a class="bouton" href="#reserver">Réserver une table</a>
+            <a class="bouton bouton--ligne" href="#carte">Voir la carte</a>
+          </div>
+        </div>
+        <div class="hero__four" aria-hidden="true">
+          <div class="voute">
+            <div class="flammes"><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="pelle">
+            <svg class="hero__pizza" viewBox="0 0 200 200" set:html={heroPizza} />
+          </div>
+        </div>
+        <a class="descendre" href="#carte" aria-label="Voir la carte"><span></span></a>
+      </section>
+
+      <section id="carte" class="carte">
+        <div class="titre r">
+          <p class="sur">La carte</p>
+          <h2>Six pizzas.<br /><em>Aucun compromis.</em></h2>
+        </div>
+        <div class="filtres r" role="group" aria-label="Filtrer la carte">
+          {filtres.map(([v, l], i) => <button type="button" data-filtre={v} aria-pressed={i === 0 ? 'true' : 'false'}>{l}</button>)}
+        </div>
+        <ul class="pizzas">
+          {carte.map((p, i) => (
+            <li class="pizza r" data-cat={p.cat} style={`--i: ${i}; view-transition-name: pizza-${i}`}>
+              <svg viewBox="0 0 200 200" aria-hidden="true" set:html={pizza(`p${i}`, p.graine, p.base, [...p.g])} />
+              <div class="pizza__ligne">
+                <h3>{p.nom}</h3>
+                <span class="points" aria-hidden="true"></span>
+                <span class="prix">{p.prix} €</span>
+              </div>
+              <p>{p.desc}</p>
+              {p.cat === 'piccanti' && <span class="piquant">Piquant</span>}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="citation" aria-label={citation}>
+        <p aria-hidden="true">{citation.split(' ').map((m, k) => <span style={`--k: ${k}`}>{m} </span>)}</p>
+      </section>
+
+      <section id="four" class="four">
+        <div class="four__degres r">
+          <p class="sur">Le four</p>
+          <strong><span class="compte" data-fin="485">485</span><sup>°C</sup></strong>
+          <div class="thermo"><i></i></div>
+          <p>Un four en briques réfractaires, chauffé au chêne depuis 16 h. À cette température, la pâte gonfle en quelques secondes et la croûte se tigre.</p>
+        </div>
+        <div class="four__minuteur r" aria-label="Temps de cuisson : 90 secondes">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle cx="60" cy="60" r="52" class="anneau-fond" />
+            <circle cx="60" cy="60" r="52" class="anneau" pathLength="1" />
+          </svg>
+          <span><b>90</b> secondes</span>
+        </div>
+        <ul class="faits">
+          <li class="r" style="--i: 0"><b>48 h</b>de maturation de la pâte</li>
+          <li class="r" style="--i: 1"><b>00</b>farine italienne, rien d’autre</li>
+          <li class="r" style="--i: 2"><b>DOP</b>tomates San Marzano</li>
+          <li class="r" style="--i: 3"><b>0</b>congélateur dans la cuisine</li>
+        </ul>
+      </section>
+
+      <section id="reserver" class="resa">
+        <div class="titre r">
+          <p class="sur">Réserver</p>
+          <h2>Une table,<br /><em>ce soir ?</em></h2>
+        </div>
+        <form class="resa__carte r" novalidate>
+          <fieldset>
+            <legend>Jour</legend>
+            <div class="jours"></div>
+          </fieldset>
+          <fieldset>
+            <legend>Couverts</legend>
+            <div class="couverts">
+              <button type="button" data-pas="-1" aria-label="Une personne de moins">−</button>
+              <output>2</output>
+              <button type="button" data-pas="1" aria-label="Une personne de plus">+</button>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Heure</legend>
+            <div class="creneaux">
+              {creneaux.map(([h, libre]) => <button type="button" data-heure={h} disabled={!libre} aria-pressed="false">{h}{!libre && <small>complet</small>}</button>)}
+            </div>
+          </fieldset>
+          <button class="bouton resa__ok" type="submit">Réserver</button>
+          <p class="resa__note">Démo : aucune réservation n’est envoyée.</p>
+          <div class="ticket" aria-live="polite">
+            <p class="sur">Prenotazione</p>
+            <p class="ticket__resume"></p>
+            <span class="tampon">Confermato</span>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <footer class="pied">
+      <div class="pied__infos">
+        <p><b>Fuoco</b><br />8 rue des Braises<br />78000 Versailles</p>
+        <p><b>Ouvert</b><br />Mardi – dimanche<br />18 h 30 – 23 h</p>
+        <p><b>Contact</b><br />01 00 00 00 00<br />ciao@fuoco.example</p>
+      </div>
+      <p class="pied__nom" aria-hidden="true">Fuoco</p>
+    </footer>
+
+    <a class="badge" href="https://jeannin.dev/" target="_top">Démo · pizzeria fictive · site réalisé par Timéo ↗</a>
+  </body>
+</html>
+
+<script>
+  const animer = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Reveal on scroll.
+  const io = new IntersectionObserver(
+    (entrees) => entrees.forEach((e) => e.isIntersecting && (e.target.classList.add('vu'), io.unobserve(e.target))),
+    { rootMargin: '0px 0px -12% 0px' },
+  );
+  document.querySelectorAll('.r').forEach((el) => io.observe(el));
+
+  // Embers rising from the bottom of the hero.
+  const toile = document.querySelector<HTMLCanvasElement>('.braises')!;
+  const ctx = toile.getContext('2d')!;
+  let w = 0, h = 0, visible = true;
+  const taille = () => {
+    const dpr = Math.min(devicePixelRatio, 2);
+    w = toile.clientWidth;
+    h = toile.clientHeight;
+    toile.width = w * dpr;
+    toile.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  taille();
+  addEventListener('resize', taille);
+  const neuve = () => ({ x: Math.random() * w, y: h + Math.random() * 40, v: 0.5 + Math.random() * 1.8, r: 0.6 + Math.random() * 2.2, p: Math.random() * 6.28, t: 20 + Math.random() * 25, vie: 0 });
+  const braises = Array.from({ length: 110 }, () => ({ ...neuve(), y: Math.random() * h }));
+  const tour = () => {
+    ctx.clearRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'lighter';
+    for (const b of braises) {
+      b.vie++;
+      b.y -= b.v;
+      b.x += Math.sin(b.p + b.vie / b.t) * 0.6;
+      if (b.y < -10) Object.assign(b, neuve());
+      const a = Math.min(1, b.y / h + 0.15) * (0.6 + Math.sin(b.vie / 4 + b.p) * 0.4);
+      ctx.fillStyle = `hsla(${22 + b.r * 9}, 100%, ${55 + b.r * 6}%, ${a})`;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, 6.28);
+      ctx.fill();
+      ctx.fillStyle = `hsla(30, 100%, 60%, ${a * 0.18})`;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r * 4, 0, 6.28);
+      ctx.fill();
+    }
+    if (visible && animer) requestAnimationFrame(tour);
+  };
+  new IntersectionObserver(([e]) => {
+    const avant = visible;
+    visible = e.isIntersecting;
+    if (visible && !avant) requestAnimationFrame(tour);
+  }).observe(toile);
+  requestAnimationFrame(tour);
+
+  // Menu filter: cards rearrange with a view transition where supported.
+  const boutons = document.querySelectorAll<HTMLButtonElement>('[data-filtre]');
+  boutons.forEach((b) =>
+    b.addEventListener('click', () => {
+      const appliquer = () => {
+        boutons.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        document.querySelectorAll<HTMLElement>('.pizza').forEach((p) => (p.hidden = b.dataset.filtre !== 'toutes' && p.dataset.cat !== b.dataset.filtre));
+      };
+      if (animer && document.startViewTransition) document.startViewTransition(appliquer);
+      else appliquer();
+    }),
+  );
+
+  // Quote: words light up as the section scrolls by.
+  const mots = document.querySelectorAll<HTMLElement>('.citation span');
+  const citation = document.querySelector<HTMLElement>('.citation')!;
+  const eclairer = () => {
+    const r = citation.getBoundingClientRect();
+    const p = (innerHeight * 0.85 - r.top) / (r.height + innerHeight * 0.35);
+    const n = Math.round(Math.min(Math.max(p, 0), 1) * mots.length);
+    mots.forEach((m, k) => m.classList.toggle('allume', k < n));
+  };
+  if (animer) {
+    eclairer();
+    addEventListener('scroll', eclairer, { passive: true });
+  } else mots.forEach((m) => m.classList.add('allume'));
+
+  // Oven: the temperature climbs when the section appears.
+  const compte = document.querySelector<HTMLElement>('.compte')!;
+  if (animer) {
+    compte.textContent = '0';
+    new IntersectionObserver(([e], obs) => {
+      if (!e.isIntersecting) return;
+      obs.disconnect();
+      const debut = performance.now();
+      const pas = (t: number) => {
+        const k = Math.min((t - debut) / 1800, 1);
+        compte.textContent = String(Math.round(485 * (1 - (1 - k) ** 3)));
+        if (k < 1) requestAnimationFrame(pas);
+      };
+      requestAnimationFrame(pas);
+    }, { threshold: 0.6 }).observe(compte);
+  }
+
+  // Booking (demo, nothing is sent): next 7 days, closed on Mondays.
+  const jours = document.querySelector('.jours')!;
+  const noms = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
+  const choix = { jour: '', heure: '', couverts: 2 };
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    const libelle = i === 0 ? 'Ce soir' : i === 1 ? 'Demain' : `${noms[d.getDay()]} ${d.getDate()}`;
+    const b = Object.assign(document.createElement('button'), { type: 'button', textContent: libelle, disabled: d.getDay() === 1 });
+    if (b.disabled) b.append(Object.assign(document.createElement('small'), { textContent: 'fermé' }));
+    b.setAttribute('aria-pressed', 'false');
+    b.dataset.jour = libelle;
+    jours.append(b);
+  }
+  const unique = (groupe: Element, cible: HTMLButtonElement) => groupe.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === cible)));
+  jours.addEventListener('click', (e) => {
+    const b = (e.target as Element).closest<HTMLButtonElement>('button[data-jour]');
+    if (b && !b.disabled) (unique(jours, b), (choix.jour = b.dataset.jour!));
+  });
+  const creneaux = document.querySelector('.creneaux')!;
+  creneaux.addEventListener('click', (e) => {
+    const b = (e.target as Element).closest<HTMLButtonElement>('button[data-heure]');
+    if (b && !b.disabled) (unique(creneaux, b), (choix.heure = b.dataset.heure!));
+  });
+  const sortie = document.querySelector('.couverts output')!;
+  document.querySelectorAll<HTMLButtonElement>('[data-pas]').forEach((b) =>
+    b.addEventListener('click', () => {
+      choix.couverts = Math.min(12, Math.max(1, choix.couverts + Number(b.dataset.pas)));
+      sortie.textContent = String(choix.couverts);
+    }),
+  );
+  const form = document.querySelector<HTMLFormElement>('.resa__carte')!;
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const manque = !choix.jour ? 'jours' : !choix.heure ? 'creneaux' : '';
+    if (manque) {
+      const g = document.querySelector(`.${manque}`)!;
+      g.classList.remove('secoue');
+      void (g as HTMLElement).offsetWidth;
+      g.classList.add('secoue');
+      return;
+    }
+    form.querySelector('.ticket__resume')!.textContent = `Table pour ${choix.couverts} · ${choix.jour} · ${choix.heure}`;
+    form.classList.add('confirme');
+  });
+</script>
+
+<style>
+  :root {
+    --nuit: #120b07;
+    --charbon: #1d130d;
+    --braise: #ff5a1f;
+    --flamme: #ffb347;
+    --tomate: #e23a1c;
+    --creme: #f6ecd9;
+    --creme-2: #cbbba1;
+    --basilic: #4f9a3c;
+    --f-titre: 'Fraunces Variable', Georgia, serif;
+    --f-texte: 'Instrument Sans', system-ui, sans-serif;
+    --courbe: cubic-bezier(0.2, 0.7, 0.1, 1);
+    color-scheme: dark;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    scroll-behavior: smooth;
+    scrollbar-color: var(--braise) var(--nuit);
+    scrollbar-width: thin;
+  }
+  body {
+    margin: 0;
+    background: var(--nuit);
+    color: var(--creme);
+    font-family: var(--f-texte);
+    font-size: 1.05rem;
+    line-height: 1.55;
+    overflow-x: hidden;
+  }
+  /* Grain over everything, like flour on a dark worktop. */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0.09;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  ::selection {
+    background: var(--braise);
+    color: var(--nuit);
+  }
+  a {
+    color: inherit;
+  }
+  h1,
+  h2,
+  h3,
+  .logo,
+  .prix,
+  .four strong,
+  .pied__nom,
+  .citation p {
+    font-family: var(--f-titre);
+    font-variation-settings: 'SOFT' 100, 'WONK' 1;
+  }
+  em {
+    font-style: italic;
+    color: var(--flamme);
+  }
+  .sur {
+    margin: 0 0 1rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--braise);
+  }
+  .bouton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.95em 1.6em;
+    border: 0;
+    border-radius: 999px;
+    background: var(--braise);
+    color: var(--nuit);
+    font: 600 0.95rem var(--f-texte);
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 0 0 0 rgba(255, 90, 31, 0.5);
+    transition:
+      transform 0.3s var(--courbe),
+      box-shadow 0.4s,
+      background 0.3s;
+  }
+  .bouton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px -6px rgba(255, 90, 31, 0.7);
+    background: var(--flamme);
+  }
+  .bouton--ligne {
+    background: transparent;
+    color: var(--creme);
+    box-shadow: inset 0 0 0 1.5px var(--creme-2);
+  }
+  .bouton--ligne:hover {
+    background: var(--creme);
+    color: var(--nuit);
+    box-shadow: inset 0 0 0 1.5px var(--creme);
+  }
+
+  /* ---------- Top bar ---------- */
+  .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.1rem clamp(1rem, 4vw, 3rem);
+    background: linear-gradient(var(--nuit), transparent);
+  }
+  .logo {
+    font-size: 1.7rem;
+    font-weight: 800;
+    font-style: italic;
+    text-decoration: none;
+  }
+  .logo sup {
+    font-size: 0.4em;
+    color: var(--braise);
+  }
+  .nav nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.8rem, 2.5vw, 2rem);
+    font-size: 0.92rem;
+  }
+  .nav nav a {
+    text-decoration: none;
+    opacity: 0.85;
+  }
+  .nav nav a:hover {
+    opacity: 1;
+    color: var(--flamme);
+  }
+  .nav__cta {
+    padding: 0.5em 1.1em;
+    border: 1.5px solid var(--braise);
+    border-radius: 999px;
+    color: var(--braise);
+    opacity: 1 !important;
+  }
+
+  /* ---------- Hero: title on the left, the oven mouth on the right ---------- */
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    align-items: center;
+    gap: 2rem;
+    padding: 6rem clamp(1rem, 4vw, 3rem) 4rem;
+    overflow: hidden;
+    background: radial-gradient(ellipse 60% 70% at 75% 70%, rgba(255, 90, 31, 0.18), transparent 70%);
+  }
+  .braises {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .hero__texte {
+    position: relative;
+    z-index: 4;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(5.5rem, 17vw, 17rem);
+    font-weight: 900;
+    font-style: italic;
+    line-height: 0.82;
+    letter-spacing: -0.04em;
+  }
+  /* Letters drop in one by one, filled with a flickering fire gradient. */
+  h1 span {
+    display: inline-block;
+    padding-right: 0.04em;
+    background: linear-gradient(180deg, #ffe2a1 10%, var(--flamme) 40%, var(--braise) 70%, #b8200c);
+    background-size: 100% 220%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation:
+      tombe 1s var(--courbe) both,
+      vacille 3.2s ease-in-out infinite alternate;
+    animation-delay: calc(var(--k) * 90ms + 0.2s), calc(var(--k) * -0.6s);
+  }
+  @keyframes tombe {
+    from { opacity: 0; transform: translateY(-60%) rotate(-8deg); filter: blur(8px); }
+  }
+  @keyframes vacille {
+    to { background-position: 0 100%; }
+  }
+  .hero__accroche {
+    max-width: 30rem;
+    margin: 1.5rem 0 2rem;
+    font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+    color: var(--creme-2);
+    animation: monte 0.9s 0.8s var(--courbe) both;
+  }
+  .hero__boutons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    animation: monte 0.9s 1s var(--courbe) both;
+  }
+  .hero .sur {
+    animation: monte 0.9s 0.1s var(--courbe) both;
+  }
+  @keyframes monte {
+    from { opacity: 0; transform: translateY(20px); }
+  }
+
+  .hero__four {
+    position: relative;
+    z-index: 2;
+    justify-self: center;
+    width: min(100%, 560px);
+    animation: allume 1.6s 0.3s ease-out both;
+  }
+  @keyframes allume {
+    from { filter: brightness(0.15) saturate(0.4); }
+  }
+  /* Oven vault: brick voussoirs around a glowing mouth. */
+  .voute {
+    position: relative;
+    aspect-ratio: 1 / 0.86;
+    padding: 26px 26px 0;
+    border-radius: 50% 50% 0 0 / 62% 62% 0 0;
+    background: repeating-conic-gradient(from -90deg at 50% 100%, #6b2a16 0 5.4deg, #2c1009 5.4deg 6deg);
+    box-shadow: 0 0 140px rgba(255, 90, 31, 0.35);
+  }
+  .flammes {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 50% 50% 0 0 / 62% 62% 0 0;
+    background: radial-gradient(ellipse 80% 70% at 50% 100%, #ffd27a 0%, #ff7a1a 25%, #c32a0e 50%, #3a0d05 78%, #0d0503);
+    box-shadow: inset 0 30px 60px rgba(0, 0, 0, 0.8);
+  }
+  .flammes i {
+    position: absolute;
+    bottom: -12%;
+    width: 46%;
+    aspect-ratio: 0.7;
+    border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%;
+    background: radial-gradient(ellipse at 50% 80%, #fff1b8, #ffb347 30%, #ff5a1f 60%, transparent 72%);
+    filter: blur(10px);
+    mix-blend-mode: screen;
+    transform-origin: 50% 100%;
+    animation: flamme 1.4s ease-in-out infinite alternate;
+  }
+  .flammes i:nth-child(1) { left: 2%; animation-duration: 1.1s; }
+  .flammes i:nth-child(2) { left: 26%; height: auto; width: 52%; animation-delay: -0.4s; }
+  .flammes i:nth-child(3) { left: 54%; animation-duration: 1.7s; animation-delay: -0.9s; }
+  .flammes i:nth-child(4) { left: 30%; width: 38%; opacity: 0.7; animation-duration: 0.9s; }
+  @keyframes flamme {
+    0% { transform: scale(1, 0.85) skewX(-4deg); opacity: 0.75; }
+    50% { transform: scale(0.92, 1.12) skewX(5deg); opacity: 1; }
+    100% { transform: scale(1.06, 0.95) skewX(-2deg); opacity: 0.85; }
+  }
+  /* The pizza comes out of the oven on its peel, then keeps turning slowly. */
+  .pelle {
+    position: relative;
+    margin: -34% auto 0;
+    width: 74%;
+    animation: sort 1.4s 0.9s var(--courbe) both;
+  }
+  .pelle::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 92%;
+    width: 9%;
+    height: 40%;
+    translate: -50% 0;
+    border-radius: 0 0 8px 8px;
+    background: linear-gradient(90deg, #6e4423, #a87346 50%, #6e4423);
+    z-index: -1;
+  }
+  @keyframes sort {
+    from { transform: translateY(-30%) scale(0.6); filter: brightness(2.2) blur(2px); opacity: 0; }
+  }
+  .hero__pizza {
+    display: block;
+    width: 100%;
+    filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.6));
+    animation: tourne 40s linear infinite;
+  }
+  @keyframes tourne {
+    to { rotate: 360deg; }
+  }
+  .descendre {
+    position: absolute;
+    left: 50%;
+    bottom: 1.5rem;
+    z-index: 5;
+    width: 26px;
+    height: 42px;
+    translate: -50% 0;
+    border: 1.5px solid var(--creme-2);
+    border-radius: 999px;
+  }
+  .descendre span {
+    position: absolute;
+    left: 50%;
+    top: 8px;
+    width: 4px;
+    height: 8px;
+    translate: -50% 0;
+    border-radius: 2px;
+    background: var(--braise);
+    animation: molette 1.6s ease-in-out infinite;
+  }
+  @keyframes molette {
+    to { transform: translateY(14px); opacity: 0; }
+  }
+
+  /* ---------- Shared section layout ---------- */
+  .carte,
+  .four,
+  .resa {
+    padding: clamp(5rem, 12vw, 9rem) clamp(1rem, 4vw, 3rem);
+    max-width: 1320px;
+    margin: 0 auto;
+  }
+  h2 {
+    margin: 0;
+    font-size: clamp(2.8rem, 7vw, 6rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+  }
+  .r {
+    opacity: 0;
+    transform: translateY(40px);
+    transition:
+      opacity 0.9s var(--courbe),
+      transform 0.9s var(--courbe);
+    transition-delay: calc(var(--i, 0) * 90ms);
+  }
+  .r.vu {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ---------- Menu ---------- */
+  .filtres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 2.5rem 0 3rem;
+  }
+  .filtres button,
+  .jours button,
+  .creneaux button {
+    padding: 0.6em 1.2em;
+    border: 1.5px solid rgba(246, 236, 217, 0.22);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--creme);
+    font: 500 0.92rem var(--f-texte);
+    cursor: pointer;
+    transition:
+      background 0.25s,
+      border-color 0.25s,
+      color 0.25s;
+  }
+  .filtres button:hover,
+  .jours button:not(:disabled):hover,
+  .creneaux button:not(:disabled):hover {
+    border-color: var(--braise);
+  }
+  .filtres button[aria-pressed='true'],
+  .jours button[aria-pressed='true'],
+  .creneaux button[aria-pressed='true'] {
+    background: var(--braise);
+    border-color: var(--braise);
+    color: var(--nuit);
+  }
+  .pizzas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+    gap: clamp(2rem, 4vw, 3.5rem) clamp(1.5rem, 3vw, 2.5rem);
+  }
+  .pizza {
+    position: relative;
+  }
+  .pizza[hidden] {
+    display: none;
+  }
+  .pizza svg {
+    display: block;
+    width: 78%;
+    margin: 0 auto 1.5rem;
+    transition:
+      rotate 1.2s var(--courbe),
+      scale 0.8s var(--courbe),
+      filter 0.6s;
+    filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.55));
+  }
+  /* Hover: the pizza turns a third and glows as if back in front of the fire. */
+  .pizza:hover svg {
+    rotate: 120deg;
+    scale: 1.07;
+    filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 40px rgba(255, 90, 31, 0.45));
+  }
+  .pizza__ligne {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  .pizza h3 {
+    margin: 0;
+    font-size: 1.7rem;
+    font-weight: 700;
+    font-style: italic;
+  }
+  .points {
+    flex: 1;
+    border-bottom: 2px dotted rgba(246, 236, 217, 0.3);
+    translate: 0 -0.3em;
+  }
+  .prix {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--flamme);
+  }
+  .pizza p {
+    margin: 0.4rem 0 0;
+    color: var(--creme-2);
+    font-size: 0.95rem;
+  }
+  .piquant {
+    position: absolute;
+    top: 0.5rem;
+    right: 8%;
+    padding: 0.35em 0.8em;
+    border-radius: 999px;
+    background: var(--tomate);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    rotate: 8deg;
+  }
+  ::view-transition-group(*) {
+    animation-duration: 0.55s;
+    animation-timing-function: var(--courbe);
+  }
+
+  /* ---------- Quote lit word by word ---------- */
+  .citation {
+    padding: clamp(4rem, 10vw, 8rem) clamp(1rem, 6vw, 6rem);
+    background: linear-gradient(transparent, rgba(226, 58, 28, 0.08) 40%, transparent);
+  }
+  .citation p {
+    max-width: 1100px;
+    margin: 0 auto;
+    font-size: clamp(2rem, 4.8vw, 4.2rem);
+    font-weight: 600;
+    font-style: italic;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+  }
+  .citation span {
+    color: rgba(246, 236, 217, 0.14);
+    transition:
+      color 0.4s,
+      text-shadow 0.6s;
+  }
+  .citation span.allume {
+    color: var(--creme);
+  }
+  .citation span.allume:nth-child(n + 13) {
+    color: var(--flamme);
+    text-shadow: 0 0 30px rgba(255, 90, 31, 0.5);
+  }
+
+  /* ---------- Oven ---------- */
+  .four {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 3rem 4rem;
+    align-items: center;
+  }
+  .four strong {
+    display: block;
+    font-size: clamp(6rem, 16vw, 14rem);
+    font-weight: 900;
+    line-height: 0.85;
+    letter-spacing: -0.04em;
+    background: linear-gradient(180deg, var(--creme), var(--flamme) 60%, var(--braise));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-variant-numeric: tabular-nums;
+  }
+  .four strong sup {
+    font-size: 0.32em;
+    vertical-align: top;
+    margin-left: 0.1em;
+  }
+  .thermo {
+    height: 6px;
+    margin: 1.5rem 0;
+    border-radius: 3px;
+    background: rgba(246, 236, 217, 0.1);
+    overflow: hidden;
+  }
+  .thermo i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #ffd27a, var(--braise), var(--tomate));
+    transform-origin: left;
+    scale: 0 1;
+    transition: scale 1.8s cubic-bezier(0.3, 0, 0.1, 1) 0.2s;
+  }
+  .four__degres.vu .thermo i {
+    scale: 1 1;
+  }
+  .four__degres p:last-child {
+    max-width: 34rem;
+    color: var(--creme-2);
+  }
+  .four__minuteur {
+    position: relative;
+    justify-self: center;
+    width: min(100%, 300px);
+  }
+  .four__minuteur svg {
+    display: block;
+    rotate: -90deg;
+  }
+  .four__minuteur circle {
+    fill: none;
+    stroke-width: 5;
+  }
+  .anneau-fond {
+    stroke: rgba(246, 236, 217, 0.1);
+  }
+  .anneau {
+    stroke: var(--braise);
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    filter: drop-shadow(0 0 6px var(--braise));
+  }
+  .four__minuteur.vu .anneau {
+    animation: cuisson 3s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
+  }
+  @keyframes cuisson {
+    to { stroke-dashoffset: 0; }
+  }
+  .four__minuteur span {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    text-align: center;
+    color: var(--creme-2);
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .four__minuteur b {
+    font: 900 italic 4.5rem/1 var(--f-titre);
+    letter-spacing: 0;
+    color: var(--creme);
+    text-transform: none;
+  }
+  .faits {
+    grid-column: 1 / -1;
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid rgba(246, 236, 217, 0.15);
+  }
+  .faits li {
+    padding: 1.5rem 1.25rem 0 0;
+    color: var(--creme-2);
+    font-size: 0.92rem;
+  }
+  .faits b {
+    display: block;
+    font: 800 italic 2.4rem/1.1 var(--f-titre);
+    color: var(--creme);
+  }
+
+  /* ---------- Booking ---------- */
+  .resa {
+    display: grid;
+    grid-template-columns: 1fr 1.25fr;
+    gap: 3rem;
+    align-items: start;
+  }
+  .resa__carte {
+    position: relative;
+    display: grid;
+    gap: 1.6rem;
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+    border-radius: 24px;
+    background: linear-gradient(160deg, #2a1a10, var(--charbon));
+    box-shadow:
+      inset 0 0 0 1px rgba(246, 236, 217, 0.08),
+      0 40px 80px -30px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+  }
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  legend {
+    margin-bottom: 0.7rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--creme-2);
+  }
+  .jours,
+  .creneaux {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+  .jours button:disabled,
+  .creneaux button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    text-decoration: line-through;
+  }
+  .jours small,
+  .creneaux small {
+    margin-left: 0.4em;
+    font-size: 0.7em;
+  }
+  .couverts {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .couverts button {
+    width: 2.6rem;
+    height: 2.6rem;
+    border: 1.5px solid rgba(246, 236, 217, 0.22);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--creme);
+    font-size: 1.3rem;
+    cursor: pointer;
+  }
+  .couverts button:hover {
+    border-color: var(--braise);
+    color: var(--braise);
+  }
+  .couverts output {
+    min-width: 2ch;
+    text-align: center;
+    font: 800 italic 2.2rem var(--f-titre);
+  }
+  .resa__ok {
+    justify-content: center;
+    font-size: 1.05rem;
+  }
+  .resa__note {
+    margin: -0.8rem 0 0;
+    font-size: 0.78rem;
+    color: var(--creme-2);
+    opacity: 0.7;
+  }
+  .secoue {
+    animation: secoue 0.45s;
+  }
+  @keyframes secoue {
+    20%, 60% { translate: -8px 0; }
+    40%, 80% { translate: 8px 0; }
+  }
+  /* Confirmation: a ticket slides up over the form and gets stamped. */
+  .ticket {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    text-align: center;
+    background: var(--creme);
+    color: var(--nuit);
+    background-image: radial-gradient(circle at 0 50%, var(--charbon) 14px, transparent 15px), radial-gradient(circle at 100% 50%, var(--charbon) 14px, transparent 15px);
+    translate: 0 105%;
+    transition: translate 0.8s var(--courbe);
+  }
+  .ticket__resume {
+    margin: 0;
+    font: 800 italic clamp(1.6rem, 3vw, 2.4rem)/1.1 var(--f-titre);
+    max-width: 18ch;
+  }
+  .tampon {
+    margin-top: 1.5rem;
+    padding: 0.2em 0.6em;
+    border: 4px solid var(--tomate);
+    border-radius: 8px;
+    color: var(--tomate);
+    font: 900 italic 2.2rem var(--f-titre);
+    text-transform: uppercase;
+    rotate: -12deg;
+    opacity: 0;
+    scale: 2.4;
+    transition:
+      scale 0.35s cubic-bezier(0.5, 1.8, 0.6, 1) 0.8s,
+      opacity 0.2s 0.8s;
+  }
+  .confirme .ticket {
+    translate: 0 0;
+  }
+  .confirme .tampon {
+    opacity: 1;
+    scale: 1;
+  }
+
+  /* ---------- Footer ---------- */
+  .pied {
+    position: relative;
+    padding: 4rem clamp(1rem, 4vw, 3rem) 0;
+    border-top: 1px solid rgba(246, 236, 217, 0.12);
+    overflow: hidden;
+  }
+  .pied__infos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    max-width: 1320px;
+    margin: 0 auto;
+    color: var(--creme-2);
+  }
+  .pied__infos b {
+    color: var(--creme);
+  }
+  .pied__nom {
+    margin: 2rem 0 -0.28em;
+    font-size: 30vw;
+    font-weight: 900;
+    font-style: italic;
+    line-height: 0.8;
+    letter-spacing: -0.05em;
+    text-align: center;
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgba(255, 90, 31, 0.45);
+  }
+  .badge {
+    position: fixed;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 45;
+    padding: 0.55em 1em;
+    border-radius: 999px;
+    background: rgba(18, 11, 7, 0.8);
+    backdrop-filter: blur(8px);
+    box-shadow: inset 0 0 0 1px rgba(246, 236, 217, 0.18);
+    font-size: 0.78rem;
+    text-decoration: none;
+    color: var(--creme-2);
+  }
+  .badge:hover {
+    color: var(--creme);
+  }
+
+  @media (max-width: 860px) {
+    .hero,
+    .four,
+    .resa {
+      grid-template-columns: 1fr;
+    }
+    .hero {
+      padding-top: 5.5rem;
+    }
+    .hero__four {
+      width: min(86%, 420px);
+    }
+    .faits {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .pied__infos {
+      grid-template-columns: 1fr;
+    }
+    .nav nav a:not(.nav__cta) {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+    .r {
+      opacity: 1;
+      transform: none;
+    }
+    .anneau {
+      stroke-dashoffset: 0;
+    }
+    .thermo i {
+      scale: 1 1;
+    }
+  }
+</style>

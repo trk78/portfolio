@@ -92,6 +92,11 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
               <ul class="mono card__pts">
                 {s.points.map((p, k) => <li style={`--k: ${k}`}>{p}</li>)}
               </ul>
+              {s.demo && (
+                <button type="button" class="mono card__demo" data-demo={s.demo.url} data-domaine={s.demo.domaine}>
+                  Voir un exemple →
+                </button>
+              )}
             </li>
           ))
         }
@@ -218,6 +223,18 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       <div class="rideau__nom" aria-hidden="true">{SITE.nom}</div>
     </div>
   </footer>
+
+  <div class="demo" hidden>
+    <div class="demo__fenetre" role="dialog" aria-modal="true" aria-label="Exemple de site">
+      <div class="demo__barre">
+        <span class="demo__points" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="demo__url"></span>
+        <a class="demo__plein mono trait" target="_blank" rel="noopener">Plein écran ↗</a>
+        <button type="button" class="demo__fermer" aria-label="Fermer l’exemple">×</button>
+      </div>
+      <iframe title="Exemple de site"></iframe>
+    </div>
+  </div>
 </Base>
 
 <script>
@@ -227,7 +244,41 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   const animer = !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Smooth scrolling with inertia (wheel only; touch keeps native scrolling). Anchors stop below the top bar.
-  if (animer) new Lenis({ autoRaf: true, anchors: { offset: -64 } });
+  const lenis = animer ? new Lenis({ autoRaf: true, anchors: { offset: -64 } }) : null;
+
+  // Service demos: the example site opens in a browser-like window, unfolding from the click point.
+  const demo = document.querySelector<HTMLElement>('.demo')!;
+  const cadre = demo.querySelector('iframe')!;
+  const plein = demo.querySelector<HTMLAnchorElement>('.demo__plein')!;
+  const fermerDemo = demo.querySelector<HTMLButtonElement>('.demo__fermer')!;
+  let declencheur: HTMLElement | null = null;
+  const fermer = () => {
+    demo.classList.remove('is-ouvert');
+    document.documentElement.style.overflow = '';
+    lenis?.start();
+    setTimeout(() => !demo.classList.contains('is-ouvert') && (demo.hidden = true), animer ? 750 : 0);
+    declencheur?.focus();
+  };
+  document.querySelectorAll<HTMLButtonElement>('.card__demo').forEach((b) =>
+    b.addEventListener('click', (e) => {
+      declencheur = b;
+      // Keyboard activation has no pointer position: start from the button instead.
+      const r = b.getBoundingClientRect();
+      demo.style.setProperty('--ox', `${e.clientX || r.left + r.width / 2}px`);
+      demo.style.setProperty('--oy', `${e.clientY || r.top + r.height / 2}px`);
+      if (cadre.dataset.src !== b.dataset.demo) cadre.src = cadre.dataset.src = b.dataset.demo!;
+      plein.href = b.dataset.demo!;
+      demo.querySelector('.demo__url')!.textContent = b.dataset.domaine!;
+      demo.hidden = false;
+      document.documentElement.style.overflow = 'hidden';
+      lenis?.stop();
+      requestAnimationFrame(() => requestAnimationFrame(() => demo.classList.add('is-ouvert')));
+      fermerDemo.focus();
+    }),
+  );
+  fermerDemo.addEventListener('click', fermer);
+  demo.addEventListener('click', (e) => e.target === demo && fermer());
+  addEventListener('keydown', (e) => e.key === 'Escape' && !demo.hidden && fermer());
 
   // Reveal on scroll; everything stays visible without JS or with reduced motion.
   const items = document.querySelectorAll<HTMLElement>('.reveal, .title-reveal, .block, .reveal-lettres');
@@ -873,6 +924,140 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     }
     .card h3 {
       padding-top: 1.5rem;
+    }
+  }
+
+  /* Demo link: the whole card opens the example (stretched button). */
+  .card__demo {
+    margin-top: 1.25rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    font-size: 0.8rem;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      color 0.35s,
+      translate 0.35s cubic-bezier(0.2, 0.7, 0.1, 1);
+  }
+  .card__demo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .card:hover .card__demo {
+    color: var(--accent-ink);
+    translate: 0.4rem 0;
+  }
+
+  /* ---------- Demo window ---------- */
+  .demo {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    display: grid;
+    place-items: center;
+    padding: clamp(0.5rem, 3vw, 2.5rem);
+    background: rgba(8, 7, 6, 0.72);
+    backdrop-filter: blur(8px);
+    clip-path: circle(0 at var(--ox, 50%) var(--oy, 50%));
+    transition: clip-path 0.75s cubic-bezier(0.7, 0, 0.2, 1);
+  }
+  .demo[hidden] {
+    display: none;
+  }
+  .demo.is-ouvert {
+    clip-path: circle(150vmax at var(--ox, 50%) var(--oy, 50%));
+  }
+  /* The portfolio hides the system cursor: give it back inside the window. */
+  .demo,
+  .demo * {
+    cursor: auto !important;
+  }
+  .demo button,
+  .demo a {
+    cursor: pointer !important;
+  }
+  .demo__fenetre {
+    display: flex;
+    flex-direction: column;
+    width: min(100%, 1400px);
+    height: 100%;
+    overflow: hidden;
+    border-radius: 14px;
+    background: #120b07;
+    box-shadow:
+      0 40px 120px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(255, 255, 255, 0.08);
+    scale: 0.9;
+    transition: scale 0.9s cubic-bezier(0.2, 0.7, 0.1, 1) 0.1s;
+  }
+  .demo.is-ouvert .demo__fenetre {
+    scale: 1;
+  }
+  .demo__barre {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.55rem 0.9rem;
+    background: #1f1d1a;
+    color: #d9d3c7;
+  }
+  .demo__points {
+    display: flex;
+    gap: 6px;
+  }
+  .demo__points i {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #ff5f57;
+  }
+  .demo__points i:nth-child(2) {
+    background: #febc2e;
+  }
+  .demo__points i:nth-child(3) {
+    background: #28c840;
+  }
+  .demo__url {
+    flex: 1;
+    max-width: 28rem;
+    margin: 0 auto;
+    padding: 0.3rem 1rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    font-size: 0.85rem;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .demo__plein {
+    font-size: 0.75rem;
+  }
+  .demo__fermer {
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: inherit;
+    font-size: 1.3rem;
+    line-height: 1;
+  }
+  .demo__fermer:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+  .demo iframe {
+    flex: 1;
+    width: 100%;
+    border: 0;
+    background: #120b07;
+  }
+  @media (max-width: 560px) {
+    .demo__plein {
+      display: none;
     }
   }
 
