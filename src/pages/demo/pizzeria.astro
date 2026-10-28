@@ -1,6 +1,7 @@
 ---
 // Demo "business website": homepage of a fictional Neapolitan pizzeria, opened from the Services section.
-// Standalone page (own fonts and colors, not the portfolio layout). Pizzas are drawn in SVG at build time.
+// Standalone page (own fonts and colors, not the portfolio layout). A 3D pizza (src/scripts/pizza3d.ts) sits
+// behind the whole page and builds up section by section; menu thumbnails are drawn in SVG at build time.
 import '@fontsource-variable/fraunces/full.css';
 import '@fontsource-variable/fraunces/full-italic.css';
 import '@fontsource/instrument-sans/400.css';
@@ -137,26 +138,41 @@ function pizza(id: string, graine: number, base: 'rossa' | 'bianca', garnitures:
 }
 
 const carte = [
+  { nom: 'La Fuoco', desc: 'Tomate, fior di latte, salame piccante, basilic, huile d’olive', prix: 16, cat: 'rosse', base: 'rossa', g: ['mozza', 'salame', 'basilic'], graine: 23, signature: true },
   { nom: 'Margherita', desc: 'San Marzano, fior di latte, basilic, huile d’olive', prix: 12, cat: 'rosse', base: 'rossa', g: ['mozza', 'basilic'], graine: 3 },
   { nom: 'Diavola', desc: 'Tomate, fior di latte, salame piquant, piment de Calabre', prix: 15, cat: 'piccanti', base: 'rossa', g: ['mozza', 'salame', 'piment'], graine: 7 },
   { nom: 'Quattro formaggi', desc: 'Fior di latte, gorgonzola, parmesan 24 mois, scamorza fumée', prix: 16, cat: 'bianche', base: 'bianca', g: ['fromages'], graine: 11 },
   { nom: 'Funghi e tartufo', desc: 'Crème de truffe, champignons, fior di latte', prix: 19, cat: 'bianche', base: 'bianca', g: ['mozza', 'champignons', 'truffe'], graine: 5 },
   { nom: 'Burrata', desc: 'Tomate, burrata entière, roquette, tomates cerises', prix: 17, cat: 'rosse', base: 'rossa', g: ['burrata', 'tomates', 'roquette'], graine: 17 },
-  { nom: 'Ortolana', desc: 'Tomate, courgette, poivrons rôtis, olives taggiasche', prix: 14, cat: 'rosse', base: 'rossa', g: ['mozza', 'legumes', 'olives'], graine: 13 },
+  { nom: 'Ortolana', desc: 'Tomate, courgette, poivrons rôtis, olives taggiasche (végétarienne)', prix: 14, cat: 'rosse', base: 'rossa', g: ['mozza', 'legumes', 'olives'], graine: 13 },
 ] as const;
 const filtres = [['toutes', 'Toutes'], ['rosse', 'Rosse'], ['bianche', 'Bianche'], ['piccanti', 'Piccanti']];
-const citation = 'On ne cuit pas une pizza. On la saisit, quatre-vingt-dix secondes, dans un four à quatre cent quatre-vingt-cinq degrés.';
-// Captions of the 3D pizza after the opening screen, one per stage (same order as SEUILS in src/scripts/pizza3d.ts).
-const etapes3d = [
-  ['La pâte.', 'Maturée 48 heures, étirée à la main. Jamais au rouleau.'],
-  ['San Marzano.', 'Une louche, étalée en spirale du centre vers le bord.'],
-  ['Fior di latte.', 'Déchirée à la main, juste avant d’enfourner.'],
-  ['Salame piccante.', 'Tranché fin. Au four, il se recourbe et caramélise.'],
-  ['Basilic frais.', 'Cueilli le matin même, posé à la dernière seconde.'],
-  ['485 °C.', 'Quatre-vingt-dix secondes. La croûte se tigre, le fromage file.'],
-  ['La Fuoco.', 'Notre signature : salame piccante, fior di latte, basilic.'],
+// Opening hours, Sunday first (Date.getDay order); used for the table and the live "open now" badge.
+const horaires: [string, [string, string][]][] = [
+  ['Dimanche', [['12:00', '14:30'], ['18:30', '22:30']]],
+  ['Lundi', []],
+  ['Mardi', [['18:30', '22:30']]],
+  ['Mercredi', [['18:30', '22:30']]],
+  ['Jeudi', [['18:30', '22:30']]],
+  ['Vendredi', [['18:30', '23:30']]],
+  ['Samedi', [['12:00', '14:30'], ['18:30', '23:30']]],
+];
+const ordre = [1, 2, 3, 4, 5, 6, 0];
+const services = ['Sur place', 'À emporter', 'Livraison 5 km', 'Terrasse', 'Accès PMR', 'Végétarien', 'Sans gluten (+2 €)'];
+const produits = [
+  ['Pâte', 'Farine type 00, levain, 48 h de maturation au froid.'],
+  ['Tomate', 'San Marzano DOP, cultivée au pied du Vésuve.'],
+  ['Fior di latte', 'Mozzarella de lait de vache, livrée deux fois par semaine.'],
+  ['Salame piccante', 'Salami de Calabre au piment, tranché minute.'],
+  ['Basilic', 'De notre potager, posé à la sortie du four.'],
+];
+const avis = [
+  ['La meilleure napolitaine de l’ouest parisien. La croûte est incroyable.', 'Camille R.'],
+  ['On vient chaque vendredi. Service adorable, pizzas parfaites, prix honnêtes.', 'Mehdi B.'],
+  ['La Fuoco au salame piquant, c’est une claque. Et le tiramisu !', 'Julie T.'],
 ];
 const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', true], ['21:00', true], ['21:30', false]] as const;
+const etoiles = '★★★★★';
 ---
 
 <!doctype html>
@@ -170,134 +186,174 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23e8471f'/%3E%3C/svg%3E" />
   </head>
   <body>
+    <canvas class="scene3d" aria-hidden="true"></canvas>
+    <canvas class="braises" aria-hidden="true"></canvas>
+    <p class="etiquette" aria-hidden="true"><b>01</b><span>Pâte maturée 48 h</span></p>
+
     <header class="nav">
-      <a class="logo" href="#haut">Fuoco<sup>®</sup></a>
+      <a class="logo" href="#accueil">Fuoco<sup>®</sup></a>
       <nav>
+        <a href="#infos">Infos</a>
         <a href="#carte">La carte</a>
-        <a href="#four">Le four</a>
+        <a href="#avis">Avis</a>
         <a href="#reserver" class="nav__cta">Réserver</a>
       </nav>
     </header>
 
-    <main id="haut">
-      <section class="assemblage" aria-label="Fuoco, la pizza construite au fil du défilement">
-        <div class="assemblage__colle">
-          <canvas class="assemblage__scene" aria-hidden="true"></canvas>
-          <canvas class="braises" aria-hidden="true"></canvas>
-          <ol class="legendes">
-            <li data-i="0" class="accueil">
-              <p class="sur">Pizzeria napolitaine · Versailles</p>
-              <h1 aria-label="Fuoco">
-                {[...'Fuoco'].map((c, k) => <span style={`--k: ${k}`} aria-hidden="true">{c}</span>)}
-              </h1>
-              <p class="accueil__accroche">Pâte maturée 48 heures. Cuite <em>90 secondes</em> au feu de bois, à 485 °C. Rien d’autre.</p>
-              <div class="accueil__boutons">
-                <a class="bouton" href="#reserver">Réserver une table</a>
-                <a class="bouton bouton--ligne" href="#carte">Voir la carte</a>
-              </div>
-            </li>
-            {etapes3d.map(([t, d], i) => (
-              <li data-i={i + 1}>
-                <p class="sur">0{i + 1} / 0{etapes3d.length}</p>
-                <h2>{t}</h2>
-                <p>{d}</p>
+    <main>
+      <section id="accueil" class="bloc" data-q="0">
+        <div class="panneau">
+          <p class="sur">Pizzeria napolitaine · Versailles</p>
+          <h1 aria-label="Fuoco">
+            {[...'Fuoco'].map((c, k) => <span style={`--k: ${k}`} aria-hidden="true">{c}</span>)}
+          </h1>
+          <p class="accroche">Pâte maturée 48 heures. Cuite <em>90 secondes</em> au feu de bois, à 485 °C. Rien d’autre.</p>
+          <p class="statut"><span class="pastille"></span><span class="statut__texte">Horaires ci-dessous</span></p>
+          <p class="note"><span class="etoiles" aria-hidden="true">{etoiles}</span> <b>4,8</b> · 1 240 avis</p>
+          <div class="boutons">
+            <a class="bouton" href="#reserver">Réserver une table</a>
+            <a class="bouton bouton--ligne" href="#carte">Voir la carte</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="infos" class="bloc" data-q="0.12">
+        <div class="panneau">
+          <p class="sur">Infos pratiques</p>
+          <h2>Ouvert <em>six soirs</em><br />sur sept.</h2>
+          <table class="horaires">
+            <tbody>
+              {ordre.map((j) => (
+                <tr data-jour={j}>
+                  <th scope="row">{horaires[j][0]}</th>
+                  <td>{horaires[j][1].length ? horaires[j][1].map(([a, b]) => `${a} – ${b}`).join(' · ') : 'Fermé'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div class="coord">
+            <p><b>Adresse</b>8 rue des Braises<br />78000 Versailles<br /><small>À 5 min à pied du château</small></p>
+            <p><b>Téléphone</b>01 00 00 00 00<br /><small>Commandes à emporter jusqu’à 22 h</small></p>
+          </div>
+          <ul class="services">
+            {services.map((s) => <li>{s}</li>)}
+          </ul>
+        </div>
+      </section>
+
+      <section id="carte" class="bloc" data-q="0.27">
+        <div class="panneau">
+          <p class="sur">La carte</p>
+          <h2>Sept pizzas.<br /><em>Aucun compromis.</em></h2>
+          <div class="filtres" role="group" aria-label="Filtrer la carte">
+            {filtres.map(([v, l], i) => <button type="button" data-filtre={v} aria-pressed={i === 0 ? 'true' : 'false'}>{l}</button>)}
+          </div>
+          <ul class="pizzas">
+            {carte.map((p, i) => (
+              <li class="pizza" data-cat={p.cat} style={`view-transition-name: pizza-${i}`}>
+                <svg viewBox="0 0 200 200" aria-hidden="true" set:html={pizza(`p${i}`, p.graine, p.base, [...p.g])} />
+                <div>
+                  <div class="pizza__ligne">
+                    <h3>{p.nom}</h3>
+                    {'signature' in p && <span class="pastille-texte">Signature</span>}
+                    {p.cat === 'piccanti' && <span class="pastille-texte pastille-texte--piquant">Piquant</span>}
+                    <span class="points" aria-hidden="true"></span>
+                    <span class="prix">{p.prix} €</span>
+                  </div>
+                  <p>{p.desc}</p>
+                </div>
               </li>
             ))}
-          </ol>
-          <span class="descendre" aria-hidden="true"><span></span></span>
-          <div class="assemblage__barre" aria-hidden="true"><i></i></div>
+          </ul>
+          <p class="mention">Formule du midi (samedi et dimanche) : pizza + boisson, 15 €. Liste des allergènes disponible sur demande.</p>
         </div>
       </section>
 
-      <section id="carte" class="carte">
-        <div class="titre r">
-          <p class="sur">La carte</p>
-          <h2>Six pizzas.<br /><em>Aucun compromis.</em></h2>
+      <section id="produits" class="bloc" data-q="0.42">
+        <div class="panneau">
+          <p class="sur">Nos produits</p>
+          <h2>Cinq ingrédients.<br /><em>Tous choisis.</em></h2>
+          <ul class="produits">
+            {produits.map(([n, d], i) => (
+              <li style={`--i: ${i}`}>
+                <b>0{i + 1}</b>
+                <span><strong>{n}</strong>{d}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-        <div class="filtres r" role="group" aria-label="Filtrer la carte">
-          {filtres.map(([v, l], i) => <button type="button" data-filtre={v} aria-pressed={i === 0 ? 'true' : 'false'}>{l}</button>)}
-        </div>
-        <ul class="pizzas">
-          {carte.map((p, i) => (
-            <li class="pizza r" data-cat={p.cat} style={`--i: ${i}; view-transition-name: pizza-${i}`}>
-              <svg viewBox="0 0 200 200" aria-hidden="true" set:html={pizza(`p${i}`, p.graine, p.base, [...p.g])} />
-              <div class="pizza__ligne">
-                <h3>{p.nom}</h3>
-                <span class="points" aria-hidden="true"></span>
-                <span class="prix">{p.prix} €</span>
-              </div>
-              <p>{p.desc}</p>
-              {p.cat === 'piccanti' && <span class="piquant">Piquant</span>}
-            </li>
-          ))}
-        </ul>
       </section>
 
-      <section class="citation" aria-label={citation}>
-        <p aria-hidden="true">{citation.split(' ').map((m, k) => <span style={`--k: ${k}`}>{m} </span>)}</p>
+      <section id="avis" class="bloc" data-q="0.55">
+        <div class="panneau">
+          <p class="sur">Avis</p>
+          <h2><span class="etoiles">{etoiles}</span><br />4,8 sur 5.</h2>
+          <ul class="temoignages">
+            {avis.map(([t, n]) => (
+              <li>
+                <p>« {t} »</p>
+                <span>{n} · <span class="etoiles" aria-label="5 étoiles">{etoiles}</span></span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
-      <section id="four" class="four">
-        <div class="four__degres r">
+      <section id="four" class="bloc" data-q="0.68">
+        <div class="panneau">
           <p class="sur">Le four</p>
-          <strong><span class="compte" data-fin="485">485</span><sup>°C</sup></strong>
+          <strong class="degres"><span class="compte" data-fin="485">485</span><sup>°C</sup></strong>
           <div class="thermo"><i></i></div>
-          <p>Un four en briques réfractaires, chauffé au chêne depuis 16 h. À cette température, la pâte gonfle en quelques secondes et la croûte se tigre.</p>
+          <p class="four__texte">Un four en briques réfractaires, chauffé au chêne depuis 16 h. Quatre-vingt-dix secondes suffisent : la pâte gonfle, la croûte se tigre, le fromage file.</p>
+          <div class="minuteur" aria-label="Temps de cuisson : 90 secondes">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <circle cx="60" cy="60" r="52" class="anneau-fond" />
+              <circle cx="60" cy="60" r="52" class="anneau" pathLength="1" />
+            </svg>
+            <span><b>90</b> secondes</span>
+          </div>
         </div>
-        <div class="four__minuteur r" aria-label="Temps de cuisson : 90 secondes">
-          <svg viewBox="0 0 120 120" aria-hidden="true">
-            <circle cx="60" cy="60" r="52" class="anneau-fond" />
-            <circle cx="60" cy="60" r="52" class="anneau" pathLength="1" />
-          </svg>
-          <span><b>90</b> secondes</span>
-        </div>
-        <ul class="faits">
-          <li class="r" style="--i: 0"><b>48 h</b>de maturation de la pâte</li>
-          <li class="r" style="--i: 1"><b>00</b>farine italienne, rien d’autre</li>
-          <li class="r" style="--i: 2"><b>DOP</b>tomates San Marzano</li>
-          <li class="r" style="--i: 3"><b>0</b>congélateur dans la cuisine</li>
-        </ul>
       </section>
 
-      <section id="reserver" class="resa">
-        <div class="titre r">
+      <section id="reserver" class="bloc" data-q="0.9">
+        <div class="panneau">
           <p class="sur">Réserver</p>
           <h2>Une table,<br /><em>ce soir ?</em></h2>
+          <form class="resa" novalidate>
+            <fieldset>
+              <legend>Jour</legend>
+              <div class="jours"></div>
+            </fieldset>
+            <fieldset>
+              <legend>Couverts</legend>
+              <div class="couverts">
+                <button type="button" data-pas="-1" aria-label="Une personne de moins">−</button>
+                <output>2</output>
+                <button type="button" data-pas="1" aria-label="Une personne de plus">+</button>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Heure</legend>
+              <div class="creneaux">
+                {creneaux.map(([h, libre]) => <button type="button" data-heure={h} disabled={!libre} aria-pressed="false">{h}{!libre && <small>complet</small>}</button>)}
+              </div>
+            </fieldset>
+            <button class="bouton resa__ok" type="submit">Réserver</button>
+            <p class="resa__note">Démo : aucune réservation n’est envoyée.</p>
+            <div class="ticket" aria-live="polite">
+              <p class="sur">Prenotazione</p>
+              <p class="ticket__resume"></p>
+              <span class="tampon">Confermato</span>
+            </div>
+          </form>
         </div>
-        <form class="resa__carte r" novalidate>
-          <fieldset>
-            <legend>Jour</legend>
-            <div class="jours"></div>
-          </fieldset>
-          <fieldset>
-            <legend>Couverts</legend>
-            <div class="couverts">
-              <button type="button" data-pas="-1" aria-label="Une personne de moins">−</button>
-              <output>2</output>
-              <button type="button" data-pas="1" aria-label="Une personne de plus">+</button>
-            </div>
-          </fieldset>
-          <fieldset>
-            <legend>Heure</legend>
-            <div class="creneaux">
-              {creneaux.map(([h, libre]) => <button type="button" data-heure={h} disabled={!libre} aria-pressed="false">{h}{!libre && <small>complet</small>}</button>)}
-            </div>
-          </fieldset>
-          <button class="bouton resa__ok" type="submit">Réserver</button>
-          <p class="resa__note">Démo : aucune réservation n’est envoyée.</p>
-          <div class="ticket" aria-live="polite">
-            <p class="sur">Prenotazione</p>
-            <p class="ticket__resume"></p>
-            <span class="tampon">Confermato</span>
-          </div>
-        </form>
       </section>
     </main>
 
-    <footer class="pied">
+    <footer class="pied" data-q="1">
       <div class="pied__infos">
         <p><b>Fuoco</b><br />8 rue des Braises<br />78000 Versailles</p>
-        <p><b>Ouvert</b><br />Mardi – dimanche<br />18 h 30 – 23 h</p>
+        <p><b>Ouvert</b><br />Mardi – dimanche<br />Fermé le lundi</p>
         <p><b>Contact</b><br />01 00 00 00 00<br />ciao@fuoco.example</p>
       </div>
       <p class="pied__nom" aria-hidden="true">Fuoco</p>
@@ -315,16 +371,35 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     (entrees) => entrees.forEach((e) => e.isIntersecting && (e.target.classList.add('vu'), io.unobserve(e.target))),
     { rootMargin: '0px 0px -12% 0px' },
   );
-  document.querySelectorAll('.r').forEach((el) => io.observe(el));
+  document.querySelectorAll('.panneau').forEach((el) => io.observe(el));
 
-  // Embers rising over the 3D scene.
+  // 3D pizza behind the page; each section (and the footer) gives the stage it starts. Hidden if WebGL fails.
+  const scene = document.querySelector<HTMLCanvasElement>('.scene3d')!;
+  const etiquette = document.querySelector<HTMLElement>('.etiquette')!;
+  const libelles = ['Pâte maturée 48 h', 'Sauce San Marzano DOP', 'Fior di latte', 'Salame piccante', 'Basilic du potager', '485 °C · 90 secondes', 'Huile d’olive · La Fuoco'];
+  import('../../scripts/pizza3d')
+    .then(({ demarrer }) =>
+      demarrer(scene, [...document.querySelectorAll<HTMLElement>('[data-q]')], (i) => {
+        etiquette.querySelector('b')!.textContent = `0${i + 1}`;
+        etiquette.querySelector('span')!.textContent = libelles[i];
+        etiquette.classList.remove('change');
+        void etiquette.offsetWidth;
+        etiquette.classList.add('change');
+      }),
+    )
+    .catch(() => {
+      scene.hidden = true;
+      etiquette.hidden = true;
+    });
+
+  // Embers rising over the scene, stronger while the pizza bakes (--cuisson set by the 3D script).
   const toile = document.querySelector<HTMLCanvasElement>('.braises')!;
   const ctx = toile.getContext('2d')!;
-  let w = 0, h = 0, visible = true;
+  let w = 0, h = 0;
   const taille = () => {
     const dpr = Math.min(devicePixelRatio, 2);
-    w = toile.clientWidth;
-    h = toile.clientHeight;
+    w = innerWidth;
+    h = innerHeight;
     toile.width = w * dpr;
     toile.height = h * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -332,7 +407,7 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
   taille();
   addEventListener('resize', taille);
   const neuve = () => ({ x: Math.random() * w, y: h + Math.random() * 40, v: 0.5 + Math.random() * 1.8, r: 0.6 + Math.random() * 2.2, p: Math.random() * 6.28, t: 20 + Math.random() * 25, vie: 0 });
-  const braises = Array.from({ length: 110 }, () => ({ ...neuve(), y: Math.random() * h }));
+  const braises = Array.from({ length: 90 }, () => ({ ...neuve(), y: Math.random() * h }));
   const tour = () => {
     ctx.clearRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'lighter';
@@ -351,27 +426,28 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
       ctx.arc(b.x, b.y, b.r * 4, 0, 6.28);
       ctx.fill();
     }
-    if (visible && animer) requestAnimationFrame(tour);
+    requestAnimationFrame(tour);
   };
-  new IntersectionObserver(([e]) => {
-    const avant = visible;
-    visible = e.isIntersecting;
-    if (visible && !avant) requestAnimationFrame(tour);
-  }).observe(toile);
-  requestAnimationFrame(tour);
+  if (animer) requestAnimationFrame(tour);
 
-  // 3D assembly: Three.js is only downloaded when the section gets close; hidden if WebGL is unavailable.
-  const assemblage = document.querySelector<HTMLElement>('.assemblage')!;
-  new IntersectionObserver(async ([e], obs) => {
-    if (!e.isIntersecting) return;
-    obs.disconnect();
-    try {
-      const { demarrer } = await import('../../scripts/pizza3d');
-      demarrer(assemblage, assemblage.querySelector('canvas')!);
-    } catch {
-      assemblage.hidden = true;
-    }
-  }, { rootMargin: '100% 0px' }).observe(assemblage);
+  // Opening hours: highlight today and say whether the restaurant is open right now.
+  const plages: [string, string][][] = [
+    [['12:00', '14:30'], ['18:30', '22:30']], [], [['18:30', '22:30']], [['18:30', '22:30']], [['18:30', '22:30']], [['18:30', '23:30']], [['12:00', '14:30'], ['18:30', '23:30']],
+  ];
+  const maintenant = new Date();
+  const jour = maintenant.getDay();
+  const minutes = (hm: string) => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3));
+  const actuelle = maintenant.getHours() * 60 + maintenant.getMinutes();
+  document.querySelector(`.horaires tr[data-jour="${jour}"]`)?.classList.add('aujourdhui');
+  const ouverte = plages[jour].find(([a, b]) => actuelle >= minutes(a) && actuelle < minutes(b));
+  const prochaine = plages[jour].find(([a]) => actuelle < minutes(a));
+  const statut = document.querySelector<HTMLElement>('.statut')!;
+  statut.classList.toggle('ouvert', !!ouverte);
+  statut.querySelector('.statut__texte')!.textContent = ouverte
+    ? `Ouvert maintenant · jusqu’à ${ouverte[1].replace(':', ' h ')}`
+    : prochaine
+      ? `Fermé · ouvre à ${prochaine[0].replace(':', ' h ')}`
+      : 'Fermé pour aujourd’hui';
 
   // Menu filter: cards rearrange with a view transition where supported.
   const boutons = document.querySelectorAll<HTMLButtonElement>('[data-filtre]');
@@ -385,20 +461,6 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
       else appliquer();
     }),
   );
-
-  // Quote: words light up as the section scrolls by.
-  const mots = document.querySelectorAll<HTMLElement>('.citation span');
-  const citation = document.querySelector<HTMLElement>('.citation')!;
-  const eclairer = () => {
-    const r = citation.getBoundingClientRect();
-    const p = (innerHeight * 0.85 - r.top) / (r.height + innerHeight * 0.35);
-    const n = Math.round(Math.min(Math.max(p, 0), 1) * mots.length);
-    mots.forEach((m, k) => m.classList.toggle('allume', k < n));
-  };
-  if (animer) {
-    eclairer();
-    addEventListener('scroll', eclairer, { passive: true });
-  } else mots.forEach((m) => m.classList.add('allume'));
 
   // Oven: the temperature climbs when the section appears.
   const compte = document.querySelector<HTMLElement>('.compte')!;
@@ -448,14 +510,14 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
       sortie.textContent = String(choix.couverts);
     }),
   );
-  const form = document.querySelector<HTMLFormElement>('.resa__carte')!;
+  const form = document.querySelector<HTMLFormElement>('.resa')!;
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const manque = !choix.jour ? 'jours' : !choix.heure ? 'creneaux' : '';
     if (manque) {
-      const g = document.querySelector(`.${manque}`)!;
+      const g = document.querySelector<HTMLElement>(`.${manque}`)!;
       g.classList.remove('secoue');
-      void (g as HTMLElement).offsetWidth;
+      void g.offsetWidth;
       g.classList.add('secoue');
       return;
     }
@@ -503,7 +565,7 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     inset: 0;
     z-index: 50;
     pointer-events: none;
-    opacity: 0.09;
+    opacity: 0.08;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   ::selection {
@@ -518,9 +580,8 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
   h3,
   .logo,
   .prix,
-  .four strong,
-  .pied__nom,
-  .citation p {
+  .degres,
+  .pied__nom {
     font-family: var(--f-titre);
     font-variation-settings: 'SOFT' 100, 'WONK' 1;
   }
@@ -548,7 +609,6 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     font: 600 0.95rem var(--f-texte);
     text-decoration: none;
     cursor: pointer;
-    box-shadow: 0 0 0 0 rgba(255, 90, 31, 0.5);
     transition:
       transform 0.3s var(--courbe),
       box-shadow 0.4s,
@@ -570,6 +630,50 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     box-shadow: inset 0 0 0 1.5px var(--creme);
   }
 
+  /* ---------- 3D scene and embers fixed behind the content ---------- */
+  .scene3d,
+  .braises {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .scene3d[hidden] {
+    display: none;
+  }
+  .braises {
+    z-index: 1;
+    opacity: calc(0.25 + var(--cuisson, 0) * 0.75);
+  }
+  /* Name of the ingredient just added, next to the pizza. */
+  .etiquette {
+    position: fixed;
+    z-index: 3;
+    right: clamp(1rem, 5vw, 4rem);
+    bottom: 2rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.8rem;
+    margin: 0;
+    padding: 0.7em 1.2em;
+    border-radius: 999px;
+    background: rgba(18, 11, 7, 0.6);
+    backdrop-filter: blur(10px);
+    box-shadow: inset 0 0 0 1px rgba(246, 236, 217, 0.15);
+    font-size: 0.95rem;
+  }
+  .etiquette b {
+    font: 800 italic 1.3rem var(--f-titre);
+    color: var(--braise);
+  }
+  .etiquette.change {
+    animation: etiquette 0.6s var(--courbe);
+  }
+  @keyframes etiquette {
+    from { opacity: 0; transform: translateY(12px); }
+  }
+
   /* ---------- Top bar ---------- */
   .nav {
     position: fixed;
@@ -581,7 +685,7 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     justify-content: space-between;
     align-items: center;
     padding: 1.1rem clamp(1rem, 4vw, 3rem);
-    background: linear-gradient(var(--nuit), transparent);
+    background: linear-gradient(rgba(18, 11, 7, 0.9), transparent);
   }
   .logo {
     font-size: 1.7rem;
@@ -615,17 +719,47 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     opacity: 1 !important;
   }
 
-  /* ---------- Opening screen (caption 0 of the 3D scene) ---------- */
-  .braises {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
+  /* ---------- Sections: a text column on the left, the pizza stays on the right ---------- */
+  main,
+  .pied {
+    position: relative;
+    z-index: 2;
   }
+  .bloc {
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    padding: 7rem clamp(1rem, 4vw, 3rem) 5rem clamp(1rem, 6vw, 6rem);
+  }
+  .panneau {
+    width: min(100%, 40rem);
+    max-width: 46vw;
+    opacity: 0;
+    transform: translateY(40px);
+    transition:
+      opacity 0.9s var(--courbe),
+      transform 0.9s var(--courbe);
+  }
+  .panneau.vu {
+    opacity: 1;
+    transform: none;
+  }
+  #accueil .panneau {
+    opacity: 1;
+    transform: none;
+  }
+  h2 {
+    margin: 0 0 2rem;
+    font-size: clamp(2.6rem, 5vw, 4.6rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+  }
+
+  /* ---------- Opening ---------- */
   h1 {
     margin: 0;
-    font-size: clamp(5rem, 13vw, 14rem);
+    font-size: clamp(5rem, 12vw, 13rem);
     font-weight: 900;
     font-style: italic;
     line-height: 0.82;
@@ -651,201 +785,118 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
   @keyframes vacille {
     to { background-position: 0 100%; }
   }
-  .accueil__accroche {
+  .accroche {
     max-width: 30rem;
-    margin: 1.5rem 0 2rem;
+    margin: 1.5rem 0 1.2rem;
     font-size: clamp(1.05rem, 1.6vw, 1.3rem);
     color: var(--creme-2);
     animation: monte 0.9s 0.8s var(--courbe) both;
   }
-  .accueil__boutons {
+  .statut,
+  .note {
+    margin: 0 0 0.4rem;
+    font-size: 0.95rem;
+    animation: monte 0.9s 0.9s var(--courbe) both;
+  }
+  .statut {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .pastille {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--tomate);
+  }
+  .statut.ouvert .pastille {
+    background: #4cd964;
+    box-shadow: 0 0 0 0 rgba(76, 217, 100, 0.6);
+    animation: pouls 2s infinite;
+  }
+  @keyframes pouls {
+    to { box-shadow: 0 0 0 10px rgba(76, 217, 100, 0); }
+  }
+  .etoiles {
+    color: var(--flamme);
+    letter-spacing: 0.1em;
+  }
+  .boutons {
     display: flex;
     flex-wrap: wrap;
     gap: 0.8rem;
+    margin-top: 1.8rem;
     animation: monte 0.9s 1s var(--courbe) both;
   }
-  .accueil .sur {
+  #accueil .sur {
     animation: monte 0.9s 0.1s var(--courbe) both;
   }
   @keyframes monte {
     from { opacity: 0; transform: translateY(20px); }
   }
-  .descendre {
-    position: absolute;
-    left: 50%;
-    bottom: 4.5rem;
-    width: 26px;
-    height: 42px;
-    translate: -50% 0;
-    border: 1.5px solid var(--creme-2);
-    border-radius: 999px;
-    transition: opacity 0.5s;
-  }
-  .descendre span {
-    position: absolute;
-    left: 50%;
-    top: 8px;
-    width: 4px;
-    height: 8px;
-    translate: -50% 0;
-    border-radius: 2px;
-    background: var(--braise);
-    animation: molette 1.6s ease-in-out infinite;
-  }
-  @keyframes molette {
-    to { transform: translateY(14px); opacity: 0; }
-  }
-  .assemblage[data-etape]:not([data-etape='0']) .descendre {
-    opacity: 0;
-  }
 
-  /* ---------- 3D assembly: pinned scene, one caption per stage (data-etape set by the script) ---------- */
-  .assemblage {
-    position: relative;
-    height: 850vh;
-  }
-  .assemblage[hidden] {
-    display: none;
-  }
-  .assemblage__colle {
-    position: sticky;
-    top: 0;
-    height: 100svh;
-    overflow: hidden;
-    background: radial-gradient(ellipse 70% 60% at 62% 60%, #3a1d0e, var(--nuit) 72%);
-  }
-  .assemblage__scene {
-    position: absolute;
-    inset: 0;
+  /* ---------- Practical info ---------- */
+  .horaires {
     width: 100%;
-    height: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
   }
-  .legendes {
+  .horaires th,
+  .horaires td {
+    padding: 0.55rem 0;
+    border-bottom: 1px solid rgba(246, 236, 217, 0.1);
+    text-align: left;
+    font-weight: 400;
+  }
+  .horaires td {
+    text-align: right;
+    color: var(--creme-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .horaires tr.aujourdhui th,
+  .horaires tr.aujourdhui td {
+    color: var(--flamme);
+    font-weight: 600;
+  }
+  .horaires tr.aujourdhui th::after {
+    content: ' · aujourd’hui';
+    font-size: 0.8em;
+    font-weight: 400;
+  }
+  .coord {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.8rem;
+  }
+  .coord p {
+    margin: 0;
+    color: var(--creme-2);
+  }
+  .coord b {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: var(--creme);
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .coord small {
+    opacity: 0.75;
+  }
+  .services {
     list-style: none;
     margin: 0;
     padding: 0;
-    position: absolute;
-    left: clamp(1rem, 7vw, 7rem);
-    top: 50%;
-    width: min(28rem, 40vw);
-    translate: 0 -50%;
-    pointer-events: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
   }
-  .legendes li {
-    position: absolute;
-    inset: auto 0 0;
-    translate: 0 50%;
-    opacity: 0;
-    transform: translateY(40px);
-    filter: blur(8px);
-    transition:
-      opacity 0.6s var(--courbe),
-      transform 0.8s var(--courbe),
-      filter 0.6s;
-  }
-  .legendes h2 {
-    font-size: clamp(3rem, 6.5vw, 6rem);
-    font-style: italic;
-  }
-  .legendes li p:last-child {
-    margin: 1rem 0 0;
-    font-size: clamp(1rem, 1.5vw, 1.25rem);
-    color: var(--creme-2);
-  }
-  .assemblage:not([data-etape]) li[data-i='0'],
-  .assemblage[data-etape='0'] li[data-i='0'],
-  .assemblage[data-etape='1'] li[data-i='1'],
-  .assemblage[data-etape='2'] li[data-i='2'],
-  .assemblage[data-etape='3'] li[data-i='3'],
-  .assemblage[data-etape='4'] li[data-i='4'],
-  .assemblage[data-etape='5'] li[data-i='5'],
-  .assemblage[data-etape='6'] li[data-i='6'],
-  .assemblage[data-etape='7'] li[data-i='7'] {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
-  /* The opening caption is wider (big title) and its buttons must stay clickable. */
-  .legendes .accueil {
-    right: auto;
-    width: min(46rem, 52vw);
-  }
-  .assemblage:not([data-etape]) .accueil,
-  .assemblage[data-etape='0'] .accueil {
-    pointer-events: auto;
-  }
-  .assemblage[data-etape='6'] h2 {
-    color: var(--flamme);
-    text-shadow: 0 0 40px rgba(255, 90, 31, 0.6);
-  }
-  .assemblage__barre {
-    position: absolute;
-    left: clamp(1rem, 7vw, 7rem);
-    right: clamp(1rem, 7vw, 7rem);
-    bottom: 2.5rem;
-    height: 2px;
-    background: rgba(246, 236, 217, 0.12);
-  }
-  .assemblage__barre i {
-    display: block;
-    height: 100%;
-    background: var(--braise);
-    transform-origin: left;
-    scale: var(--p, 0) 1;
-  }
-  @media (max-width: 860px) {
-    /* Phone: caption at the top, pizza below. */
-    .legendes {
-      top: 6.5rem;
-      width: auto;
-      right: 1rem;
-      translate: none;
-    }
-    .legendes li {
-      inset: 0 0 auto;
-      translate: none;
-    }
-    .legendes h2 {
-      font-size: clamp(2.6rem, 11vw, 4rem);
-    }
-    .legendes .accueil {
-      width: auto;
-      right: 0;
-    }
-    h1 {
-      font-size: clamp(4.5rem, 24vw, 7rem);
-    }
-    .accueil__accroche {
-      margin: 0.8rem 0 1rem;
-    }
-  }
-
-  /* ---------- Shared section layout ---------- */
-  .carte,
-  .four,
-  .resa {
-    padding: clamp(5rem, 12vw, 9rem) clamp(1rem, 4vw, 3rem);
-    max-width: 1320px;
-    margin: 0 auto;
-  }
-  h2 {
-    margin: 0;
-    font-size: clamp(2.8rem, 7vw, 6rem);
-    font-weight: 800;
-    line-height: 0.95;
-    letter-spacing: -0.02em;
-  }
-  .r {
-    opacity: 0;
-    transform: translateY(40px);
-    transition:
-      opacity 0.9s var(--courbe),
-      transform 0.9s var(--courbe);
-    transition-delay: calc(var(--i, 0) * 90ms);
-  }
-  .r.vu {
-    opacity: 1;
-    transform: none;
+  .services li {
+    padding: 0.4em 0.9em;
+    border-radius: 999px;
+    background: rgba(246, 236, 217, 0.08);
+    font-size: 0.85rem;
   }
 
   /* ---------- Menu ---------- */
@@ -853,7 +904,7 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin: 2.5rem 0 3rem;
+    margin: -0.5rem 0 1.5rem;
   }
   .filtres button,
   .jours button,
@@ -887,41 +938,50 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
-    gap: clamp(2rem, 4vw, 3.5rem) clamp(1.5rem, 3vw, 2.5rem);
+    gap: 1.1rem;
   }
   .pizza {
-    position: relative;
+    display: grid;
+    grid-template-columns: 4.5rem 1fr;
+    gap: 1rem;
+    align-items: center;
   }
   .pizza[hidden] {
     display: none;
   }
   .pizza svg {
-    display: block;
-    width: 78%;
-    margin: 0 auto 1.5rem;
-    transition:
-      rotate 1.2s var(--courbe),
-      scale 0.8s var(--courbe),
-      filter 0.6s;
-    filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.55));
+    width: 100%;
+    transition: rotate 1.2s var(--courbe), scale 0.8s var(--courbe);
   }
-  /* Hover: the pizza turns a third and glows as if back in front of the fire. */
   .pizza:hover svg {
     rotate: 120deg;
-    scale: 1.07;
-    filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 40px rgba(255, 90, 31, 0.45));
+    scale: 1.12;
   }
   .pizza__ligne {
     display: flex;
     align-items: baseline;
-    gap: 0.6rem;
+    gap: 0.5rem;
   }
   .pizza h3 {
     margin: 0;
-    font-size: 1.7rem;
+    font-size: 1.45rem;
     font-weight: 700;
     font-style: italic;
+  }
+  .pastille-texte {
+    padding: 0.2em 0.6em;
+    border-radius: 999px;
+    background: var(--braise);
+    color: var(--nuit);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    translate: 0 -0.2em;
+  }
+  .pastille-texte--piquant {
+    background: var(--tomate);
+    color: var(--creme);
   }
   .points {
     flex: 1;
@@ -929,71 +989,72 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     translate: 0 -0.3em;
   }
   .prix {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 600;
     color: var(--flamme);
   }
   .pizza p {
-    margin: 0.4rem 0 0;
+    margin: 0.15rem 0 0;
     color: var(--creme-2);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
-  .piquant {
-    position: absolute;
-    top: 0.5rem;
-    right: 8%;
-    padding: 0.35em 0.8em;
-    border-radius: 999px;
-    background: var(--tomate);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    rotate: 8deg;
+  .mention {
+    margin: 1.5rem 0 0;
+    font-size: 0.85rem;
+    color: var(--creme-2);
   }
   ::view-transition-group(*) {
     animation-duration: 0.55s;
     animation-timing-function: var(--courbe);
   }
 
-  /* ---------- Quote lit word by word ---------- */
-  .citation {
-    padding: clamp(4rem, 10vw, 8rem) clamp(1rem, 6vw, 6rem);
-    background: linear-gradient(transparent, rgba(226, 58, 28, 0.08) 40%, transparent);
+  /* ---------- Products ---------- */
+  .produits {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1.2rem;
   }
-  .citation p {
-    max-width: 1100px;
-    margin: 0 auto;
-    font-size: clamp(2rem, 4.8vw, 4.2rem);
-    font-weight: 600;
-    font-style: italic;
-    line-height: 1.12;
-    letter-spacing: -0.01em;
+  .produits li {
+    display: grid;
+    grid-template-columns: 3rem 1fr;
+    gap: 1rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid rgba(246, 236, 217, 0.1);
+    color: var(--creme-2);
   }
-  .citation span {
-    color: rgba(246, 236, 217, 0.14);
-    transition:
-      color 0.4s,
-      text-shadow 0.6s;
+  .produits b {
+    font: 800 italic 1.6rem/1 var(--f-titre);
+    color: var(--braise);
   }
-  .citation span.allume {
+  .produits strong {
+    display: block;
     color: var(--creme);
+    font: 700 italic 1.4rem var(--f-titre);
   }
-  .citation span.allume:nth-child(n + 13) {
-    color: var(--flamme);
-    text-shadow: 0 0 30px rgba(255, 90, 31, 0.5);
+
+  /* ---------- Reviews ---------- */
+  .temoignages {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1.6rem;
+  }
+  .temoignages p {
+    margin: 0 0 0.4rem;
+    font: 500 italic clamp(1.15rem, 1.8vw, 1.45rem)/1.35 var(--f-titre);
+  }
+  .temoignages span {
+    font-size: 0.9rem;
+    color: var(--creme-2);
   }
 
   /* ---------- Oven ---------- */
-  .four {
-    display: grid;
-    grid-template-columns: 1.3fr 1fr;
-    gap: 3rem 4rem;
-    align-items: center;
-  }
-  .four strong {
+  .degres {
     display: block;
-    font-size: clamp(6rem, 16vw, 14rem);
+    font-size: clamp(6rem, 13vw, 12rem);
     font-weight: 900;
     line-height: 0.85;
     letter-spacing: -0.04em;
@@ -1003,7 +1064,7 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     color: transparent;
     font-variant-numeric: tabular-nums;
   }
-  .four strong sup {
+  .degres sup {
     font-size: 0.32em;
     vertical-align: top;
     margin-left: 0.1em;
@@ -1023,23 +1084,22 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     scale: 0 1;
     transition: scale 1.8s cubic-bezier(0.3, 0, 0.1, 1) 0.2s;
   }
-  .four__degres.vu .thermo i {
+  .vu .thermo i {
     scale: 1 1;
   }
-  .four__degres p:last-child {
-    max-width: 34rem;
+  .four__texte {
     color: var(--creme-2);
   }
-  .four__minuteur {
+  .minuteur {
     position: relative;
-    justify-self: center;
-    width: min(100%, 300px);
+    width: 180px;
+    margin-top: 2rem;
   }
-  .four__minuteur svg {
+  .minuteur svg {
     display: block;
     rotate: -90deg;
   }
-  .four__minuteur circle {
+  .minuteur circle {
     fill: none;
     stroke-width: 5;
   }
@@ -1053,63 +1113,38 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     stroke-dashoffset: 1;
     filter: drop-shadow(0 0 6px var(--braise));
   }
-  .four__minuteur.vu .anneau {
+  .vu .anneau {
     animation: cuisson 3s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
   }
   @keyframes cuisson {
     to { stroke-dashoffset: 0; }
   }
-  .four__minuteur span {
+  .minuteur span {
     position: absolute;
     inset: 0;
     display: grid;
     place-content: center;
     text-align: center;
     color: var(--creme-2);
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
   }
-  .four__minuteur b {
-    font: 900 italic 4.5rem/1 var(--f-titre);
+  .minuteur b {
+    font: 900 italic 3rem/1 var(--f-titre);
     letter-spacing: 0;
-    color: var(--creme);
-    text-transform: none;
-  }
-  .faits {
-    grid-column: 1 / -1;
-    list-style: none;
-    margin: 2rem 0 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    border-top: 1px solid rgba(246, 236, 217, 0.15);
-  }
-  .faits li {
-    padding: 1.5rem 1.25rem 0 0;
-    color: var(--creme-2);
-    font-size: 0.92rem;
-  }
-  .faits b {
-    display: block;
-    font: 800 italic 2.4rem/1.1 var(--f-titre);
     color: var(--creme);
   }
 
   /* ---------- Booking ---------- */
   .resa {
-    display: grid;
-    grid-template-columns: 1fr 1.25fr;
-    gap: 3rem;
-    align-items: start;
-  }
-  .resa__carte {
     position: relative;
     display: grid;
     gap: 1.6rem;
     padding: clamp(1.5rem, 3vw, 2.5rem);
     border-radius: 24px;
-    background: linear-gradient(160deg, #2a1a10, var(--charbon));
+    background: linear-gradient(160deg, rgba(42, 26, 16, 0.92), rgba(29, 19, 13, 0.92));
+    backdrop-filter: blur(8px);
     box-shadow:
       inset 0 0 0 1px rgba(246, 236, 217, 0.08),
       0 40px 80px -30px rgba(0, 0, 0, 0.8);
@@ -1230,9 +1265,8 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
 
   /* ---------- Footer ---------- */
   .pied {
-    position: relative;
     padding: 4rem clamp(1rem, 4vw, 3rem) 0;
-    border-top: 1px solid rgba(246, 236, 217, 0.12);
+    background: linear-gradient(transparent, var(--nuit) 30%);
     overflow: hidden;
   }
   .pied__infos {
@@ -1276,15 +1310,30 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
   }
 
   @media (max-width: 860px) {
-    .four,
-    .resa {
-      grid-template-columns: 1fr;
+    /* Phone: the pizza stays in the upper part of the screen; text panels scroll over it on a dark glass. */
+    .bloc {
+      align-items: flex-end;
+      padding: 45svh 1rem 3rem;
     }
-    .faits {
-      grid-template-columns: repeat(2, 1fr);
+    .panneau {
+      max-width: none;
+      padding: 1.5rem;
+      border-radius: 20px;
+      background: rgba(18, 11, 7, 0.78);
+      backdrop-filter: blur(12px);
     }
+    h1 {
+      font-size: clamp(4.5rem, 24vw, 7rem);
+    }
+    .coord,
     .pied__infos {
       grid-template-columns: 1fr;
+    }
+    .etiquette {
+      top: 5rem;
+      bottom: auto;
+      right: 1rem;
+      font-size: 0.85rem;
     }
     .nav nav a:not(.nav__cta) {
       display: none;
@@ -1297,7 +1346,7 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
       animation: none !important;
       transition: none !important;
     }
-    .r {
+    .panneau {
       opacity: 1;
       transform: none;
     }
