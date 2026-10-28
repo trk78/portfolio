@@ -1110,6 +1110,8 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     background: var(--accent);
     transform-origin: left;
     scale: clamp(0, calc(var(--p, 0.25) * 4 - var(--i, 0)), 1) 1;
+    /* Below the hovered number's bubble (z-index -1), which overlaps the line. */
+    z-index: -2;
   }
   .step__n {
     display: block;
