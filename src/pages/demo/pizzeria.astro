@@ -147,6 +147,15 @@ const carte = [
 const filtres = [['toutes', 'Toutes'], ['rosse', 'Rosse'], ['bianche', 'Bianche'], ['piccanti', 'Piccanti']];
 const heroPizza = pizza('hero', 21, 'rossa', ['mozza', 'basilic']);
 const citation = 'On ne cuit pas une pizza. On la saisit, quatre-vingt-dix secondes, dans un four à quatre cent quatre-vingt-cinq degrés.';
+// Captions of the 3D assembly, one per scroll stage (same thresholds as src/scripts/pizza3d.ts).
+const etapes3d = [
+  ['La pâte.', 'Maturée 48 heures, étirée à la main. Jamais au rouleau.'],
+  ['San Marzano.', 'Une louche, étalée en spirale du centre vers le bord.'],
+  ['Fior di latte.', 'Déchirée à la main, juste avant d’enfourner.'],
+  ['Basilic frais.', 'Cueilli le matin même, posé à la dernière seconde.'],
+  ['485 °C.', 'Quatre-vingt-dix secondes. La croûte se tigre, le fromage file.'],
+  ['Margherita.', 'Telle qu’à Naples depuis 1889. Rien à ajouter.'],
+];
 const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', true], ['21:00', true], ['21:30', false]] as const;
 ---
 
@@ -193,6 +202,22 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
           </div>
         </div>
         <a class="descendre" href="#carte" aria-label="Voir la carte"><span></span></a>
+      </section>
+
+      <section class="assemblage" aria-label="Comment naît une Margherita">
+        <div class="assemblage__colle">
+          <canvas class="assemblage__scene" aria-hidden="true"></canvas>
+          <ol class="legendes">
+            {etapes3d.map(([t, d], i) => (
+              <li data-i={i}>
+                <p class="sur">0{i + 1} / 0{etapes3d.length}</p>
+                <h2>{t}</h2>
+                <p>{d}</p>
+              </li>
+            ))}
+          </ol>
+          <div class="assemblage__barre" aria-hidden="true"><i></i></div>
+        </div>
       </section>
 
       <section id="carte" class="carte">
@@ -345,6 +370,19 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     if (visible && !avant) requestAnimationFrame(tour);
   }).observe(toile);
   requestAnimationFrame(tour);
+
+  // 3D assembly: Three.js is only downloaded when the section gets close; hidden if WebGL is unavailable.
+  const assemblage = document.querySelector<HTMLElement>('.assemblage')!;
+  new IntersectionObserver(async ([e], obs) => {
+    if (!e.isIntersecting) return;
+    obs.disconnect();
+    try {
+      const { demarrer } = await import('../../scripts/pizza3d');
+      demarrer(assemblage, assemblage.querySelector('canvas')!);
+    } catch {
+      assemblage.hidden = true;
+    }
+  }, { rootMargin: '100% 0px' }).observe(assemblage);
 
   // Menu filter: cards rearrange with a view transition where supported.
   const boutons = document.querySelectorAll<HTMLButtonElement>('[data-filtre]');
@@ -763,6 +801,106 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
   }
   @keyframes molette {
     to { transform: translateY(14px); opacity: 0; }
+  }
+
+  /* ---------- 3D assembly: pinned scene, one caption per stage (data-etape set by the script) ---------- */
+  .assemblage {
+    position: relative;
+    height: 650vh;
+  }
+  .assemblage[hidden] {
+    display: none;
+  }
+  .assemblage__colle {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+    background: radial-gradient(ellipse 70% 60% at 62% 60%, #3a1d0e, var(--nuit) 72%);
+  }
+  .assemblage__scene {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .legendes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    left: clamp(1rem, 7vw, 7rem);
+    top: 50%;
+    width: min(28rem, 40vw);
+    translate: 0 -50%;
+    pointer-events: none;
+  }
+  .legendes li {
+    position: absolute;
+    inset: auto 0 0;
+    translate: 0 50%;
+    opacity: 0;
+    transform: translateY(40px);
+    filter: blur(8px);
+    transition:
+      opacity 0.6s var(--courbe),
+      transform 0.8s var(--courbe),
+      filter 0.6s;
+  }
+  .legendes h2 {
+    font-size: clamp(3rem, 6.5vw, 6rem);
+    font-style: italic;
+  }
+  .legendes li p:last-child {
+    margin: 1rem 0 0;
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+    color: var(--creme-2);
+  }
+  .assemblage:not([data-etape]) li[data-i='0'],
+  .assemblage[data-etape='0'] li[data-i='0'],
+  .assemblage[data-etape='1'] li[data-i='1'],
+  .assemblage[data-etape='2'] li[data-i='2'],
+  .assemblage[data-etape='3'] li[data-i='3'],
+  .assemblage[data-etape='4'] li[data-i='4'],
+  .assemblage[data-etape='5'] li[data-i='5'] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  .assemblage[data-etape='4'] h2 {
+    color: var(--flamme);
+    text-shadow: 0 0 40px rgba(255, 90, 31, 0.6);
+  }
+  .assemblage__barre {
+    position: absolute;
+    left: clamp(1rem, 7vw, 7rem);
+    right: clamp(1rem, 7vw, 7rem);
+    bottom: 2.5rem;
+    height: 2px;
+    background: rgba(246, 236, 217, 0.12);
+  }
+  .assemblage__barre i {
+    display: block;
+    height: 100%;
+    background: var(--braise);
+    transform-origin: left;
+    scale: var(--p, 0) 1;
+  }
+  @media (max-width: 860px) {
+    /* Phone: caption at the top, pizza below. */
+    .legendes {
+      top: 6.5rem;
+      width: auto;
+      right: 1rem;
+      translate: none;
+    }
+    .legendes li {
+      inset: 0 0 auto;
+      translate: none;
+    }
+    .legendes h2 {
+      font-size: clamp(2.6rem, 11vw, 4rem);
+    }
   }
 
   /* ---------- Shared section layout ---------- */
