@@ -145,16 +145,16 @@ const carte = [
   { nom: 'Ortolana', desc: 'Tomate, courgette, poivrons rôtis, olives taggiasche', prix: 14, cat: 'rosse', base: 'rossa', g: ['mozza', 'legumes', 'olives'], graine: 13 },
 ] as const;
 const filtres = [['toutes', 'Toutes'], ['rosse', 'Rosse'], ['bianche', 'Bianche'], ['piccanti', 'Piccanti']];
-const heroPizza = pizza('hero', 21, 'rossa', ['mozza', 'basilic']);
 const citation = 'On ne cuit pas une pizza. On la saisit, quatre-vingt-dix secondes, dans un four à quatre cent quatre-vingt-cinq degrés.';
-// Captions of the 3D assembly, one per scroll stage (same thresholds as src/scripts/pizza3d.ts).
+// Captions of the 3D pizza after the opening screen, one per stage (same order as SEUILS in src/scripts/pizza3d.ts).
 const etapes3d = [
   ['La pâte.', 'Maturée 48 heures, étirée à la main. Jamais au rouleau.'],
   ['San Marzano.', 'Une louche, étalée en spirale du centre vers le bord.'],
   ['Fior di latte.', 'Déchirée à la main, juste avant d’enfourner.'],
+  ['Salame piccante.', 'Tranché fin. Au four, il se recourbe et caramélise.'],
   ['Basilic frais.', 'Cueilli le matin même, posé à la dernière seconde.'],
   ['485 °C.', 'Quatre-vingt-dix secondes. La croûte se tigre, le fromage file.'],
-  ['Margherita.', 'Telle qu’à Naples depuis 1889. Rien à ajouter.'],
+  ['La Fuoco.', 'Notre signature : salame piccante, fior di latte, basilic.'],
 ];
 const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', true], ['21:00', true], ['21:30', false]] as const;
 ---
@@ -180,42 +180,31 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     </header>
 
     <main id="haut">
-      <section class="hero">
-        <canvas class="braises" aria-hidden="true"></canvas>
-        <div class="hero__texte">
-          <p class="sur">Pizzeria napolitaine · Versailles</p>
-          <h1 aria-label="Fuoco">
-            {[...'Fuoco'].map((c, k) => <span style={`--k: ${k}`} aria-hidden="true">{c}</span>)}
-          </h1>
-          <p class="hero__accroche">Pâte maturée 48 heures. Cuite <em>90 secondes</em> au feu de bois, à 485 °C. Rien d’autre.</p>
-          <div class="hero__boutons">
-            <a class="bouton" href="#reserver">Réserver une table</a>
-            <a class="bouton bouton--ligne" href="#carte">Voir la carte</a>
-          </div>
-        </div>
-        <div class="hero__four" aria-hidden="true">
-          <div class="voute">
-            <div class="flammes"><i></i><i></i><i></i><i></i></div>
-          </div>
-          <div class="pelle">
-            <svg class="hero__pizza" viewBox="0 0 200 200" set:html={heroPizza} />
-          </div>
-        </div>
-        <a class="descendre" href="#carte" aria-label="Voir la carte"><span></span></a>
-      </section>
-
-      <section class="assemblage" aria-label="Comment naît une Margherita">
+      <section class="assemblage" aria-label="Fuoco, la pizza construite au fil du défilement">
         <div class="assemblage__colle">
           <canvas class="assemblage__scene" aria-hidden="true"></canvas>
+          <canvas class="braises" aria-hidden="true"></canvas>
           <ol class="legendes">
+            <li data-i="0" class="accueil">
+              <p class="sur">Pizzeria napolitaine · Versailles</p>
+              <h1 aria-label="Fuoco">
+                {[...'Fuoco'].map((c, k) => <span style={`--k: ${k}`} aria-hidden="true">{c}</span>)}
+              </h1>
+              <p class="accueil__accroche">Pâte maturée 48 heures. Cuite <em>90 secondes</em> au feu de bois, à 485 °C. Rien d’autre.</p>
+              <div class="accueil__boutons">
+                <a class="bouton" href="#reserver">Réserver une table</a>
+                <a class="bouton bouton--ligne" href="#carte">Voir la carte</a>
+              </div>
+            </li>
             {etapes3d.map(([t, d], i) => (
-              <li data-i={i}>
+              <li data-i={i + 1}>
                 <p class="sur">0{i + 1} / 0{etapes3d.length}</p>
                 <h2>{t}</h2>
                 <p>{d}</p>
               </li>
             ))}
           </ol>
+          <span class="descendre" aria-hidden="true"><span></span></span>
           <div class="assemblage__barre" aria-hidden="true"><i></i></div>
         </div>
       </section>
@@ -328,7 +317,7 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
   );
   document.querySelectorAll('.r').forEach((el) => io.observe(el));
 
-  // Embers rising from the bottom of the hero.
+  // Embers rising over the 3D scene.
   const toile = document.querySelector<HTMLCanvasElement>('.braises')!;
   const ctx = toile.getContext('2d')!;
   let w = 0, h = 0, visible = true;
@@ -626,33 +615,17 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     opacity: 1 !important;
   }
 
-  /* ---------- Hero: title on the left, the oven mouth on the right ---------- */
-  .hero {
-    position: relative;
-    min-height: 100svh;
-    display: grid;
-    grid-template-columns: 1.1fr 1fr;
-    align-items: center;
-    gap: 2rem;
-    padding: 6rem clamp(1rem, 4vw, 3rem) 4rem;
-    overflow: hidden;
-    background: radial-gradient(ellipse 60% 70% at 75% 70%, rgba(255, 90, 31, 0.18), transparent 70%);
-  }
+  /* ---------- Opening screen (caption 0 of the 3D scene) ---------- */
   .braises {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 3;
-  }
-  .hero__texte {
-    position: relative;
-    z-index: 4;
   }
   h1 {
     margin: 0;
-    font-size: clamp(5.5rem, 17vw, 17rem);
+    font-size: clamp(5rem, 13vw, 14rem);
     font-weight: 900;
     font-style: italic;
     line-height: 0.82;
@@ -678,115 +651,35 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
   @keyframes vacille {
     to { background-position: 0 100%; }
   }
-  .hero__accroche {
+  .accueil__accroche {
     max-width: 30rem;
     margin: 1.5rem 0 2rem;
     font-size: clamp(1.05rem, 1.6vw, 1.3rem);
     color: var(--creme-2);
     animation: monte 0.9s 0.8s var(--courbe) both;
   }
-  .hero__boutons {
+  .accueil__boutons {
     display: flex;
     flex-wrap: wrap;
     gap: 0.8rem;
     animation: monte 0.9s 1s var(--courbe) both;
   }
-  .hero .sur {
+  .accueil .sur {
     animation: monte 0.9s 0.1s var(--courbe) both;
   }
   @keyframes monte {
     from { opacity: 0; transform: translateY(20px); }
   }
-
-  .hero__four {
-    position: relative;
-    z-index: 2;
-    justify-self: center;
-    width: min(100%, 560px);
-    animation: allume 1.6s 0.3s ease-out both;
-  }
-  @keyframes allume {
-    from { filter: brightness(0.15) saturate(0.4); }
-  }
-  /* Oven vault: brick voussoirs around a glowing mouth. */
-  .voute {
-    position: relative;
-    aspect-ratio: 1 / 0.86;
-    padding: 26px 26px 0;
-    border-radius: 50% 50% 0 0 / 62% 62% 0 0;
-    background: repeating-conic-gradient(from -90deg at 50% 100%, #6b2a16 0 5.4deg, #2c1009 5.4deg 6deg);
-    box-shadow: 0 0 140px rgba(255, 90, 31, 0.35);
-  }
-  .flammes {
-    position: relative;
-    height: 100%;
-    overflow: hidden;
-    border-radius: 50% 50% 0 0 / 62% 62% 0 0;
-    background: radial-gradient(ellipse 80% 70% at 50% 100%, #ffd27a 0%, #ff7a1a 25%, #c32a0e 50%, #3a0d05 78%, #0d0503);
-    box-shadow: inset 0 30px 60px rgba(0, 0, 0, 0.8);
-  }
-  .flammes i {
-    position: absolute;
-    bottom: -12%;
-    width: 46%;
-    aspect-ratio: 0.7;
-    border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%;
-    background: radial-gradient(ellipse at 50% 80%, #fff1b8, #ffb347 30%, #ff5a1f 60%, transparent 72%);
-    filter: blur(10px);
-    mix-blend-mode: screen;
-    transform-origin: 50% 100%;
-    animation: flamme 1.4s ease-in-out infinite alternate;
-  }
-  .flammes i:nth-child(1) { left: 2%; animation-duration: 1.1s; }
-  .flammes i:nth-child(2) { left: 26%; height: auto; width: 52%; animation-delay: -0.4s; }
-  .flammes i:nth-child(3) { left: 54%; animation-duration: 1.7s; animation-delay: -0.9s; }
-  .flammes i:nth-child(4) { left: 30%; width: 38%; opacity: 0.7; animation-duration: 0.9s; }
-  @keyframes flamme {
-    0% { transform: scale(1, 0.85) skewX(-4deg); opacity: 0.75; }
-    50% { transform: scale(0.92, 1.12) skewX(5deg); opacity: 1; }
-    100% { transform: scale(1.06, 0.95) skewX(-2deg); opacity: 0.85; }
-  }
-  /* The pizza comes out of the oven on its peel, then keeps turning slowly. */
-  .pelle {
-    position: relative;
-    margin: -34% auto 0;
-    width: 74%;
-    animation: sort 1.4s 0.9s var(--courbe) both;
-  }
-  .pelle::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 92%;
-    width: 9%;
-    height: 40%;
-    translate: -50% 0;
-    border-radius: 0 0 8px 8px;
-    background: linear-gradient(90deg, #6e4423, #a87346 50%, #6e4423);
-    z-index: -1;
-  }
-  @keyframes sort {
-    from { transform: translateY(-30%) scale(0.6); filter: brightness(2.2) blur(2px); opacity: 0; }
-  }
-  .hero__pizza {
-    display: block;
-    width: 100%;
-    filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.6));
-    animation: tourne 40s linear infinite;
-  }
-  @keyframes tourne {
-    to { rotate: 360deg; }
-  }
   .descendre {
     position: absolute;
     left: 50%;
-    bottom: 1.5rem;
-    z-index: 5;
+    bottom: 4.5rem;
     width: 26px;
     height: 42px;
     translate: -50% 0;
     border: 1.5px solid var(--creme-2);
     border-radius: 999px;
+    transition: opacity 0.5s;
   }
   .descendre span {
     position: absolute;
@@ -802,11 +695,14 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
   @keyframes molette {
     to { transform: translateY(14px); opacity: 0; }
   }
+  .assemblage[data-etape]:not([data-etape='0']) .descendre {
+    opacity: 0;
+  }
 
   /* ---------- 3D assembly: pinned scene, one caption per stage (data-etape set by the script) ---------- */
   .assemblage {
     position: relative;
-    height: 650vh;
+    height: 850vh;
   }
   .assemblage[hidden] {
     display: none;
@@ -862,12 +758,23 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
   .assemblage[data-etape='2'] li[data-i='2'],
   .assemblage[data-etape='3'] li[data-i='3'],
   .assemblage[data-etape='4'] li[data-i='4'],
-  .assemblage[data-etape='5'] li[data-i='5'] {
+  .assemblage[data-etape='5'] li[data-i='5'],
+  .assemblage[data-etape='6'] li[data-i='6'],
+  .assemblage[data-etape='7'] li[data-i='7'] {
     opacity: 1;
     transform: none;
     filter: none;
   }
-  .assemblage[data-etape='4'] h2 {
+  /* The opening caption is wider (big title) and its buttons must stay clickable. */
+  .legendes .accueil {
+    right: auto;
+    width: min(46rem, 52vw);
+  }
+  .assemblage:not([data-etape]) .accueil,
+  .assemblage[data-etape='0'] .accueil {
+    pointer-events: auto;
+  }
+  .assemblage[data-etape='6'] h2 {
     color: var(--flamme);
     text-shadow: 0 0 40px rgba(255, 90, 31, 0.6);
   }
@@ -900,6 +807,16 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
     }
     .legendes h2 {
       font-size: clamp(2.6rem, 11vw, 4rem);
+    }
+    .legendes .accueil {
+      width: auto;
+      right: 0;
+    }
+    h1 {
+      font-size: clamp(4.5rem, 24vw, 7rem);
+    }
+    .accueil__accroche {
+      margin: 0.8rem 0 1rem;
     }
   }
 
@@ -1359,16 +1276,9 @@ const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', 
   }
 
   @media (max-width: 860px) {
-    .hero,
     .four,
     .resa {
       grid-template-columns: 1fr;
-    }
-    .hero {
-      padding-top: 5.5rem;
-    }
-    .hero__four {
-      width: min(86%, 420px);
     }
     .faits {
       grid-template-columns: repeat(2, 1fr);
