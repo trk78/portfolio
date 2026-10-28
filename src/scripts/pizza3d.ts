@@ -117,14 +117,14 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
   const camera = new THREE.PerspectiveCamera(26, 1, 0.1, 100);
 
   // ---------- Lights: warm spot (natural falloff on the board), orange rim, front fill, oven glow during baking
-  const cle = new THREE.SpotLight('#ffe4bf', 260, 30, 0.42, 0.85, 2);
+  const cle = new THREE.SpotLight('#ffe4bf', 70, 30, 0.42, 0.85, 2);
   cle.position.set(3.2, 7.5, 3);
   cle.castShadow = true;
   cle.shadow.mapSize.set(2048, 2048);
   cle.shadow.radius = 5;
   cle.shadow.bias = -0.0004;
   cle.shadow.normalBias = 0.02;
-  const contre = new THREE.DirectionalLight('#ff9a5a', 2);
+  const contre = new THREE.DirectionalLight('#ff9a5a', 1.2);
   contre.position.set(-3, 2.5, -4);
   const appoint = new THREE.DirectionalLight('#fff1e0', 0.45);
   appoint.position.set(-2, 1, 4);
@@ -262,7 +262,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
   }), false);
   // Raw dough has a dusty flour sheen that disappears in the oven; the charred crust glows while baking.
   const matPate = new THREE.MeshPhysicalMaterial({
-    map: pate.tex, bumpMap: relief, bumpScale: 2.6, roughness: 0.82,
+    map: pate.tex, bumpMap: relief, bumpScale: 0.9, roughness: 0.82,
     sheen: 0.8, sheenRoughness: 0.6, sheenColor: new THREE.Color('#fff6e4'),
     emissive: new THREE.Color('#ff4a10'), emissiveIntensity: 0,
   });
@@ -333,7 +333,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
   // ---------- Mozzarella: torn lumps that fall and bounce, then melt into glossy blistered puddles
   const mozza = melange(
     toile(512, (c, t) => {
-      c.fillStyle = '#fbf6ea';
+      c.fillStyle = '#f3ead4';
       c.fillRect(0, 0, t, t);
       taches(c, t, 200, 'rgba(235,225,205,.5)', 6, 30);
       grain(c, t, 6);
@@ -349,7 +349,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
   );
   const matMozza = new THREE.MeshPhysicalMaterial({ map: mozza.tex, roughness: 0.45, sheen: 1, sheenColor: new THREE.Color('#fffaf0'), clearcoat: 0.4, clearcoatRoughness: 0.35 });
   const mozzas = Array.from({ length: 18 }, (_, i) => {
-    const m = new THREE.Mesh(bosseler(new THREE.IcosahedronGeometry(0.2 + R() * 0.09, 5), 1, R() * 10), matMozza);
+    const m = new THREE.Mesh(bosseler(new THREE.IcosahedronGeometry(0.2 + R() * 0.09, 5), 1.7, R() * 10), matMozza);
     m.castShadow = m.receiveShadow = true;
     const a = R() * Math.PI * 2, d = 1.22 * Math.sqrt(R());
     m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.27 + i * 0.0075, rot: R() * Math.PI * 2, h: 2.6 + R() * 1.5 };
@@ -489,7 +489,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
   // ---------- Post-processing: soft bloom on highlights and glow, shallow depth of field on the pizza
   const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { samples: 4, type: THREE.HalfFloatType }));
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.35, 0.6, 0.82);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.2, 0.5, 1.1);
   composer.addPass(bloom);
   const flou = new BokehPass(scene, camera, { focus: 9, aperture: 0.00035, maxblur: 0.006 });
   composer.addPass(flou);
@@ -514,7 +514,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
     camera.aspect = w / h;
     // Desktop: pizza on the right of the text column. Phone: pizza in the upper part of the screen.
     if (mobile) camera.setViewOffset(w, h, 0, h * 0.2, w, h);
-    else camera.setViewOffset(w, h, -w * 0.22, 0, w, h);
+    else camera.setViewOffset(w, h, -w * 0.25, 0, w, h);
     camera.updateProjectionMatrix();
     dessinerFond(mobile ? 0.5 : 0.72, mobile ? 0.3 : 0.55);
     mesure();
@@ -563,7 +563,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
     matMozza.clearcoat = 0.4 + cuisson * 0.4;
     four.intensity = lueur * 40 * vacille;
     cle.color.copy(neutre).lerp(chaud, lueur * 0.6);
-    bloom.strength = 0.35 + lueur * 0.5;
+    bloom.strength = 0.2 + lueur * 0.4;
 
     for (const m of mozzas) {
       const { x, z, debut: d0, rot, h } = m.userData;
@@ -571,7 +571,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
       m.visible = k > 0;
       m.position.set(x, 0.1 + (1 - rebond(k)) * h - cuisson * 0.02, z);
       m.rotation.set(0, rot + (1 - k) * 3, 0);
-      m.scale.set(1 + cuisson * 0.75, 0.45 - cuisson * 0.3, 1 + cuisson * 0.75);
+      m.scale.set(1.15 + cuisson * 0.7, 0.3 - cuisson * 0.18, 1 + cuisson * 0.75);
     }
     for (const [n, m] of salames.entries()) {
       const { x, z, debut: d0, h } = m.userData;
@@ -605,7 +605,7 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
 
     // Camera: three-quarter view of the bare dough, lower during the assembly, overhead hero shot at the end.
     const elev = q < 0.12 ? 0.62 : THREE.MathUtils.lerp(0.45, 1.15, doux(etape(0.12, 1, q)));
-    const dist = (mobile ? 13 : 9) - q * 0.8;
+    const dist = (mobile ? 18 : 15) - q * 1.2;
     const az = 0.4 + (animer ? Math.sin(t * 0.15) * 0.08 : 0);
     camera.position.set(Math.sin(az) * Math.cos(elev) * dist, Math.sin(elev) * dist, Math.cos(az) * Math.cos(elev) * dist);
     camera.lookAt(0, 0.08, 0);
