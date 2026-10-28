@@ -36,115 +36,172 @@ const point = (R: () => number, rmax: number) => {
   return [100 + Math.cos(a) * d, 100 + Math.sin(a) * d];
 };
 
-type Garniture = 'mozza' | 'basilic' | 'salame' | 'piment' | 'fromages' | 'champignons' | 'truffe' | 'legumes' | 'olives' | 'burrata' | 'roquette' | 'tomates';
+type Garniture =
+  | 'mozza' | 'basilic' | 'salame' | 'piment' | 'fromages' | 'champignons' | 'truffe' | 'legumes'
+  | 'olives' | 'burrata' | 'roquette' | 'tomates' | 'parmesan' | 'huile' | 'origan';
 
+// Menu pizza drawn in SVG: textured crust with leopard spotting, glossy sauce, toppings with soft shadows,
+// and a light from the top left over everything for volume.
 function pizza(id: string, graine: number, base: 'rossa' | 'bianca', garnitures: Garniture[]) {
   const R = alea(graine);
   const g = (x: Garniture) => garnitures.includes(x);
+  const u = (n: string) => `url(#${id}-${n})`;
   let s = `<defs>
-    <radialGradient id="${id}-c"><stop offset=".72" stop-color="#f3c886"/><stop offset=".9" stop-color="#d98a3f"/><stop offset="1" stop-color="#9c5220"/></radialGradient>
-    <radialGradient id="${id}-s"><stop offset="0" stop-color="#e5482a"/><stop offset=".85" stop-color="#c22d18"/><stop offset="1" stop-color="#9e2111"/></radialGradient>
-    <radialGradient id="${id}-b"><stop offset="0" stop-color="#fbf2de"/><stop offset="1" stop-color="#e6cc98"/></radialGradient>
-    <radialGradient id="${id}-m" cx=".4" cy=".35"><stop offset="0" stop-color="#fffaf0"/><stop offset=".7" stop-color="#f6e6c2"/><stop offset="1" stop-color="#e2be7c"/></radialGradient>
-    <radialGradient id="${id}-l" cx=".35" cy=".28"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></radialGradient>
-    <filter id="${id}-f"><feGaussianBlur stdDeviation="1.1"/></filter>
+    <radialGradient id="${id}-c"><stop offset=".7" stop-color="#f2c47e"/><stop offset=".82" stop-color="#e3a458"/><stop offset=".93" stop-color="#c47632"/><stop offset="1" stop-color="#8a451a"/></radialGradient>
+    <radialGradient id="${id}-r"><stop offset=".8" stop-color="#fff0d0" stop-opacity="0"/><stop offset=".87" stop-color="#fff0d0" stop-opacity=".45"/><stop offset=".95" stop-color="#fff0d0" stop-opacity="0"/></radialGradient>
+    <radialGradient id="${id}-s"><stop offset="0" stop-color="#df4426"/><stop offset=".8" stop-color="#c22c15"/><stop offset="1" stop-color="#7f160a"/></radialGradient>
+    <radialGradient id="${id}-b"><stop offset="0" stop-color="#fbf1dc"/><stop offset=".85" stop-color="#ecd5a6"/><stop offset="1" stop-color="#d4ae6c"/></radialGradient>
+    <radialGradient id="${id}-m" cx=".38" cy=".32"><stop offset="0" stop-color="#fffdf6"/><stop offset=".55" stop-color="#f8edd4"/><stop offset="1" stop-color="#dfb878"/></radialGradient>
+    <radialGradient id="${id}-sa" cx=".42" cy=".38"><stop offset="0" stop-color="#bb3423"/><stop offset=".75" stop-color="#931f12"/><stop offset="1" stop-color="#560c05"/></radialGradient>
+    <linearGradient id="${id}-fe" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4caa45"/><stop offset="1" stop-color="#1d5a1f"/></linearGradient>
+    <radialGradient id="${id}-l" cx=".3" cy=".25" r=".85"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset=".8" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></radialGradient>
+    <filter id="${id}-f"><feGaussianBlur stdDeviation="1"/></filter>
+    <filter id="${id}-o" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx=".7" dy="1.3" stdDeviation=".9" flood-color="#2a0c03" flood-opacity=".6"/></filter>
+    <filter id="${id}-t" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" seed="${graine}"/><feColorMatrix values="0 0 0 0 .25  0 0 0 0 .12  0 0 0 0 .04  0 0 0 -1.4 1"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+    <clipPath id="${id}-k"><circle cx="100" cy="100" r="95"/></clipPath>
   </defs>
-  <circle cx="102" cy="104" r="96" fill="#000" opacity=".45" filter="url(#${id}-f)"/>
-  <path d="${forme(R, 100, 100, 95, 40, 0.03)}" fill="url(#${id}-c)"/>`;
-  // Leopard spotting on the rim (charred bubbles from the wood fire).
-  for (let k = 0; k < 26; k++) {
-    const a = R() * Math.PI * 2;
-    const d = 84 + R() * 9;
-    s += `<circle cx="${f(100 + Math.cos(a) * d)}" cy="${f(100 + Math.sin(a) * d)}" r="${f(1.4 + R() * 3)}" fill="#3b1c0d" opacity="${f(0.45 + R() * 0.45)}" filter="url(#${id}-f)"/>`;
+  <ellipse cx="103" cy="106" rx="96" ry="95" fill="#000" opacity=".5" filter="${u('f')}"/>
+  <path d="${forme(R, 100, 100, 95, 44, 0.025)}" fill="${u('c')}"/>
+  <path d="${forme(R, 100, 100, 95, 44, 0.025)}" fill="${u('r')}"/>`;
+  // Leopard spotting: charred bubbles in small clusters on the rim, with flour dust in between.
+  for (let k = 0; k < 16; k++) {
+    const a = R() * Math.PI * 2, d = 83 + R() * 9;
+    for (let j = 0; j < 3; j++) {
+      const x = 100 + Math.cos(a) * d + (R() - 0.5) * 6, y = 100 + Math.sin(a) * d + (R() - 0.5) * 6;
+      s += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(0.8 + R() * 2.4)}" fill="#2b1206" opacity="${f(0.5 + R() * 0.45)}"/>`;
+    }
   }
-  s += `<path d="${forme(R, 100, 100, 79, 48, 0.045)}" fill="url(#${id}-${base === 'rossa' ? 's' : 'b'})"/>`;
+  for (let k = 0; k < 40; k++) {
+    const a = R() * Math.PI * 2, d = 82 + R() * 12;
+    s += `<circle cx="${f(100 + Math.cos(a) * d)}" cy="${f(100 + Math.sin(a) * d)}" r="${f(0.4 + R() * 0.6)}" fill="#fff8ea" opacity=".55"/>`;
+  }
+  // Base: sauce or cream, with a darker edge and a noise texture.
+  s += `<path d="${forme(R, 100, 100, 77, 52, 0.04)}" fill="${u(base === 'rossa' ? 's' : 'b')}"/>`;
   if (base === 'rossa') {
-    for (let k = 0; k < 14; k++) {
-      const [x, y] = point(R, 70);
-      s += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(2 + R() * 5)}" fill="#8f1a0c" opacity=".35" filter="url(#${id}-f)"/>`;
+    for (let k = 0; k < 18; k++) {
+      const [x, y] = point(R, 68);
+      s += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(2 + R() * 5)}" fill="${R() > 0.5 ? '#8a1709' : '#ec6440'}" opacity=".35" filter="${u('f')}"/>`;
     }
   }
-  const fromage = (x: number, y: number, r: number, couleur = `url(#${id}-m)`) =>
-    `<path d="${forme(R, x, y, r, 10, 0.28)}" fill="${couleur}"/>` +
-    (R() > 0.4 ? `<circle cx="${f(x + (R() - 0.5) * r)}" cy="${f(y + (R() - 0.5) * r)}" r="${f(1.5 + R() * 2.5)}" fill="#c98a3c" opacity=".55" filter="url(#${id}-f)"/>` : '');
-  if (g('mozza')) for (let k = 0; k < 8; k++) { const [x, y] = point(R, 58); s += fromage(x, y, 10 + R() * 7); }
+  s += `<rect width="200" height="200" filter="${u('t')}" opacity=".35" clip-path="${u('k')}"/>`;
+  // Toppings, each group with a soft shadow.
+  let t = '';
+  const fromage = (x: number, y: number, r: number, couleur = u('m')) => {
+    let m = `<path d="${forme(R, x, y, r, 11, 0.3)}" fill="${couleur}"/>`;
+    for (let j = 0; j < 2; j++) if (R() > 0.35) m += `<circle cx="${f(x + (R() - 0.5) * r)}" cy="${f(y + (R() - 0.5) * r)}" r="${f(1.2 + R() * 2.4)}" fill="#c9852f" opacity=".6" filter="${u('f')}"/>`;
+    return m + `<ellipse cx="${f(x - r * 0.25)}" cy="${f(y - r * 0.3)}" rx="${f(r * 0.3)}" ry="${f(r * 0.16)}" fill="#fff" opacity=".45"/>`;
+  };
+  if (g('mozza')) for (let k = 0; k < 11; k++) { const [x, y] = point(R, 60); t += fromage(x, y, 8 + R() * 7); }
   if (g('fromages')) {
-    const couleurs = [`url(#${id}-m)`, '#f2cf6e', '#efe6d2', '#e2b55a'];
-    for (let k = 0; k < 16; k++) {
+    const couleurs = [u('m'), '#f3d071', '#efe7d4', '#e4b85e'];
+    for (let k = 0; k < 18; k++) {
       const [x, y] = point(R, 62);
-      s += fromage(x, y, 8 + R() * 6, couleurs[k % 4]);
-      if (k % 4 === 2) for (let j = 0; j < 4; j++) s += `<circle cx="${f(x + (R() - 0.5) * 10)}" cy="${f(y + (R() - 0.5) * 10)}" r="1.1" fill="#5d72a3" opacity=".8"/>`;
+      t += fromage(x, y, 7 + R() * 6, couleurs[k % 4]);
+      if (k % 4 === 2) for (let j = 0; j < 6; j++) t += `<circle cx="${f(x + (R() - 0.5) * 11)}" cy="${f(y + (R() - 0.5) * 11)}" r="${f(0.6 + R() * 0.8)}" fill="#4f6f7d" opacity=".85"/>`;
     }
   }
-  if (g('burrata')) s += fromage(100, 100, 27) + `<path d="${forme(R, 96, 95, 12, 8, 0.2)}" fill="#fffdf6" opacity=".9"/>`;
+  if (g('burrata')) {
+    t += fromage(100, 100, 28);
+    // Torn centre: creamy stracciatella with black pepper.
+    t += `<path d="${forme(R, 97, 96, 13, 9, 0.3)}" fill="#fffef8"/>`;
+    for (let j = 0; j < 10; j++) t += `<circle cx="${f(92 + R() * 14)}" cy="${f(90 + R() * 14)}" r=".7" fill="#2a2420"/>`;
+  }
   if (g('salame')) {
-    for (let k = 0; k < 10; k++) {
-      const [x, y] = point(R, 62);
-      s += `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(R() * 360)})"><ellipse rx="9.5" ry="8.6" fill="#7e1a0f"/><ellipse rx="8" ry="7.2" fill="#a8281a"/>`;
-      for (let j = 0; j < 5; j++) s += `<circle cx="${f((R() - 0.5) * 10)}" cy="${f((R() - 0.5) * 9)}" r="${f(0.7 + R())}" fill="#eaa18c"/>`;
-      s += `</g>`;
+    for (let k = 0; k < 13; k++) {
+      const [x, y] = k === 0 ? [100, 100] : point(R, 62);
+      t += `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(R() * 360)})"><circle r="10" fill="${u('sa')}"/><circle r="10" fill="none" stroke="#4a0b04" stroke-width="1.4" opacity=".7"/>`;
+      for (let j = 0; j < 7; j++) t += `<ellipse cx="${f((R() - 0.5) * 13)}" cy="${f((R() - 0.5) * 13)}" rx="${f(0.7 + R() * 1.3)}" ry="${f(0.6 + R())}" fill="#f2b3a0" opacity=".85"/>`;
+      // Edge curled up in the oven: a light rim on the top left.
+      t += `<path d="M-8.5-4A9.5 9.5 0 0 1 4-8.8" fill="none" stroke="#e86a4f" stroke-width="1.3" stroke-linecap="round" opacity=".7"/></g>`;
     }
   }
   if (g('champignons')) {
-    for (let k = 0; k < 9; k++) {
+    for (let k = 0; k < 10; k++) {
       const [x, y] = point(R, 60);
-      s += `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(R() * 360)})"><path d="M-8 0A8 7 0 0 1 8 0L3 0 3 6-3 6-3 0Z" fill="#d8b890" stroke="#8a6440" stroke-width="1.1"/></g>`;
+      t += `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(R() * 360)})"><path d="M-9 0A9 8 0 0 1 9 0L3.4 0 3.4 7-3.4 7-3.4 0Z" fill="#dcc09a" stroke="#8f6842" stroke-width="1"/><path d="M-6 0Q0-4 6 0M-4 0Q0-6 4 0" fill="none" stroke="#a57d55" stroke-width=".6"/></g>`;
     }
   }
   if (g('truffe')) {
-    for (let k = 0; k < 8; k++) {
+    for (let k = 0; k < 9; k++) {
       const [x, y] = point(R, 55);
-      s += `<path d="${forme(R, x, y, 4 + R() * 2, 7, 0.3)}" fill="#3a2a20" stroke="#6b5444" stroke-width=".6"/>`;
+      t += `<path d="${forme(R, x, y, 4.5 + R() * 2, 8, 0.25)}" fill="#3a2a20"/><path d="M${f(x - 3)} ${f(y)}q2-2 4 0t3 1" fill="none" stroke="#9a8270" stroke-width=".5"/>`;
     }
   }
   if (g('legumes')) {
-    for (let k = 0; k < 6; k++) {
-      const [x, y] = point(R, 60);
-      s += `<circle cx="${f(x)}" cy="${f(y)}" r="6.5" fill="#e4edbd" stroke="#3f7a25" stroke-width="2.2"/><circle cx="${f(x)}" cy="${f(y)}" r="2.5" fill="#cfdc94"/>`;
-    }
     for (let k = 0; k < 7; k++) {
+      const [x, y] = point(R, 60);
+      t += `<circle cx="${f(x)}" cy="${f(y)}" r="7" fill="#e6efc2" stroke="#3a7322" stroke-width="2.2"/>`;
+      for (let j = 0; j < 5; j++) t += `<circle cx="${f(x + (R() - 0.5) * 6)}" cy="${f(y + (R() - 0.5) * 6)}" r=".7" fill="#b9c77a"/>`;
+    }
+    for (let k = 0; k < 8; k++) {
       const [x, y] = point(R, 62);
       const a = R() * 6.28;
-      s += `<path d="M${f(x)} ${f(y)}q${f(Math.cos(a) * 8)} ${f(Math.sin(a) * 8 - 4)} ${f(Math.cos(a) * 16)} ${f(Math.sin(a) * 16)}" fill="none" stroke="${k % 2 ? '#e8382a' : '#f2b51d'}" stroke-width="3.4" stroke-linecap="round"/>`;
+      t += `<path d="M${f(x)} ${f(y)}q${f(Math.cos(a) * 8)} ${f(Math.sin(a) * 8 - 4)} ${f(Math.cos(a) * 16)} ${f(Math.sin(a) * 16)}" fill="none" stroke="${k % 2 ? '#e2361f' : '#f0b21a'}" stroke-width="3.6" stroke-linecap="round"/>`;
     }
   }
-  if (g('olives')) for (let k = 0; k < 8; k++) { const [x, y] = point(R, 64); s += `<circle cx="${f(x)}" cy="${f(y)}" r="3.6" fill="none" stroke="#2a2220" stroke-width="2.4"/>`; }
   if (g('tomates')) {
-    for (let k = 0; k < 6; k++) {
+    for (let k = 0; k < 7; k++) {
       const [x, y] = point(R, 60);
-      s += `<circle cx="${f(x)}" cy="${f(y)}" r="6" fill="#d9291a"/><circle cx="${f(x - 1)}" cy="${f(y - 1)}" r="3.6" fill="#f0624a"/><circle cx="${f(x - 2)}" cy="${f(y - 2.4)}" r="1.2" fill="#fff" opacity=".5"/>`;
+      t += `<circle cx="${f(x)}" cy="${f(y)}" r="6.5" fill="#d32a17"/><circle cx="${f(x)}" cy="${f(y)}" r="4.4" fill="#f07155"/>`;
+      for (let j = 0; j < 4; j++) t += `<ellipse cx="${f(x + Math.cos(j * 1.57) * 2.2)}" cy="${f(y + Math.sin(j * 1.57) * 2.2)}" rx=".9" ry=".6" fill="#f7d6a0"/>`;
+      t += `<ellipse cx="${f(x - 2.5)}" cy="${f(y - 3)}" rx="1.6" ry=".8" fill="#fff" opacity=".6"/>`;
+    }
+  }
+  if (g('olives')) {
+    for (let k = 0; k < 10; k++) {
+      const [x, y] = point(R, 64);
+      t += `<circle cx="${f(x)}" cy="${f(y)}" r="3.8" fill="none" stroke="#231a1d" stroke-width="2.6"/><path d="M${f(x - 3)} ${f(y - 2)}a3.8 3.8 0 0 1 3-2" fill="none" stroke="#8a7a80" stroke-width=".8"/>`;
     }
   }
   if (g('roquette')) {
-    for (let k = 0; k < 16; k++) {
-      const [x, y] = point(R, 66);
-      const a = R() * 360;
-      s += `<path transform="translate(${f(x)} ${f(y)}) rotate(${f(a)})" d="M-9 0L9 0M-5 0l-2-3M-1 0l-2 3M3 0l-2-3M6 0l-2 3" stroke="#3f8a2b" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+    for (let k = 0; k < 18; k++) {
+      const [x, y] = point(R, 64);
+      t += `<path transform="translate(${f(x)} ${f(y)}) rotate(${f(R() * 360)})" d="M-10 0L10 0M-6 0l-2.5-3.5M-2 0l-2 3.5M2 0l-2-3.5M6 0l-2 3.5" stroke="#3c8a2a" stroke-width="2.2" stroke-linecap="round" fill="none"/>`;
     }
   }
   if (g('basilic')) {
-    for (let k = 0; k < 5; k++) {
-      const [x, y] = point(R, 50);
-      s += `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(R() * 360)}) scale(${f(0.9 + R() * 0.5)})"><path d="M0-10Q8-3 0 10Q-8-3 0-10Z" fill="#2c7a2e"/><path d="M0-8V8" stroke="#56a64d" stroke-width=".9"/></g>`;
+    for (let k = 0; k < 6; k++) {
+      const [x, y] = point(R, 52);
+      t += `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(R() * 360)}) scale(${f(0.9 + R() * 0.5)})"><path d="M0-11Q9-3 0 11Q-9-3 0-11Z" fill="${u('fe')}"/><path d="M0-9V9M0-4l3.5-2M0 0l4-2M0-4l-3.5-2M0 0l-4-2" stroke="#7cc46c" stroke-width=".7" fill="none"/><ellipse cx="-2" cy="-4" rx="1.6" ry="3" fill="#fff" opacity=".25"/></g>`;
     }
   }
+  if (g('parmesan')) {
+    for (let k = 0; k < 12; k++) {
+      const [x, y] = point(R, 58);
+      t += `<path transform="translate(${f(x)} ${f(y)}) rotate(${f(R() * 360)})" d="M-5-1.5L5-2.5 4.5 1.5-4.5 2Z" fill="#f4e2a6" stroke="#d8bd72" stroke-width=".4"/>`;
+    }
+  }
+  s += `<g filter="${u('o')}">${t}</g>`;
   if (g('piment')) {
-    for (let k = 0; k < 34; k++) {
+    for (let k = 0; k < 40; k++) {
       const [x, y] = point(R, 70);
       s += `<rect x="${f(x)}" y="${f(y)}" width="2.4" height="1.2" rx=".5" fill="#d8351a" transform="rotate(${f(R() * 360)} ${f(x)} ${f(y)})"/>`;
     }
   }
-  return s + `<circle cx="100" cy="100" r="95" fill="url(#${id}-l)"/>`;
+  if (g('origan')) {
+    for (let k = 0; k < 60; k++) {
+      const [x, y] = point(R, 70);
+      s += `<rect x="${f(x)}" y="${f(y)}" width="1.3" height=".8" fill="${R() > 0.5 ? '#4d5c1f' : '#6b7a2c'}" opacity=".85"/>`;
+    }
+  }
+  if (g('huile')) {
+    // Olive oil: a few golden glints catching the light.
+    for (let k = 0; k < 9; k++) {
+      const [x, y] = point(R, 62);
+      s += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(2 + R() * 3)}" ry="${f(1 + R() * 1.5)}" fill="#ffd45e" opacity=".45"/><circle cx="${f(x - 1)}" cy="${f(y - 0.6)}" r=".7" fill="#fff" opacity=".8"/>`;
+    }
+  }
+  return s + `<circle cx="100" cy="100" r="95" fill="${u('l')}"/>`;
 }
 
 const carte = [
-  { nom: 'La Fuoco', desc: 'Tomate, fior di latte, salame piccante, basilic, huile d’olive', prix: 16, cat: 'rosse', base: 'rossa', g: ['mozza', 'salame', 'basilic'], graine: 23, signature: true },
-  { nom: 'Margherita', desc: 'San Marzano, fior di latte, basilic, huile d’olive', prix: 12, cat: 'rosse', base: 'rossa', g: ['mozza', 'basilic'], graine: 3 },
-  { nom: 'Diavola', desc: 'Tomate, fior di latte, salame piquant, piment de Calabre', prix: 15, cat: 'piccanti', base: 'rossa', g: ['mozza', 'salame', 'piment'], graine: 7 },
-  { nom: 'Quattro formaggi', desc: 'Fior di latte, gorgonzola, parmesan 24 mois, scamorza fumée', prix: 16, cat: 'bianche', base: 'bianca', g: ['fromages'], graine: 11 },
-  { nom: 'Funghi e tartufo', desc: 'Crème de truffe, champignons, fior di latte', prix: 19, cat: 'bianche', base: 'bianca', g: ['mozza', 'champignons', 'truffe'], graine: 5 },
-  { nom: 'Burrata', desc: 'Tomate, burrata entière, roquette, tomates cerises', prix: 17, cat: 'rosse', base: 'rossa', g: ['burrata', 'tomates', 'roquette'], graine: 17 },
-  { nom: 'Ortolana', desc: 'Tomate, courgette, poivrons rôtis, olives taggiasche (végétarienne)', prix: 14, cat: 'rosse', base: 'rossa', g: ['mozza', 'legumes', 'olives'], graine: 13 },
+  { nom: 'La Fuoco', desc: 'Tomate, fior di latte, salame piccante, olives noires, basilic, huile d’olive', prix: 16, cat: 'rosse', base: 'rossa', g: ['mozza', 'salame', 'olives', 'basilic', 'huile'], graine: 23, signature: true },
+  { nom: 'Margherita', desc: 'San Marzano, fior di latte, basilic, parmesan, huile d’olive', prix: 12, cat: 'rosse', base: 'rossa', g: ['mozza', 'basilic', 'parmesan', 'huile'], graine: 3 },
+  { nom: 'Diavola', desc: 'Tomate, fior di latte, salame piquant, piment de Calabre, olives, origan', prix: 15, cat: 'piccanti', base: 'rossa', g: ['mozza', 'salame', 'piment', 'olives', 'origan'], graine: 7 },
+  { nom: 'Quattro formaggi', desc: 'Fior di latte, gorgonzola, parmesan 24 mois, scamorza fumée', prix: 16, cat: 'bianche', base: 'bianca', g: ['fromages', 'parmesan'], graine: 11 },
+  { nom: 'Funghi e tartufo', desc: 'Crème de truffe, champignons, fior di latte, parmesan', prix: 19, cat: 'bianche', base: 'bianca', g: ['mozza', 'champignons', 'truffe', 'parmesan'], graine: 5 },
+  { nom: 'Burrata', desc: 'Tomate, burrata entière, tomates cerises, roquette, parmesan, huile d’olive', prix: 17, cat: 'rosse', base: 'rossa', g: ['burrata', 'tomates', 'roquette', 'parmesan', 'huile'], graine: 17 },
+  { nom: 'Ortolana', desc: 'Tomate, courgette, poivrons rôtis, olives taggiasche, basilic (végétarienne)', prix: 14, cat: 'rosse', base: 'rossa', g: ['mozza', 'legumes', 'olives', 'basilic', 'origan'], graine: 13 },
 ] as const;
 const filtres = [['toutes', 'Toutes'], ['rosse', 'Rosse'], ['bianche', 'Bianche'], ['piccanti', 'Piccanti']];
 // Opening hours, Sunday first (Date.getDay order); used for the table and the live "open now" badge.
@@ -187,7 +244,7 @@ const etoiles = '★★★★★';
   </head>
   <body>
     <canvas class="scene3d" aria-hidden="true"></canvas>
-    <div class="secours" aria-hidden="true" hidden><svg viewBox="0 0 200 200" set:html={pizza('secours', 23, 'rossa', ['mozza', 'salame', 'basilic'])} /></div>
+    <div class="secours" aria-hidden="true" hidden><svg viewBox="0 0 200 200" set:html={pizza('secours', 23, 'rossa', ['mozza', 'salame', 'olives', 'basilic', 'huile'])} /></div>
     <canvas class="braises" aria-hidden="true"></canvas>
     <p class="etiquette" aria-hidden="true"><b>01</b><span>Pâte maturée 48 h</span></p>
 
@@ -980,8 +1037,8 @@ const etoiles = '★★★★★';
   }
   .pizza {
     display: grid;
-    grid-template-columns: 4.5rem 1fr;
-    gap: 1rem;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 1.1rem;
     align-items: center;
   }
   .pizza[hidden] {
@@ -1306,6 +1363,8 @@ const etoiles = '★★★★★';
   .pied {
     padding: 4rem clamp(1rem, 4vw, 3rem) 0;
     overflow: hidden;
+    background: var(--nuit);
+    border-top: 1px solid rgba(246, 236, 217, 0.12);
   }
   .pied__infos {
     display: grid;
@@ -1320,7 +1379,7 @@ const etoiles = '★★★★★';
   }
   .pied__nom {
     margin: 2rem 0 -0.28em;
-    font-size: 30vw;
+    font-size: 24vw;
     font-weight: 900;
     font-style: italic;
     line-height: 0.8;

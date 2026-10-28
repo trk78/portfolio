@@ -1155,12 +1155,11 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     z-index: -1;
     left: 50%;
     top: 50%;
-    width: clamp(5.5rem, 10vw, 8.5rem);
+    width: clamp(6.5rem, 12vw, 10rem);
     aspect-ratio: 1;
     border-radius: 50%;
     background: var(--accent);
-    /* Pushed down so the bubble never touches the step's top line. */
-    translate: -50% calc(-50% + 0.9rem);
+    translate: -50% -50%;
     scale: 0;
     transition: scale 0.5s cubic-bezier(0.3, 1.5, 0.5, 1);
   }
