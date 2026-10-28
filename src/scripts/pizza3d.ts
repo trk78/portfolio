@@ -100,7 +100,8 @@ const bosseler = (geo: THREE.BufferGeometry, force: number, graine: number) => {
   return geo;
 };
 
-export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEtape: (i: number, cuisson: number) => void) {
+// echec: called once if WebGL breaks after start (render error or context lost); errors at start are thrown.
+export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEtape: (i: number, cuisson: number) => void, echec: (e: unknown) => void) {
   const animer = !matchMedia('(prefers-reduced-motion: reduce)').matches;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
@@ -528,9 +529,24 @@ export function demarrer(canvas: HTMLCanvasElement, ancres: HTMLElement[], surEt
   const chaud = new THREE.Color('#ffb070'), neutre = new THREE.Color('#ffe4bf');
   const debut = performance.now();
   let derniere = -1;
+  let arret = false;
+  const casse = (e: unknown) => {
+    if (arret) return;
+    arret = true;
+    echec(e);
+  };
+  canvas.addEventListener('webglcontextlost', () => casse(new Error('WebGL context lost')));
   const rendu = () => {
+    if (arret) return;
     requestAnimationFrame(rendu);
     if (document.hidden) return;
+    try {
+      image();
+    } catch (e) {
+      casse(e);
+    }
+  };
+  const image = () => {
     const t = (performance.now() - debut) / 1000;
     q += (cible - q) * 0.07;
     const i = SEUILS.filter((s) => q >= s).length;

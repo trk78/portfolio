@@ -187,6 +187,7 @@ const etoiles = '★★★★★';
   </head>
   <body>
     <canvas class="scene3d" aria-hidden="true"></canvas>
+    <div class="secours" aria-hidden="true" hidden><svg viewBox="0 0 200 200" set:html={pizza('secours', 23, 'rossa', ['mozza', 'salame', 'basilic'])} /></div>
     <canvas class="braises" aria-hidden="true"></canvas>
     <p class="etiquette" aria-hidden="true"><b>01</b><span>Pâte maturée 48 h</span></p>
 
@@ -377,20 +378,29 @@ const etoiles = '★★★★★';
   const scene = document.querySelector<HTMLCanvasElement>('.scene3d')!;
   const etiquette = document.querySelector<HTMLElement>('.etiquette')!;
   const libelles = ['Pâte maturée 48 h', 'Sauce San Marzano DOP', 'Fior di latte', 'Salame piccante', 'Basilic du potager', '485 °C · 90 secondes', 'Huile d’olive · La Fuoco'];
+  // Without WebGL (disabled acceleration, old GPU...) the drawn pizza takes its place; the cause goes to the console.
+  const secours = (e: unknown) => {
+    console.error('Pizza 3D indisponible, pizza dessinée affichée à la place :', e);
+    scene.hidden = true;
+    etiquette.hidden = true;
+    document.querySelector<HTMLElement>('.secours')!.hidden = false;
+  };
   import('../../scripts/pizza3d')
     .then(({ demarrer }) =>
-      demarrer(scene, [...document.querySelectorAll<HTMLElement>('[data-q]')], (i) => {
-        etiquette.querySelector('b')!.textContent = `0${i + 1}`;
-        etiquette.querySelector('span')!.textContent = libelles[i];
-        etiquette.classList.remove('change');
-        void etiquette.offsetWidth;
-        etiquette.classList.add('change');
-      }),
+      demarrer(
+        scene,
+        [...document.querySelectorAll<HTMLElement>('[data-q]')],
+        (i) => {
+          etiquette.querySelector('b')!.textContent = `0${i + 1}`;
+          etiquette.querySelector('span')!.textContent = libelles[i];
+          etiquette.classList.remove('change');
+          void etiquette.offsetWidth;
+          etiquette.classList.add('change');
+        },
+        secours,
+      ),
     )
-    .catch(() => {
-      scene.hidden = true;
-      etiquette.hidden = true;
-    });
+    .catch(secours);
 
   // Embers rising over the scene, stronger while the pizza bakes (--cuisson set by the 3D script).
   const toile = document.querySelector<HTMLCanvasElement>('.braises')!;
@@ -641,6 +651,34 @@ const etoiles = '★★★★★';
   }
   .scene3d[hidden] {
     display: none;
+  }
+  /* Fallback: the drawn pizza, slowly turning where the 3D one would be. */
+  .secours {
+    position: fixed;
+    top: 50%;
+    right: 6vw;
+    width: min(42vw, 70vh);
+    translate: 0 -50%;
+    filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.6));
+    animation: tourne 60s linear infinite;
+  }
+  .secours svg {
+    display: block;
+    width: 100%;
+  }
+  .secours[hidden] {
+    display: none;
+  }
+  @keyframes tourne {
+    to { rotate: 360deg; }
+  }
+  @media (max-width: 860px) {
+    .secours {
+      top: 26svh;
+      right: 50%;
+      width: 70vw;
+      translate: 50% -50%;
+    }
   }
   .braises {
     z-index: 1;
