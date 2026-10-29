@@ -1,49 +1,39 @@
 ---
-// Demo "business website" #2: a fictional Loire Valley wine estate. Light and refined, as a counterpoint to the pizzeria.
-// A 3D bottle (src/scripts/vin3d.ts) sits behind the page: its label draws itself, the wine fills it as you scroll,
-// and hovering a wine or a food pairing previews that wine in the bottle.
-import '@fontsource/cormorant-garamond/500.css';
-import '@fontsource/cormorant-garamond/600.css';
+// Demo "business website" #2: a fictional Loire Valley wine estate, in a dark luxury art direction
+// (black, burgundy, gold, engraved capitals). Visuals are 3D renders made with src/scripts/studio.ts
+// (scripts/captures/domaine.mjs → public/demo/domaine/), so the page itself is plain HTML and CSS.
+import '@fontsource/cinzel/400.css';
+import '@fontsource/cinzel/600.css';
 import '@fontsource/cormorant-garamond/500-italic.css';
-import '@fontsource/cormorant-garamond/600-italic.css';
 import '@fontsource/instrument-sans/400.css';
 import '@fontsource/instrument-sans/500.css';
-import '@fontsource/instrument-sans/600.css';
 
-const cuvees = [
-  { nom: 'Brume d’Automne', type: 'Rouge', millesime: '2021', couleur: '#4a0816', cepage: 'Cabernet franc', notes: 'Cerise noire, poivre, tanins soyeux.', prix: 18 },
-  { nom: 'Coteau Blanc', type: 'Blanc sec', millesime: '2022', couleur: '#d7bf62', cepage: 'Chenin', notes: 'Coing, fleur d’acacia, finale saline.', prix: 16 },
-  { nom: 'Rosée du Matin', type: 'Rosé', millesime: '2023', couleur: '#e3807a', cepage: 'Cabernet & Grolleau', notes: 'Fraise des bois, agrumes, très frais.', prix: 12 },
-  { nom: 'Fines Bulles', type: 'Méthode traditionnelle', millesime: '2020', couleur: '#e8d48a', cepage: 'Chenin & Chardonnay', notes: 'Brioche, pomme verte, bulle fine.', prix: 22 },
+const atouts = [
+  ['verre', 'Sélection premium', 'Nos cuvées de garde, vendangées à la main.'],
+  ['medaille', 'Coffret offert', 'Dès six bouteilles, un coffret bois gravé.'],
+  ['camion', 'Livraison', 'Partout en France, sous 72 h, en caisse protégée.'],
+  ['bouclier', 'Paiement sécurisé', 'Carte, virement ou règlement au caveau.'],
 ];
-const chiffres = [
-  [1924, '', 'année de la première vendange'],
-  [14, ' ha', 'de vignes sur un seul coteau'],
-  [4, '', 'générations de vignerons'],
-  [100, ' %', 'en agriculture biologique'],
+const selections = [
+  ['rouge', 'Vins rouges', 'Cabernet franc, à partager entre amis.'],
+  ['blanc', 'Vins blancs', 'Chenin tendu, pour la table et l’apéritif.'],
+  ['bulles', 'Fines bulles', 'Méthode traditionnelle, pour les grandes occasions.'],
+  ['reserve', 'Grande réserve', 'Nos plus vieilles vignes, élevées vingt mois.'],
 ];
-// Plots of the estate: polygon on the map, grape, soil, age of the vines.
-const parcelles = [
-  { nom: 'Les Perrières', cepage: 'Chenin', sol: 'Tuffeau et silex', age: '62 ans', d: 'M60 40L170 30 190 95 80 110Z' },
-  { nom: 'La Butte', cepage: 'Cabernet franc', sol: 'Argile à silex', age: '45 ans', d: 'M190 28L300 20 315 90 205 96Z' },
-  { nom: 'Clos du Haut', cepage: 'Cabernet franc', sol: 'Tuffeau', age: '70 ans', d: 'M320 22L420 30 410 105 330 92Z' },
-  { nom: 'Les Sables', cepage: 'Grolleau', sol: 'Sables', age: '28 ans', d: 'M85 120L200 108 210 170 95 178Z' },
-  { nom: 'Le Coteau', cepage: 'Chardonnay', sol: 'Argilo-calcaire', age: '35 ans', d: 'M215 104L330 100 340 160 222 168Z' },
-];
-const accords = [
-  ['Viande rouge', 0, 'Les tanins du cabernet franc tiennent tête à une côte de bœuf ou un magret.'],
-  ['Poisson', 1, 'La tension du chenin réveille un poisson grillé ou un beurre blanc.'],
-  ['Chèvre', 1, 'Un accord local : le chenin et le crottin de Chavignol se répondent.'],
-  ['Apéritif', 3, 'Des bulles fines pour ouvrir le repas, sur des gougères tièdes.'],
-  ['Barbecue', 2, 'Le rosé, servi frais, accompagne grillades et légumes d’été.'],
-  ['Dessert', 3, 'Les bulles et une tarte aux pommes : la fraîcheur après le sucre.'],
+const bouteilles = [
+  ['b-rose', 'Rosée du Matin', 'Rosé 2023 · fraise des bois, agrumes', 12],
+  ['b-blanc', 'Coteau', 'Blanc sec 2022 · coing, finale saline', 16],
+  ['b-rouge', 'Brume d’Automne', 'Rouge 2021 · cerise noire, poivre', 18],
+  ['b-grand', 'Grand Vin', 'Clos du Haut 2019 · garde 15 ans', 34],
 ] as const;
-const formules = [
-  ['Découverte', '1 h · 4 vins', 15],
-  ['Prestige', '2 h · 6 vins et accords', 35],
-] as const;
-// Cellar opening hours, Sunday first (Date.getDay order).
-const caveau: [string, string][][] = [[], [], [['10:00', '12:30'], ['14:00', '18:30']], [['10:00', '12:30'], ['14:00', '18:30']], [['10:00', '12:30'], ['14:00', '18:30']], [['10:00', '12:30'], ['14:00', '18:30']], [['10:00', '18:30']]];
+// Gold line icons, 32×32.
+const icones: Record<string, string> = {
+  verre: '<path d="M10 3h12l-1 9a5 5 0 0 1-10 0Z M16 17v9 M11 29h10"/>',
+  medaille: '<circle cx="16" cy="13" r="8"/><path d="M12 20l-3 9 7-3 7 3-3-9 M16 9l1.2 2.6 2.8.3-2 1.9.5 2.8-2.5-1.4-2.5 1.4.5-2.8-2-1.9 2.8-.3Z"/>',
+  camion: '<path d="M3 9h16v13H3Z M19 13h6l4 5v4h-10 M8 25a2.5 2.5 0 1 0 0-.1 M23 25a2.5 2.5 0 1 0 0-.1"/>',
+  bouclier: '<path d="M16 3l10 4v8c0 7-4.5 11-10 14C10.5 26 6 22 6 15V7Z M11.5 16l3 3 6-6"/>',
+};
+const ruban = 'CLOS DES BRUMES · VAL DE LOIRE · DEPUIS 1924 · ';
 ---
 
 <!doctype html>
@@ -51,1086 +41,866 @@ const caveau: [string, string][][] = [[], [], [['10:00', '12:30'], ['14:00', '18
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Clos des Brumes — Domaine viticole (démo)</title>
+    <title>Clos des Brumes — Grands vins de Loire (démo)</title>
     <meta name="robots" content="noindex" />
     <meta name="description" content="Page d’accueil d’un domaine viticole fictif : démo de site vitrine réalisée par Timéo." />
-    <noscript><style>.chargement { display: none }</style></noscript>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%236b1e2c'/%3E%3C/svg%3E" />
+    <link rel="preload" as="image" href="/demo/domaine/hero.webp" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23140708' stroke='%23c9a45c'/%3E%3C/svg%3E" />
   </head>
   <body>
-    <div class="chargement" aria-hidden="true">
-      <p class="chargement__nom">Clos des Brumes</p>
-      <p class="chargement__texte">Le vin se décante</p>
-      <div class="chargement__barre"><i></i></div>
-    </div>
-    <canvas class="scene3d" aria-hidden="true"></canvas>
-    <div class="secours" aria-hidden="true" hidden>
-      <svg viewBox="0 0 100 300"><path d="M36 0h28v8h-2v52c0 18 26 30 26 60v168c0 7-4 12-12 12H24c-8 0-12-5-12-12V120c0-30 26-42 26-60V8h-2Z" fill="#3b1520" /><rect x="14" y="160" width="72" height="70" fill="#f6efe1" /><text x="50" y="200" font-size="10" text-anchor="middle" font-family="Georgia" font-style="italic" fill="#3b1520">Clos des Brumes</text></svg>
-    </div>
+    <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+      <defs>
+        <linearGradient id="or" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#f3dfa2" /><stop offset=".45" stop-color="#c9a45c" /><stop offset="1" stop-color="#8a6326" />
+        </linearGradient>
+      </defs>
+    </svg>
 
-    <header class="nav">
-      <a class="logo" href="#accueil">Clos des Brumes</a>
-      <nav>
-        <a href="#domaine">Le domaine</a>
-        <a href="#terroir">Terroir</a>
-        <a href="#vins">Nos vins</a>
-        <a href="#visiter" class="nav__cta">Réserver une dégustation</a>
+    <header class="tete">
+      <a class="marque" href="#haut" aria-label="Clos des Brumes, accueil">
+        <span class="marque__mono">CB</span>
+        <span>Clos des Brumes</span>
+      </a>
+      <nav aria-label="Navigation">
+        <a href="#selections">Nos vins</a>
+        <a href="#unite">Boutique</a>
+        <a href="#cave">Le domaine</a>
+        <a href="#contact">Contact</a>
       </nav>
+      <button class="panier" type="button" aria-live="polite">Panier <span class="panier__n">0</span></button>
     </header>
 
-    <main>
-      <section id="accueil" class="bloc" data-q="0">
-        <div class="panneau">
-          <p class="sur">Domaine familial · Val de Loire</p>
-          <h1>Clos<br /><em>des Brumes</em></h1>
-          <p class="accroche">Quatorze hectares sur un coteau de tuffeau, travaillés à la main depuis 1924. Des vins de Loire droits, frais, et qui vieillissent bien.</p>
-          <p class="statut"><span class="pastille"></span><span class="statut__texte">Horaires du caveau plus bas</span></p>
-          <div class="boutons">
-            <a class="bouton" href="#vins">Découvrir nos vins</a>
-            <a class="bouton bouton--ligne" href="#visiter">Visiter le domaine</a>
-          </div>
-        </div>
-      </section>
-
-      <section id="domaine" class="bloc" data-q="0.12">
-        <div class="panneau">
-          <p class="sur">Le domaine</p>
-          <h2>Quatre générations.<br /><em>Un seul coteau.</em></h2>
-          <p class="texte">Arrière-grand-père Émile a planté les premières vignes à flanc de coteau, au-dessus de la brume du fleuve qui a donné son nom au domaine. Aujourd’hui, Claire et Thomas vendangent toujours à la main et vinifient en cave troglodyte, à 12 °C toute l’année.</p>
-          <ul class="chiffres">
-            {chiffres.map(([n, u, l]) => (
-              <li>
-                <strong><span class="compte" data-fin={n}>{n}</span>{u}</strong>
-                <span>{l}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section id="terroir" class="bloc" data-q="0.3">
-        <div class="panneau">
-          <p class="sur">Le terroir</p>
-          <h2>Cinq parcelles.<br /><em>Cinq caractères.</em></h2>
-          <svg class="carte" viewBox="0 0 480 240" role="img" aria-label="Carte des cinq parcelles du domaine, au-dessus de la Loire">
-            <path class="loire" d="M0 215C80 195 160 230 250 210S400 190 480 205V240H0Z" />
-            <text x="410" y="228" class="carte__fleuve">La Loire</text>
-            {parcelles.map((p, i) => (
-              <g class="parcelle" tabindex="0" data-nom={p.nom} data-detail={`${p.cepage} · ${p.sol} · vignes de ${p.age}`} style={`--i: ${i}`}>
-                <path d={p.d} pathLength="1" />
-              </g>
-            ))}
-            <path class="chemin" d="M40 190C120 185 200 190 260 182S380 170 450 178" />
+    <main id="haut">
+      <section class="hero">
+        <div class="hero__texte">
+          <svg class="volute" viewBox="0 0 200 600" aria-hidden="true">
+            <path pathLength="1" d="M190 0C120 60 40 90 60 170c15 60 90 50 80 0-8-38-60-30-55 5 4 25 35 25 35 5M60 170c-30 80-40 140 10 210 40 55 110 40 100-20-8-45-70-40-60 0 7 25 40 20 35-2M70 380c-40 70-30 150 40 220" />
+            <path pathLength="1" d="M200 30C150 90 90 120 100 200M100 400c10 70 40 120 90 170" />
           </svg>
-          <div class="parcelle__info" aria-live="polite">
-            <b>Survolez une parcelle</b>
-            <span>pour voir son cépage, son sol et l’âge de ses vignes.</span>
-          </div>
+          <p class="sur">Héritage</p>
+          <h1><span>Clos</span><span>des Brumes</span></h1>
+          <div class="ornement" aria-hidden="true"><i></i><b></b><i></i></div>
+          <p class="hero__accroche">Grands vins de Loire, vendangés à la main depuis quatre générations.</p>
+          <a class="bouton-or" href="#selections">Nos vins</a>
+        </div>
+        <div class="hero__image">
+          <img src="/demo/domaine/hero.webp" alt="Bouteille Clos des Brumes entourée de grappes de raisin noir" width="1500" height="1200" />
         </div>
       </section>
 
-      <section id="vins" class="bloc" data-q="0.45">
-        <div class="panneau">
-          <p class="sur">Nos vins</p>
-          <h2>Quatre cuvées,<br /><em>une seule exigence.</em></h2>
-          <ul class="cuvees">
-            {cuvees.map((c, i) => (
-              <li class="cuvee" data-i={i} tabindex="0">
-                <svg viewBox="0 0 40 120" aria-hidden="true">
-                  <path d="M15 0h10v4h-1v22c0 7 10 12 10 24v66c0 2-2 4-4 4H8c-2 0-4-2-4-4V50c0-12 10-17 10-24V4h-1Z" fill={c.couleur} />
-                  <path d="M15 0h10v4h-1v22c0 7 10 12 10 24v66c0 2-2 4-4 4H8c-2 0-4-2-4-4V50c0-12 10-17 10-24V4h-1Z" fill="url(#reflet)" />
-                  <rect x="5" y="62" width="30" height="28" fill="#f6efe1" />
-                  <rect x="14" y="0" width="12" height="16" fill="#5a1022" />
-                </svg>
-                <div>
-                  <div class="cuvee__ligne">
-                    <h3>{c.nom}</h3>
-                    <span class="points" aria-hidden="true"></span>
-                    <span class="prix">{c.prix} €</span>
-                  </div>
-                  <p class="cuvee__type">{c.type} · {c.millesime} · {c.cepage}</p>
-                  <p>{c.notes}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <svg width="0" height="0" aria-hidden="true" style="position:absolute">
-            <defs><linearGradient id="reflet" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0" /><stop offset=".3" stop-color="#fff" stop-opacity=".35" /><stop offset=".45" stop-color="#fff" stop-opacity="0" /></linearGradient></defs>
-          </svg>
-          <p class="mention">Vente au caveau et expédition en France à partir de 6 bouteilles. L’abus d’alcool est dangereux pour la santé, à consommer avec modération.</p>
-        </div>
-      </section>
+      <ul class="atouts">
+        {atouts.map(([i, t, d], k) => (
+          <li class="r" style={`--i: ${k}`}>
+            <svg viewBox="0 0 32 32" aria-hidden="true" set:html={icones[i]} />
+            <div><b>{t}</b><span>{d}</span></div>
+          </li>
+        ))}
+      </ul>
 
-      <section id="accords" class="bloc" data-q="0.62">
-        <div class="panneau">
-          <p class="sur">Accords</p>
-          <h2>Que servez-vous<br /><em>ce soir ?</em></h2>
-          <div class="plats" role="group" aria-label="Choisir un plat">
-            {accords.map(([plat, k, pourquoi]) => <button type="button" data-k={k} data-pourquoi={pourquoi} aria-pressed="false">{plat}</button>)}
-          </div>
-          <div class="accord" aria-live="polite">
-            <p class="accord__vide">Choisissez un plat : nous vous conseillons une cuvée.</p>
-          </div>
-        </div>
-      </section>
-
-      <section id="visiter" class="bloc" data-q="0.78">
-        <div class="panneau">
-          <p class="sur">Visiter</p>
-          <h2>Venez goûter,<br /><em>en cave.</em></h2>
-          <table class="horaires" data-caveau={JSON.stringify(caveau)}>
-            <tbody>
-              {[2, 3, 4, 5, 6, 0, 1].map((j) => (
-                <tr data-jour={j}>
-                  <th scope="row">{['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'][j]}</th>
-                  <td>{caveau[j].length ? caveau[j].map(([a, b]) => `${a} – ${b}`).join(' · ') : 'Fermé'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <form class="resa" novalidate>
-            <fieldset>
-              <legend>Formule</legend>
-              <div class="formules">
-                {formules.map(([n, d, p]) => (
-                  <button type="button" data-formule={n} data-prix={p} aria-pressed="false"><b>{n}</b><span>{d}</span><em>{p} € / pers.</em></button>
-                ))}
+      <section id="selections" class="section">
+        <p class="sur centre r">Nos</p>
+        <h2 class="centre r">Sélections</h2>
+        <div class="ornement r" aria-hidden="true"><i></i><b></b><i></i></div>
+        <ul class="cartes">
+          {selections.map(([img, t, d], k) => (
+            <li class="carte r" style={`--i: ${k}`}>
+              <img src={`/demo/domaine/${img}.webp`} alt="" width="900" height="1200" loading="lazy" />
+              <div class="carte__texte">
+                <h3>{t}</h3>
+                <p>{d}</p>
+                <span class="carte__lien">Découvrir</span>
               </div>
-            </fieldset>
-            <fieldset>
-              <legend>Jour</legend>
-              <div class="jours"></div>
-            </fieldset>
-            <fieldset>
-              <legend>Personnes</legend>
-              <div class="couverts">
-                <button type="button" data-pas="-1" aria-label="Une personne de moins">−</button>
-                <output>2</output>
-                <button type="button" data-pas="1" aria-label="Une personne de plus">+</button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section id="unite" class="section">
+        <div class="titre-ligne r">
+          <h2>À l’unité</h2>
+          <i aria-hidden="true"></i>
+        </div>
+        <ul class="produits">
+          {bouteilles.map(([img, n, d, prix], k) => (
+            <li class="produit r" style={`--i: ${k}`}>
+              <img src={`/demo/domaine/${img}.webp`} alt={`Bouteille ${n}`} width="500" height="1100" loading="lazy" />
+              <div>
+                <h3>{n}</h3>
+                <p>{d}</p>
+                <strong>{prix} €</strong>
+                <button type="button" class="ajouter" data-nom={n} data-prix={prix * 6}>Caisse de 6 · {prix * 6} €</button>
               </div>
-            </fieldset>
-            <button class="bouton resa__ok" type="submit">Réserver la dégustation</button>
-            <p class="resa__note">Démo : aucune réservation n’est envoyée.</p>
-            <div class="ticket" aria-live="polite">
-              <p class="sur">Réservation</p>
-              <p class="ticket__resume"></p>
-              <span class="tampon">Confirmée</span>
-            </div>
-          </form>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section id="cave" class="bandeau">
+        <div class="bandeau__image">
+          <img src="/demo/domaine/cave.webp" alt="Cave voûtée bordée de tonneaux" width="1600" height="900" loading="lazy" />
+        </div>
+        <div class="bandeau__texte r">
+          <p class="sur">Clos des Brumes</p>
+          <h2>Savourez un peu<br />de Loire</h2>
+          <div class="ornement ornement--gauche" aria-hidden="true"><i></i><b></b><i></i></div>
+          <p>Nos caves troglodytes gardent nos vins à 12 °C toute l’année. Visites et dégustations du mardi au samedi, sur réservation.</p>
+          <a class="bouton-or bouton-or--ligne" href="#contact">Réserver une visite</a>
+          <div class="medaillon" aria-hidden="true">
+            <svg viewBox="0 0 200 200">
+              <defs><path id="cercle" d="M100 100m-78 0a78 78 0 1 1 156 0a78 78 0 1 1-156 0" /></defs>
+              <circle cx="100" cy="100" r="96" />
+              <circle cx="100" cy="100" r="62" />
+              <g class="medaillon__ruban"><text><textPath href="#cercle">{ruban.repeat(2)}</textPath></text></g>
+              <text x="100" y="114" class="medaillon__mono" text-anchor="middle">CB</text>
+              <path d="M78 76l8-14 7 10 7-14 7 14 7-10 8 14Z" />
+            </svg>
+          </div>
         </div>
       </section>
     </main>
 
-    <footer class="pied" data-q="1">
-      <div class="pied__infos">
-        <p><b>Clos des Brumes</b><br />Lieu-dit Les Brumes<br />Val de Loire</p>
-        <p><b>Caveau</b><br />Mardi – samedi<br />Fermé dimanche et lundi</p>
-        <p><b>Contact</b><br />02 00 00 00 00<br />bonjour@closdesbrumes.example</p>
+    <footer id="contact" class="pied">
+      <div>
+        <b>Clos des Brumes</b>
+        <span>Lieu-dit Les Brumes · Val de Loire</span>
       </div>
+      <div>
+        <b>Caveau</b>
+        <span>Mardi – samedi · 10 h – 12 h 30 · 14 h – 18 h 30</span>
+      </div>
+      <div>
+        <b>Contact</b>
+        <span>02 00 00 00 00 · bonjour@closdesbrumes.example</span>
+      </div>
+      <p class="pied__loi">L’abus d’alcool est dangereux pour la santé, à consommer avec modération.</p>
     </footer>
 
+    <p class="toast" role="status" aria-live="polite"></p>
     <a class="badge" href="https://jeannin.dev/" target="_top">Démo · domaine fictif · site réalisé par Timéo ↗</a>
   </body>
 </html>
 
 <script>
-  import type { Cuvee } from '../../scripts/vin3d';
-
   const animer = !matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const cuvees: Cuvee[] = [...document.querySelectorAll<HTMLElement>('.cuvee')].map((li) => ({
-    nom: li.querySelector('h3')!.textContent!,
-    type: li.querySelector('.cuvee__type')!.textContent!.split(' · ')[0],
-    millesime: li.querySelector('.cuvee__type')!.textContent!.split(' · ')[1],
-    couleur: li.querySelector('path')!.getAttribute('fill')!,
-  }));
 
-  // Loading screen until the bottle is drawn (at least 1.2 s, at most 9 s).
-  const chargement = document.querySelector<HTMLElement>('.chargement')!;
-  const t0 = performance.now();
-  let ouvert = false;
-  const ouvrir = () => {
-    if (ouvert) return;
-    ouvert = true;
-    setTimeout(() => {
-      chargement.classList.add('fini');
-      document.documentElement.classList.add('charge');
-    }, Math.max(0, 1200 - (performance.now() - t0)));
-  };
-  setTimeout(ouvrir, 9000);
-
-  // Reveal on scroll.
+  // Reveal on scroll, staggered by --i.
   const io = new IntersectionObserver(
     (entrees) => entrees.forEach((e) => e.isIntersecting && (e.target.classList.add('vu'), io.unobserve(e.target))),
-    { rootMargin: '0px 0px -12% 0px' },
+    { rootMargin: '0px 0px -10% 0px' },
   );
-  document.querySelectorAll('.panneau').forEach((el) => io.observe(el));
+  document.querySelectorAll('.r, .bandeau, .hero').forEach((el) => io.observe(el));
 
-  // 3D bottle; without WebGL a drawn bottle takes its place and the cause goes to the console.
-  const scene = document.querySelector<HTMLCanvasElement>('.scene3d')!;
-  let montrer: (c: Cuvee | null) => void = () => {};
-  const secours = (e: unknown) => {
-    console.error('Bouteille 3D indisponible, dessin affiché à la place :', e);
-    scene.hidden = true;
-    document.querySelector<HTMLElement>('.secours')!.hidden = false;
-    ouvrir();
-  };
-  import('../../scripts/vin3d')
-    .then(({ demarrer }) => (montrer = demarrer(scene, [...document.querySelectorAll<HTMLElement>('[data-q]')], cuvees[0], secours, ouvrir).montrer))
-    .catch(secours);
-
-  // Wines: hovering (or focusing) one previews it in the bottle.
-  const liste = document.querySelector<HTMLElement>('.cuvees')!;
-  liste.querySelectorAll<HTMLElement>('.cuvee').forEach((li) => {
-    const voir = () => montrer(cuvees[Number(li.dataset.i)]);
-    li.addEventListener('pointerenter', voir);
-    li.addEventListener('focus', voir);
-  });
-  liste.addEventListener('pointerleave', () => montrer(null));
-  liste.addEventListener('focusout', () => montrer(null));
-
-  // Key figures count up when they appear.
-  document.querySelectorAll<HTMLElement>('.compte').forEach((el) => {
-    if (!animer) return;
-    const fin = Number(el.dataset.fin);
-    const depart = fin > 1000 ? fin - 60 : 0;
-    el.textContent = String(depart);
-    new IntersectionObserver(([e], obs) => {
-      if (!e.isIntersecting) return;
-      obs.disconnect();
-      const debut = performance.now();
-      const pas = (t: number) => {
-        const k = Math.min((t - debut) / 1600, 1);
-        el.textContent = String(Math.round(depart + (fin - depart) * (1 - (1 - k) ** 3)));
-        if (k < 1) requestAnimationFrame(pas);
-      };
-      requestAnimationFrame(pas);
-    }, { threshold: 0.6 }).observe(el);
-  });
-
-  // Plots: hover or focus shows the grape, soil and vine age.
-  const info = document.querySelector<HTMLElement>('.parcelle__info')!;
-  document.querySelectorAll<SVGGElement>('.parcelle').forEach((g) => {
-    const voir = () => {
-      info.innerHTML = `<b>${g.dataset.nom}</b><span>${g.dataset.detail}</span>`;
-    };
-    g.addEventListener('pointerenter', voir);
-    g.addEventListener('focus', voir);
-  });
-
-  // Food pairings: picking a dish suggests a wine and shows it in the bottle.
-  const plats = document.querySelector<HTMLElement>('.plats')!;
-  const accord = document.querySelector<HTMLElement>('.accord')!;
-  plats.addEventListener('click', (e) => {
-    const b = (e.target as Element).closest<HTMLButtonElement>('button[data-k]');
-    if (!b) return;
-    plats.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-    const c = cuvees[Number(b.dataset.k)];
-    accord.innerHTML = `<span class="accord__pastille" style="background:${c.couleur}"></span><div><b>${c.nom}</b><span>${c.type} · ${c.millesime}</span><p>${b.dataset.pourquoi}</p></div>`;
-    accord.classList.remove('nouveau');
-    void accord.offsetWidth;
-    accord.classList.add('nouveau');
-    montrer(c);
-  });
-  // Leaving the pairings section gives the bottle back to the scroll.
-  new IntersectionObserver(([e]) => !e.isIntersecting && montrer(null)).observe(document.querySelector('#accords')!);
-
-  // Cellar: today's opening hours, highlighted row and live status.
-  const caveau: [string, string][][] = JSON.parse(document.querySelector<HTMLElement>('.horaires')!.dataset.caveau!);
-  const maintenant = new Date();
-  const jour = maintenant.getDay();
-  const minutes = (hm: string) => Number(hm.slice(0, 2)) * 60 + Number(hm.slice(3));
-  const actuelle = maintenant.getHours() * 60 + maintenant.getMinutes();
-  document.querySelector(`.horaires tr[data-jour="${jour}"]`)?.classList.add('aujourdhui');
-  const ouverte = caveau[jour].find(([a, b]) => actuelle >= minutes(a) && actuelle < minutes(b));
-  const prochaine = caveau[jour].find(([a]) => actuelle < minutes(a));
-  const statut = document.querySelector<HTMLElement>('.statut')!;
-  statut.classList.toggle('ouvert', !!ouverte);
-  statut.querySelector('.statut__texte')!.textContent = ouverte
-    ? `Caveau ouvert · jusqu’à ${ouverte[1].replace(':', ' h ')}`
-    : prochaine
-      ? `Caveau fermé · ouvre à ${prochaine[0].replace(':', ' h ')}`
-      : 'Caveau fermé aujourd’hui';
-
-  // Tasting booking (demo, nothing is sent).
-  const choix = { formule: '', prix: 0, jour: '', personnes: 2 };
-  const unique = (groupe: Element, cible: HTMLButtonElement) => groupe.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === cible)));
-  const formulesEl = document.querySelector('.formules')!;
-  formulesEl.addEventListener('click', (e) => {
-    const b = (e.target as Element).closest<HTMLButtonElement>('button[data-formule]');
-    if (!b) return;
-    unique(formulesEl, b);
-    choix.formule = b.dataset.formule!;
-    choix.prix = Number(b.dataset.prix);
-  });
-  const jours = document.querySelector('.jours')!;
-  const noms = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
-  for (let i = 1; i <= 10; i++) {
-    const d = new Date();
-    d.setDate(d.getDate() + i);
-    if (!caveau[d.getDay()].length) continue;
-    const libelle = i === 1 ? 'Demain' : `${noms[d.getDay()]} ${d.getDate()}`;
-    const b = Object.assign(document.createElement('button'), { type: 'button', textContent: libelle });
-    b.setAttribute('aria-pressed', 'false');
-    b.dataset.jour = libelle;
-    jours.append(b);
+  // Hero: the bottle image follows the mouse slightly (depth).
+  const image = document.querySelector<HTMLElement>('.hero__image img')!;
+  if (animer && matchMedia('(hover: hover)').matches) {
+    addEventListener('pointermove', (e) => {
+      image.style.setProperty('--mx', String(e.clientX / innerWidth - 0.5));
+      image.style.setProperty('--my', String(e.clientY / innerHeight - 0.5));
+    });
   }
-  jours.addEventListener('click', (e) => {
-    const b = (e.target as Element).closest<HTMLButtonElement>('button[data-jour]');
-    if (b) (unique(jours, b), (choix.jour = b.dataset.jour!));
-  });
-  const sortie = document.querySelector('.couverts output')!;
-  document.querySelectorAll<HTMLButtonElement>('[data-pas]').forEach((b) =>
+
+  // Cases of 6 (demo, nothing is sent): cart counter in the header and a short confirmation.
+  const n = document.querySelector<HTMLElement>('.panier__n')!;
+  const toast = document.querySelector<HTMLElement>('.toast')!;
+  let total = 0, minuterie = 0;
+  document.querySelectorAll<HTMLButtonElement>('.ajouter').forEach((b) =>
     b.addEventListener('click', () => {
-      choix.personnes = Math.min(12, Math.max(1, choix.personnes + Number(b.dataset.pas)));
-      sortie.textContent = String(choix.personnes);
+      total++;
+      n.textContent = String(total);
+      n.classList.remove('bump');
+      void n.offsetWidth;
+      n.classList.add('bump');
+      toast.textContent = `${b.dataset.nom} · caisse de 6 ajoutée (${b.dataset.prix} €)`;
+      toast.classList.add('visible');
+      clearTimeout(minuterie);
+      minuterie = window.setTimeout(() => toast.classList.remove('visible'), 2600);
     }),
   );
-  const form = document.querySelector<HTMLFormElement>('.resa')!;
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const manque = !choix.formule ? '.formules' : !choix.jour ? '.jours' : '';
-    if (manque) {
-      const g = document.querySelector<HTMLElement>(manque)!;
-      g.classList.remove('secoue');
-      void g.offsetWidth;
-      g.classList.add('secoue');
-      return;
-    }
-    form.querySelector('.ticket__resume')!.textContent = `${choix.formule} · ${choix.personnes} pers. · ${choix.jour} · ${choix.prix * choix.personnes} €`;
-    form.classList.add('confirme');
-  });
-
-  // Section titles: words rise one after the other when their panel appears.
-  document.querySelectorAll<HTMLElement>('.panneau h2').forEach((h2) => {
-    h2.setAttribute('aria-label', h2.textContent!.replace(/\s+/g, ' ').trim());
-    const noeuds: Text[] = [];
-    const parcours = document.createTreeWalker(h2, NodeFilter.SHOW_TEXT);
-    while (parcours.nextNode()) noeuds.push(parcours.currentNode as Text);
-    let n = 0;
-    for (const t of noeuds) {
-      const morceaux = document.createDocumentFragment();
-      for (const part of t.textContent!.split(/(\s+)/)) {
-        if (!part) continue;
-        if (/^\s+$/.test(part)) {
-          morceaux.append(part);
-          continue;
-        }
-        const mot = Object.assign(document.createElement('span'), { className: 'mot', textContent: part });
-        mot.style.setProperty('--w', String(n++));
-        mot.setAttribute('aria-hidden', 'true');
-        morceaux.append(mot);
-      }
-      t.replaceWith(morceaux);
-    }
-  });
 </script>
 
 <style is:global>
   :root {
-    --papier: #f6f0e5;
-    --papier-2: #ece2d0;
-    --encre: #2a1a1c;
-    --encre-2: #6a5b55;
-    --bordeaux: #6b1e2c;
-    --or: #a8823d;
-    --vert: #5f7a4a;
-    --f-titre: 'Cormorant Garamond', Georgia, serif;
+    --noir: #0c0909;
+    --noir-2: #151010;
+    --bordeaux: #3d0b15;
+    --bordeaux-2: #5a1222;
+    --or: #c9a45c;
+    --or-clair: #f3dfa2;
+    --or-sombre: #8a6326;
+    --creme: #efe6d6;
+    --gris: #a49a8c;
+    --f-titre: 'Cinzel', Georgia, serif;
+    --f-ital: 'Cormorant Garamond', Georgia, serif;
     --f-texte: 'Instrument Sans', system-ui, sans-serif;
     --courbe: cubic-bezier(0.2, 0.7, 0.1, 1);
-    color-scheme: light;
+    color-scheme: dark;
   }
   * {
     box-sizing: border-box;
   }
   html {
     scroll-behavior: smooth;
-    scrollbar-color: var(--bordeaux) var(--papier);
+    scrollbar-color: var(--or-sombre) var(--noir);
     scrollbar-width: thin;
   }
   body {
     margin: 0;
-    background: var(--papier);
-    color: var(--encre);
+    background: var(--noir);
+    color: var(--creme);
     font-family: var(--f-texte);
-    font-size: 1.02rem;
+    font-size: 0.98rem;
     line-height: 1.6;
     overflow-x: hidden;
   }
-  /* Paper grain. */
   body::after {
     content: '';
     position: fixed;
     inset: 0;
-    z-index: 50;
+    z-index: 90;
     pointer-events: none;
-    opacity: 0.06;
+    opacity: 0.07;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   ::selection {
-    background: var(--bordeaux);
-    color: var(--papier);
+    background: var(--or);
+    color: var(--noir);
   }
   a {
     color: inherit;
   }
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
   h1,
   h2,
-  h3,
-  .logo,
-  .prix {
+  h3 {
     font-family: var(--f-titre);
-    font-weight: 600;
-  }
-  em {
-    font-style: italic;
-    color: var(--bordeaux);
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
   .sur {
-    margin: 0 0 1rem;
-    font-size: 0.74rem;
-    font-weight: 600;
-    letter-spacing: 0.26em;
+    margin: 0 0 0.6rem;
+    font: 400 0.82rem var(--f-titre);
+    letter-spacing: 0.42em;
     text-transform: uppercase;
     color: var(--or);
   }
-  .bouton {
-    display: inline-flex;
+  .centre {
+    text-align: center;
+  }
+  /* Gold text with a slow shimmer. */
+  h1,
+  .section h2,
+  .bandeau h2 {
+    background: linear-gradient(100deg, var(--or-sombre), var(--or) 30%, var(--or-clair) 45%, var(--or) 60%, var(--or-sombre)) 0 0 / 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: brille 7s ease-in-out infinite;
+  }
+  @keyframes brille {
+    0%, 100% { background-position: 100% 0; }
+    50% { background-position: 0 0; }
+  }
+  /* Divider: two gold lines and a diamond, drawn from the centre. */
+  .ornement {
+    display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0.95em 1.7em;
+    gap: 0.6rem;
+    margin: 1.2rem auto 1.6rem;
+    width: min(22rem, 70%);
+  }
+  .ornement i {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--or));
+    transform-origin: right;
+    transition: scale 1.2s var(--courbe) 0.3s;
+  }
+  .ornement i:last-child {
+    background: linear-gradient(90deg, var(--or), transparent);
+    transform-origin: left;
+  }
+  .ornement b {
+    width: 9px;
+    height: 9px;
+    border: 1px solid var(--or);
+    rotate: 45deg;
+  }
+  .ornement.r:not(.vu) i,
+  .hero:not(.vu) .ornement i {
+    scale: 0 1;
+  }
+  .ornement--gauche {
+    justify-content: flex-start;
+    margin-left: 0;
+  }
+  .bouton-or {
+    display: inline-block;
+    padding: 0.85em 2.4em;
     border: 0;
-    border-radius: 2px;
-    background: var(--bordeaux);
-    color: var(--papier);
-    font: 600 0.82rem var(--f-texte);
-    letter-spacing: 0.14em;
+    background: linear-gradient(135deg, var(--or-clair), var(--or) 45%, var(--or-sombre));
+    color: var(--noir);
+    font: 600 0.82rem var(--f-titre);
+    letter-spacing: 0.3em;
     text-transform: uppercase;
     text-decoration: none;
     cursor: pointer;
+    background-size: 200% 100%;
     transition:
-      background 0.3s,
-      transform 0.3s var(--courbe);
+      background-position 0.6s var(--courbe),
+      box-shadow 0.4s,
+      transform 0.4s var(--courbe);
   }
-  .bouton:hover {
-    background: var(--encre);
+  .bouton-or:hover {
+    background-position: 100% 0;
+    box-shadow: 0 10px 40px -10px rgba(201, 164, 92, 0.7);
     transform: translateY(-2px);
   }
-  .bouton--ligne {
+  .bouton-or--ligne {
     background: transparent;
-    color: var(--encre);
-    box-shadow: inset 0 0 0 1px var(--encre);
+    color: var(--or);
+    box-shadow: inset 0 0 0 1px var(--or);
   }
-  .bouton--ligne:hover {
-    background: var(--encre);
-    color: var(--papier);
-  }
-
-  /* ---------- 3D scene behind the content ---------- */
-  .scene3d {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-  }
-  .scene3d[hidden] {
-    display: none;
-  }
-  .secours {
-    position: fixed;
-    top: 50%;
-    right: 14vw;
-    width: min(14vw, 22vh);
-    translate: 0 -50%;
-    filter: drop-shadow(0 30px 30px rgba(42, 26, 28, 0.25));
-  }
-  .secours[hidden] {
-    display: none;
-  }
-  .secours svg {
-    display: block;
-    width: 100%;
+  .bouton-or--ligne:hover {
+    background: var(--or);
+    color: var(--noir);
   }
 
-  /* ---------- Loading screen ---------- */
-  .chargement {
-    position: fixed;
-    inset: 0;
-    z-index: 70;
-    display: grid;
-    place-content: center;
-    justify-items: center;
-    gap: 1rem;
-    background: var(--papier);
-    transition:
-      opacity 0.9s var(--courbe),
-      visibility 0.9s;
-  }
-  .chargement.fini {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-  }
-  .chargement__nom {
-    margin: 0;
-    font: italic 600 clamp(2.6rem, 7vw, 5rem) / 1 var(--f-titre);
-    color: var(--bordeaux);
-  }
-  .chargement__texte {
-    margin: 0;
-    color: var(--encre-2);
-    font-size: 0.78rem;
-    letter-spacing: 0.26em;
-    text-transform: uppercase;
-  }
-  .chargement__barre {
-    width: min(50vw, 200px);
-    height: 1px;
-    background: rgba(42, 26, 28, 0.15);
-    overflow: hidden;
-  }
-  .chargement__barre i {
-    display: block;
-    height: 100%;
-    background: var(--bordeaux);
-    transform-origin: left;
-    animation: charge 1.6s cubic-bezier(0.3, 0, 0.1, 1) both;
-  }
-  @keyframes charge {
-    from { scale: 0 1; }
-  }
-  :root:not(.charge) #accueil .panneau > * {
-    animation-play-state: paused;
-  }
-
-  /* ---------- Top bar ---------- */
-  .nav {
+  /* ---------- Header ---------- */
+  .tete {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 40;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 1.2rem clamp(1rem, 4vw, 3rem);
-    background: linear-gradient(rgba(246, 240, 229, 0.92), rgba(246, 240, 229, 0));
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem clamp(1rem, 4vw, 3rem);
+    background: linear-gradient(rgba(12, 9, 9, 0.9), rgba(12, 9, 9, 0));
   }
-  .logo {
-    font-size: 1.5rem;
-    font-style: italic;
-    text-decoration: none;
-    color: var(--bordeaux);
-  }
-  .nav nav {
+  .marque {
     display: flex;
     align-items: center;
-    gap: clamp(0.8rem, 2.5vw, 2rem);
-    font-size: 0.86rem;
-  }
-  .nav nav a {
+    gap: 0.8rem;
+    font: 400 0.86rem var(--f-titre);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
     text-decoration: none;
-    color: var(--encre-2);
   }
-  .nav nav a:hover {
-    color: var(--bordeaux);
+  .marque__mono {
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border: 1px solid var(--or);
+    border-radius: 50%;
+    color: var(--or);
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
   }
-  .nav__cta {
-    padding: 0.55em 1.1em;
-    border: 1px solid var(--bordeaux);
-    color: var(--bordeaux) !important;
+  .tete nav {
+    display: flex;
+    gap: clamp(1rem, 3vw, 2.4rem);
+    font: 400 0.74rem var(--f-titre);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+  .tete nav a {
+    text-decoration: none;
+    color: var(--gris);
+    transition: color 0.3s;
+  }
+  .tete nav a:hover {
+    color: var(--or);
+  }
+  .panier {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5em 1em;
+    border: 1px solid rgba(201, 164, 92, 0.5);
+    background: transparent;
+    color: var(--or);
+    font: 400 0.72rem var(--f-titre);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .panier__n {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    background: var(--or);
+    color: var(--noir);
+    font: 600 0.72rem var(--f-texte);
+    letter-spacing: 0;
+  }
+  .panier__n.bump {
+    animation: bump 0.45s var(--courbe);
+  }
+  @keyframes bump {
+    40% { scale: 1.4; }
   }
 
-  /* ---------- Sections: text column on the left, the bottle stays on the right ---------- */
-  main,
-  .pied {
-    position: relative;
-    z-index: 2;
-  }
-  .bloc {
+  /* ---------- Hero: burgundy panel with gold ornament, product render on the right ---------- */
+  .hero {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
     min-height: 100svh;
-    display: flex;
-    align-items: center;
-    padding: 7rem clamp(1rem, 4vw, 3rem) 5rem clamp(1rem, 7vw, 7rem);
   }
-  .panneau {
-    width: min(100%, 36rem);
-    max-width: 44vw;
+  .hero__texte {
+    position: relative;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    padding: 7rem 2rem 4rem;
+    overflow: hidden;
+    text-align: center;
+    background:
+      radial-gradient(ellipse at 70% 40%, rgba(122, 22, 40, 0.55), transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M40 8c6 10 6 18 0 24-6-6-6-14 0-24zM40 48c6 10 6 18 0 24-6-6-6-14 0-24zM8 40c10-6 18-6 24 0-6 6-14 6-24 0zM48 40c10-6 18-6 24 0-6 6-14 6-24 0z' fill='%23ffffff' fill-opacity='.025'/%3E%3C/svg%3E"),
+      linear-gradient(160deg, var(--bordeaux-2), var(--bordeaux) 50%, #1c050a);
+  }
+  .volute {
+    position: absolute;
+    left: -2rem;
+    top: 0;
+    height: 100%;
+    width: auto;
+    fill: none;
+    stroke: url(#or);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0.85;
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+  }
+  .hero.vu .volute {
+    animation: trace 3s var(--courbe) 0.2s forwards;
+  }
+  @keyframes trace {
+    to { stroke-dashoffset: 0; }
+  }
+  h1 {
+    margin: 0;
+    display: grid;
+    font-size: clamp(3rem, 6vw, 5.6rem);
+    line-height: 1.02;
+  }
+  h1 span {
+    display: block;
+  }
+  .hero .sur,
+  .hero h1,
+  .hero__accroche,
+  .hero .bouton-or {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 1.2s var(--courbe),
+      transform 1.2s var(--courbe);
+  }
+  .hero.vu .sur,
+  .hero.vu h1,
+  .hero.vu .hero__accroche,
+  .hero.vu .bouton-or {
+    opacity: 1;
+    transform: none;
+  }
+  .hero.vu h1 {
+    transition-delay: 0.2s;
+  }
+  .hero.vu .hero__accroche {
+    transition-delay: 0.5s;
+  }
+  .hero.vu .bouton-or {
+    transition-delay: 0.7s;
+  }
+  .hero__accroche {
+    max-width: 22rem;
+    margin: 0 0 2rem;
+    font: italic 500 1.3rem/1.4 var(--f-ital);
+    color: var(--creme);
+  }
+  .hero__image {
+    position: relative;
+    overflow: hidden;
+    background: #0a0306;
+  }
+  .hero__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    scale: 1.08;
+    translate: calc(var(--mx, 0) * -18px) calc(var(--my, 0) * -12px);
+    transition: translate 1.2s var(--courbe);
+    animation: approche 18s ease-out both;
+  }
+  @keyframes approche {
+    from { scale: 1.22; }
+  }
+  .hero__image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(28, 5, 10, 0.75), transparent 25%);
+    pointer-events: none;
+  }
+
+  /* ---------- Guarantees strip ---------- */
+  .atouts {
+    list-style: none;
+    margin: 0;
+    padding: 2.4rem clamp(1rem, 5vw, 4rem);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid rgba(201, 164, 92, 0.18);
+    border-bottom: 1px solid rgba(201, 164, 92, 0.18);
+    background: var(--noir-2);
+  }
+  .atouts li {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 0 1.4rem;
+    border-left: 1px solid rgba(201, 164, 92, 0.18);
+  }
+  .atouts li:first-child {
+    border-left: 0;
+  }
+  .atouts svg {
+    flex: none;
+    width: 2.2rem;
+    fill: none;
+    stroke: var(--or);
+    stroke-width: 1.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .atouts b {
+    display: block;
+    font: 400 0.76rem var(--f-titre);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--or);
+  }
+  .atouts span {
+    font-size: 0.86rem;
+    color: var(--gris);
+  }
+
+  /* ---------- Sections ---------- */
+  .section {
+    padding: clamp(4rem, 9vw, 7rem) clamp(1rem, 5vw, 4rem);
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .section h2 {
+    margin: 0;
+    font-size: clamp(2.2rem, 4.6vw, 3.8rem);
+  }
+  .r {
     opacity: 0;
     transform: translateY(30px);
     transition:
       opacity 1s var(--courbe),
       transform 1s var(--courbe);
+    transition-delay: calc(var(--i, 0) * 0.12s);
   }
-  .panneau.vu,
-  #accueil .panneau {
+  .r.vu {
     opacity: 1;
     transform: none;
-  }
-  h1 {
-    margin: 0;
-    font-size: clamp(4rem, 9vw, 8.5rem);
-    font-weight: 500;
-    line-height: 0.88;
-    letter-spacing: -0.01em;
-    animation: monte 1.2s 0.1s var(--courbe) both;
-  }
-  h2 {
-    margin: 0 0 1.8rem;
-    font-size: clamp(2.6rem, 4.6vw, 4.2rem);
-    font-weight: 500;
-    line-height: 1;
-  }
-  .accroche,
-  .texte {
-    color: var(--encre-2);
-    font-size: 1.08rem;
-  }
-  .accroche {
-    max-width: 30rem;
-    margin: 1.6rem 0 1rem;
-    animation: monte 1.2s 0.5s var(--courbe) both;
-  }
-  .statut {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin: 0;
-    font-size: 0.92rem;
-    animation: monte 1.2s 0.7s var(--courbe) both;
-  }
-  .pastille {
-    width: 0.55rem;
-    height: 0.55rem;
-    border-radius: 50%;
-    background: var(--bordeaux);
-  }
-  .statut.ouvert .pastille {
-    background: var(--vert);
-    box-shadow: 0 0 0 0 rgba(95, 122, 74, 0.5);
-    animation: pouls 2s infinite;
-  }
-  @keyframes pouls {
-    to { box-shadow: 0 0 0 9px rgba(95, 122, 74, 0); }
-  }
-  .boutons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.8rem;
-    margin-top: 2rem;
-    animation: monte 1.2s 0.9s var(--courbe) both;
-  }
-  #accueil .sur {
-    animation: monte 1.2s var(--courbe) both;
-  }
-  @keyframes monte {
-    from { opacity: 0; transform: translateY(24px); }
-  }
-  .panneau h2 .mot {
-    display: inline-block;
-    opacity: 0;
-    transform: translateY(50%);
-    filter: blur(5px);
-    transition:
-      opacity 0.8s var(--courbe),
-      transform 1s var(--courbe),
-      filter 0.8s;
-    transition-delay: calc(var(--w) * 90ms + 150ms);
-  }
-  .panneau.vu h2 .mot {
-    opacity: 1;
-    transform: none;
-    filter: none;
   }
 
-  /* ---------- Estate ---------- */
-  .chiffres {
+  /* Selection cards: render fills the card, gold frame drawn on hover, caption rises. */
+  .cartes {
     list-style: none;
-    margin: 2.2rem 0 0;
+    margin: 2rem 0 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.6rem 2rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.4rem;
   }
-  .chiffres li {
-    padding-top: 1rem;
-    border-top: 1px solid rgba(42, 26, 28, 0.2);
-    color: var(--encre-2);
-    font-size: 0.9rem;
-  }
-  .chiffres strong {
-    display: block;
-    font: 500 clamp(2.6rem, 4vw, 3.6rem) / 1 var(--f-titre);
-    color: var(--bordeaux);
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* ---------- Terroir map ---------- */
   .carte {
-    display: block;
-    width: 100%;
-    height: auto;
-    margin-bottom: 1.2rem;
-  }
-  .loire {
-    fill: rgba(120, 150, 165, 0.22);
-  }
-  .carte__fleuve {
-    fill: #5b7684;
-    font: italic 500 13px var(--f-titre);
-  }
-  .chemin {
-    fill: none;
-    stroke: rgba(42, 26, 28, 0.3);
-    stroke-width: 1.2;
-    stroke-dasharray: 3 4;
-  }
-  .parcelle path {
-    fill: rgba(95, 122, 74, 0.14);
-    stroke: var(--vert);
-    stroke-width: 1.4;
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    cursor: pointer;
-    transition:
-      fill 0.3s,
-      stroke-width 0.3s;
-  }
-  /* Vine rows drawn as a hatch inside each plot. */
-  .parcelle path {
-    fill: rgba(95, 122, 74, 0.14);
-  }
-  .vu .parcelle path {
-    animation: trace 1.4s var(--courbe) forwards;
-    animation-delay: calc(var(--i) * 0.18s + 0.2s);
-  }
-  @keyframes trace {
-    to { stroke-dashoffset: 0; }
-  }
-  .parcelle:hover path,
-  .parcelle:focus path {
-    fill: rgba(107, 30, 44, 0.22);
-    stroke: var(--bordeaux);
-    stroke-width: 2.2;
-  }
-  .parcelle:focus {
-    outline: none;
-  }
-  .parcelle__info {
-    display: grid;
-    gap: 0.1rem;
-    min-height: 3.4rem;
-    padding-left: 1rem;
-    border-left: 2px solid var(--or);
-  }
-  .parcelle__info b {
-    font: italic 600 1.5rem var(--f-titre);
-    color: var(--bordeaux);
-  }
-  .parcelle__info span {
-    color: var(--encre-2);
-    font-size: 0.9rem;
-  }
-
-  /* ---------- Wines ---------- */
-  .cuvees {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 0.4rem;
-  }
-  .cuvee {
-    display: grid;
-    grid-template-columns: 2.4rem 1fr;
-    gap: 1.2rem;
-    align-items: center;
-    padding: 0.9rem 0.8rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-  .cuvee:hover,
-  .cuvee:focus-visible {
-    background: rgba(255, 255, 255, 0.55);
-    outline: none;
-  }
-  .cuvee svg {
-    width: 100%;
-    transition: transform 0.6s var(--courbe);
-  }
-  .cuvee:hover svg {
-    transform: rotate(-8deg) translateY(-4px);
-  }
-  .cuvee__ligne {
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-  }
-  .cuvee h3 {
-    margin: 0;
-    font-size: 1.6rem;
-    font-style: italic;
-  }
-  .points {
-    flex: 1;
-    border-bottom: 1px dotted rgba(42, 26, 28, 0.35);
-    translate: 0 -0.3em;
-  }
-  .prix {
-    font-size: 1.4rem;
-    color: var(--bordeaux);
-  }
-  .cuvee p {
-    margin: 0;
-    color: var(--encre-2);
-    font-size: 0.92rem;
-  }
-  .cuvee .cuvee__type {
-    font-size: 0.74rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--or);
-  }
-  .mention {
-    margin: 1.4rem 0 0;
-    font-size: 0.78rem;
-    color: var(--encre-2);
-  }
-
-  /* ---------- Pairings ---------- */
-  .plats,
-  .jours,
-  .formules {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .plats button,
-  .jours button {
-    padding: 0.6em 1.2em;
-    border: 1px solid rgba(42, 26, 28, 0.3);
-    border-radius: 999px;
-    background: transparent;
-    color: var(--encre);
-    font: 500 0.9rem var(--f-texte);
-    cursor: pointer;
-    transition:
-      background 0.25s,
-      color 0.25s,
-      border-color 0.25s;
-  }
-  .plats button:hover,
-  .jours button:hover {
-    border-color: var(--bordeaux);
-  }
-  .plats button[aria-pressed='true'],
-  .jours button[aria-pressed='true'] {
-    background: var(--bordeaux);
-    border-color: var(--bordeaux);
-    color: var(--papier);
-  }
-  .accord {
-    display: flex;
-    gap: 1.2rem;
-    align-items: flex-start;
-    min-height: 7rem;
-    margin-top: 2rem;
-    padding: 1.4rem;
-    background: rgba(255, 255, 255, 0.55);
-    border-left: 3px solid var(--bordeaux);
-  }
-  .accord.nouveau {
-    animation: monte 0.7s var(--courbe);
-  }
-  .accord__vide {
-    margin: 0;
-    color: var(--encre-2);
-    font-style: italic;
-  }
-  .accord__pastille {
-    flex: none;
-    width: 2.6rem;
-    height: 2.6rem;
-    border-radius: 50%;
-    box-shadow: inset 0 -6px 12px rgba(0, 0, 0, 0.25);
-  }
-  .accord b {
-    display: block;
-    font: italic 600 1.7rem/1.1 var(--f-titre);
-    color: var(--bordeaux);
-  }
-  .accord span {
-    font-size: 0.74rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--or);
-  }
-  .accord p {
-    margin: 0.5rem 0 0;
-    color: var(--encre-2);
-  }
-
-  /* ---------- Visit ---------- */
-  .horaires {
-    width: 100%;
-    margin-bottom: 2rem;
-    border-collapse: collapse;
-  }
-  .horaires th,
-  .horaires td {
-    padding: 0.5rem 0;
-    border-bottom: 1px solid rgba(42, 26, 28, 0.12);
-    text-align: left;
-    font-weight: 400;
-  }
-  .horaires td {
-    text-align: right;
-    color: var(--encre-2);
-    font-variant-numeric: tabular-nums;
-  }
-  .horaires tr.aujourdhui th,
-  .horaires tr.aujourdhui td {
-    color: var(--bordeaux);
-    font-weight: 600;
-  }
-  .resa {
     position: relative;
-    display: grid;
-    gap: 1.5rem;
-    padding: clamp(1.4rem, 3vw, 2.2rem);
+    aspect-ratio: 3 / 4;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(8px);
-    box-shadow:
-      inset 0 0 0 1px rgba(42, 26, 28, 0.08),
-      0 30px 60px -30px rgba(42, 26, 28, 0.35);
-  }
-  fieldset {
-    margin: 0;
-    padding: 0;
-    border: 0;
-  }
-  legend {
-    margin-bottom: 0.7rem;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--encre-2);
-  }
-  .formules button {
-    flex: 1;
-    display: grid;
-    gap: 0.15rem;
-    min-width: 11rem;
-    padding: 0.9rem 1rem;
-    border: 1px solid rgba(42, 26, 28, 0.25);
-    background: transparent;
-    color: var(--encre);
-    text-align: left;
-    font: 400 0.85rem var(--f-texte);
+    background: var(--noir-2);
+    box-shadow: inset 0 0 0 1px rgba(201, 164, 92, 0.25);
     cursor: pointer;
+  }
+  .carte img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     transition:
-      border-color 0.25s,
-      background 0.25s;
+      scale 1.4s var(--courbe),
+      filter 1s;
+    filter: brightness(0.85);
   }
-  .formules b {
-    font: italic 600 1.3rem var(--f-titre);
+  .carte::before {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    z-index: 2;
+    border: 1px solid var(--or);
+    opacity: 0;
+    scale: 0.94;
+    transition:
+      opacity 0.6s,
+      scale 0.8s var(--courbe);
+    pointer-events: none;
   }
-  .formules em {
-    font-style: normal;
-    color: var(--bordeaux);
-  }
-  .formules button[aria-pressed='true'] {
-    border-color: var(--bordeaux);
-    background: rgba(107, 30, 44, 0.06);
-    box-shadow: inset 0 0 0 1px var(--bordeaux);
-  }
-  .couverts {
-    display: inline-flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  .couverts button {
-    width: 2.4rem;
-    height: 2.4rem;
-    border: 1px solid rgba(42, 26, 28, 0.3);
-    border-radius: 50%;
-    background: transparent;
-    color: var(--encre);
-    font-size: 1.2rem;
-    cursor: pointer;
-  }
-  .couverts output {
-    min-width: 2ch;
-    text-align: center;
-    font: italic 600 2rem var(--f-titre);
-  }
-  .resa__note {
-    margin: -0.6rem 0 0;
-    font-size: 0.76rem;
-    color: var(--encre-2);
-  }
-  .secoue {
-    animation: secoue 0.45s;
-  }
-  @keyframes secoue {
-    20%, 60% { translate: -8px 0; }
-    40%, 80% { translate: 8px 0; }
-  }
-  .ticket {
+  .carte::after {
+    content: '';
     position: absolute;
     inset: 0;
-    display: grid;
-    place-content: center;
-    justify-items: center;
-    text-align: center;
-    background: var(--papier);
-    translate: 0 105%;
-    transition: translate 0.8s var(--courbe);
+    background: linear-gradient(transparent 40%, rgba(8, 4, 4, 0.92));
   }
-  .ticket__resume {
-    margin: 0;
-    max-width: 20ch;
-    font: italic 600 clamp(1.5rem, 2.6vw, 2.1rem) / 1.15 var(--f-titre);
+  .carte:hover img {
+    scale: 1.08;
+    filter: brightness(1);
   }
-  .tampon {
-    margin-top: 1.4rem;
-    padding: 0.15em 0.7em;
-    border: 3px double var(--bordeaux);
-    color: var(--bordeaux);
-    font: italic 600 1.8rem var(--f-titre);
-    rotate: -10deg;
-    opacity: 0;
-    scale: 2.2;
-    transition:
-      scale 0.35s cubic-bezier(0.5, 1.8, 0.6, 1) 0.8s,
-      opacity 0.2s 0.8s;
-  }
-  .confirme .ticket {
-    translate: 0 0;
-  }
-  .confirme .tampon {
+  .carte:hover::before {
     opacity: 1;
     scale: 1;
   }
-
-  /* ---------- Footer ---------- */
-  .pied {
-    padding: 10rem clamp(1rem, 4vw, 3rem) 5rem;
+  .carte__texte {
+    position: absolute;
+    z-index: 1;
+    left: 1.6rem;
+    right: 1.6rem;
+    bottom: 1.6rem;
+    transition: translate 0.8s var(--courbe);
   }
-  .pied__infos {
+  .carte:hover .carte__texte {
+    translate: 0 -0.6rem;
+  }
+  .carte h3 {
+    margin: 0 0 0.3rem;
+    font-size: 1.15rem;
+    color: var(--creme);
+  }
+  .carte p {
+    margin: 0;
+    font-size: 0.86rem;
+    color: var(--gris);
+  }
+  .carte__lien {
+    display: inline-block;
+    margin-top: 0.8rem;
+    font: 400 0.68rem var(--f-titre);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--or);
+    opacity: 0;
+    transition: opacity 0.5s 0.1s;
+  }
+  .carte:hover .carte__lien {
+    opacity: 1;
+  }
+
+  /* By the bottle: dark tiles, bottle lifts and turns slightly on hover. */
+  .titre-ligne {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2.2rem;
+  }
+  .titre-ligne h2 {
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    white-space: nowrap;
+  }
+  .titre-ligne i {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--or), transparent);
+  }
+  .produits {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.2rem;
+  }
+  .produit {
+    display: grid;
+    grid-template-columns: 5.2rem 1fr;
+    gap: 1rem;
+    align-items: center;
+    padding: 1.4rem 1.2rem;
+    background: linear-gradient(160deg, #1b1414, var(--noir-2));
+    box-shadow: inset 0 0 0 1px rgba(201, 164, 92, 0.18);
+    transition: box-shadow 0.5s;
+  }
+  .produit:hover {
+    box-shadow: inset 0 0 0 1px rgba(201, 164, 92, 0.55);
+  }
+  .produit img {
+    width: 100%;
+    filter: drop-shadow(0 18px 14px rgba(0, 0, 0, 0.6));
+    transition: transform 0.8s var(--courbe);
+  }
+  .produit:hover img {
+    transform: translateY(-8px) rotate(-5deg);
+  }
+  .produit h3 {
+    margin: 0 0 0.3rem;
+    font-size: 0.92rem;
+    color: var(--creme);
+  }
+  .produit p {
+    margin: 0 0 0.6rem;
+    font-size: 0.8rem;
+    color: var(--gris);
+  }
+  .produit strong {
+    display: block;
+    margin-bottom: 0.8rem;
+    font: 400 1.4rem var(--f-titre);
+    color: var(--or);
+  }
+  .ajouter {
+    padding: 0.5em 0.9em;
+    border: 1px solid rgba(201, 164, 92, 0.6);
+    background: transparent;
+    color: var(--or);
+    font: 500 0.72rem var(--f-texte);
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition:
+      background 0.3s,
+      color 0.3s;
+  }
+  .ajouter:hover {
+    background: var(--or);
+    color: var(--noir);
+  }
+
+  /* ---------- Cellar banner with the rotating medallion ---------- */
+  .bandeau {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 34rem;
+    border-top: 1px solid rgba(201, 164, 92, 0.18);
+  }
+  .bandeau__image {
+    overflow: hidden;
+  }
+  .bandeau__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    scale: 1.15;
+    transition: scale 6s ease-out;
+  }
+  .bandeau.vu .bandeau__image img {
+    scale: 1;
+  }
+  .bandeau__texte {
+    position: relative;
+    padding: clamp(3rem, 6vw, 5rem);
+    background: linear-gradient(140deg, var(--bordeaux-2), var(--bordeaux) 60%, #1a0409);
+  }
+  .bandeau h2 {
+    margin: 0;
+    font-size: clamp(2rem, 3.6vw, 3.2rem);
+    line-height: 1.1;
+  }
+  .bandeau__texte > p:not(.sur) {
+    max-width: 26rem;
+    margin: 0 0 2rem;
+    color: var(--creme);
+    opacity: 0.85;
+  }
+  .medaillon {
+    position: absolute;
+    right: clamp(1rem, 4vw, 3rem);
+    bottom: clamp(1rem, 4vw, 3rem);
+    width: clamp(8rem, 13vw, 11rem);
+  }
+  .medaillon svg {
+    fill: none;
+    stroke: var(--or);
+    stroke-width: 1;
+  }
+  .medaillon text {
+    fill: var(--or);
+    stroke: none;
+    font: 400 11.5px var(--f-titre);
+    letter-spacing: 3.2px;
+  }
+  .medaillon .medaillon__mono {
+    font-size: 42px;
+    letter-spacing: 1px;
+  }
+  .medaillon path:not([id]) {
+    fill: var(--or);
+    stroke: none;
+  }
+  .medaillon__ruban {
+    transform-origin: 100px 100px;
+    animation: tourne 40s linear infinite;
+  }
+  @keyframes tourne {
+    to { rotate: 360deg; }
+  }
+
+  /* ---------- Footer, toast, badge ---------- */
+  .pied {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-    color: var(--encre-2);
-    font-size: 0.92rem;
+    padding: 3rem clamp(1rem, 5vw, 4rem) 5rem;
+    border-top: 1px solid rgba(201, 164, 92, 0.18);
+    font-size: 0.86rem;
+    color: var(--gris);
   }
-  .pied__infos b {
-    color: var(--encre);
+  .pied b {
+    display: block;
+    margin-bottom: 0.3rem;
+    font: 400 0.74rem var(--f-titre);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--or);
+  }
+  .pied__loi {
+    grid-column: 1 / -1;
+    margin: 1rem 0 0;
+    font-size: 0.74rem;
+    opacity: 0.7;
+  }
+  .toast {
+    position: fixed;
+    top: 5rem;
+    right: clamp(1rem, 4vw, 3rem);
+    z-index: 45;
+    margin: 0;
+    padding: 0.9em 1.3em;
+    background: var(--noir-2);
+    box-shadow: inset 0 0 0 1px var(--or);
+    color: var(--creme);
+    font-size: 0.85rem;
+    opacity: 0;
+    translate: 0 -10px;
+    pointer-events: none;
+    transition:
+      opacity 0.4s,
+      translate 0.5s var(--courbe);
+  }
+  .toast.visible {
+    opacity: 1;
+    translate: 0 0;
   }
   .badge {
     position: fixed;
@@ -1139,36 +909,57 @@ const caveau: [string, string][][] = [[], [], [['10:00', '12:30'], ['14:00', '18
     z-index: 45;
     padding: 0.55em 1em;
     border-radius: 999px;
-    background: rgba(246, 240, 229, 0.85);
+    background: rgba(12, 9, 9, 0.85);
     backdrop-filter: blur(8px);
-    box-shadow: inset 0 0 0 1px rgba(42, 26, 28, 0.15);
-    font-size: 0.76rem;
+    box-shadow: inset 0 0 0 1px rgba(201, 164, 92, 0.35);
+    font-size: 0.74rem;
     text-decoration: none;
-    color: var(--encre-2);
+    color: var(--gris);
   }
 
-  @media (max-width: 860px) {
-    .bloc {
-      align-items: flex-end;
-      padding: 45svh 1rem 3rem;
+  @media (max-width: 1000px) {
+    .cartes,
+    .produits,
+    .atouts {
+      grid-template-columns: repeat(2, 1fr);
     }
-    .panneau {
-      max-width: none;
-      padding: 1.5rem;
-      background: rgba(246, 240, 229, 0.86);
-      backdrop-filter: blur(12px);
+    .atouts {
+      gap: 1.6rem 0;
     }
-    .pied__infos {
-      grid-template-columns: 1fr;
+    .atouts li:nth-child(3) {
+      border-left: 0;
     }
-    .nav nav a:not(.nav__cta) {
+    .tete nav {
       display: none;
     }
-    .secours {
-      top: 24svh;
-      right: 50%;
-      width: 24vw;
-      translate: 50% -50%;
+  }
+  @media (max-width: 760px) {
+    .hero,
+    .bandeau {
+      grid-template-columns: 1fr;
+    }
+    .hero__image {
+      height: 60svh;
+      order: -1;
+    }
+    .hero__texte {
+      padding-top: 3rem;
+    }
+    .cartes,
+    .produits,
+    .atouts,
+    .pied {
+      grid-template-columns: 1fr;
+    }
+    .atouts li {
+      border-left: 0;
+    }
+    .medaillon {
+      position: static;
+      margin-top: 2rem;
+    }
+    .bandeau__image {
+      height: 50svh;
     }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -1178,11 +969,15 @@ const caveau: [string, string][][] = [[], [], [['10:00', '12:30'], ['14:00', '18
       animation: none !important;
       transition: none !important;
     }
-    .panneau {
+    .r,
+    .hero .sur,
+    .hero h1,
+    .hero__accroche,
+    .hero .bouton-or {
       opacity: 1;
       transform: none;
     }
-    .parcelle path {
+    .volute {
       stroke-dashoffset: 0;
     }
   }
