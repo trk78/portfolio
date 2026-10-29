@@ -224,10 +224,19 @@ const produits = [
   ['Basilic', 'De notre potager, posé à la sortie du four.'],
 ];
 const avis = [
-  ['La meilleure napolitaine de l’ouest parisien. La croûte est incroyable.', 'Camille R.'],
-  ['On vient chaque vendredi. Service adorable, pizzas parfaites, prix honnêtes.', 'Mehdi B.'],
-  ['La Fuoco au salame piquant, c’est une claque. Et le tiramisu !', 'Julie T.'],
+  ['La meilleure napolitaine de l’ouest parisien. La croûte est incroyable.', 'Camille R.', 'il y a 3 jours'],
+  ['On vient chaque vendredi. Service adorable, pizzas parfaites, prix honnêtes.', 'Mehdi B.', 'il y a 1 semaine'],
+  ['La Fuoco au salame piquant, c’est une claque. Et le tiramisu !', 'Julie T.', 'il y a 2 semaines'],
+  ['Pâte légère, on la digère comme rien. Et la burrata est énorme.', 'Antoine L.', 'il y a 3 semaines'],
+  ['Réservé pour huit un samedi soir : accueil au top, service rapide.', 'Sofia M.', 'il y a 1 mois'],
 ];
+// Allergens shown on each menu pizza, derived from its toppings.
+const allergenes = (p: { base: string; g: readonly string[] }) => [
+  ['G', 'Gluten'],
+  ...(p.base === 'bianca' || p.g.some((x) => ['mozza', 'fromages', 'burrata', 'parmesan'].includes(x)) ? [['L', 'Lait']] : []),
+  ...(p.g.includes('salame') ? [['P', 'Porc']] : [['V', 'Végétarien']]),
+];
+const retraits = ['19:00', '19:15', '19:30', '19:45', '20:00', '20:15', '20:30'];
 const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', true], ['21:00', true], ['21:30', false]] as const;
 const etoiles = '★★★★★';
 ---
@@ -240,9 +249,15 @@ const etoiles = '★★★★★';
     <title>Fuoco — Pizzeria napolitaine (démo)</title>
     <meta name="robots" content="noindex" />
     <meta name="description" content="Page d’accueil d’une pizzeria fictive : démo de site vitrine réalisée par Timéo." />
+    <noscript><style>.chargement { display: none } #accueil .panneau * { animation-play-state: running !important }</style></noscript>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23e8471f'/%3E%3C/svg%3E" />
   </head>
   <body>
+    <div class="chargement" aria-hidden="true">
+      <p class="chargement__nom">Fuoco</p>
+      <p class="chargement__texte">Le four chauffe… <b>20</b> °C</p>
+      <div class="chargement__barre"><i></i></div>
+    </div>
     <canvas class="scene3d" aria-hidden="true"></canvas>
     <div class="secours" aria-hidden="true" hidden><svg viewBox="0 0 200 200" set:html={pizza('secours', 23, 'rossa', ['mozza', 'salame', 'olives', 'basilic', 'huile'])} /></div>
     <canvas class="braises" aria-hidden="true"></canvas>
@@ -293,6 +308,27 @@ const etoiles = '★★★★★';
             <p><b>Adresse</b>8 rue des Braises<br />78000 Versailles<br /><small>À 5 min à pied du château</small></p>
             <p><b>Téléphone</b>01 00 00 00 00<br /><small>Commandes à emporter jusqu’à 22 h</small></p>
           </div>
+          <svg class="plan" viewBox="0 0 400 200" role="img" aria-label="Plan : Fuoco, 8 rue des Braises, à 5 minutes à pied du château">
+            <rect class="plan__parc" x="18" y="16" width="130" height="80" rx="10" />
+            <text x="83" y="60" text-anchor="middle">Château</text>
+            <path class="rue" style="--i: 0" d="M0 122C120 112 260 130 400 118" pathLength="1" />
+            <path class="rue" style="--i: 1" d="M172 0C180 70 166 140 182 200" pathLength="1" />
+            <path class="rue rue--fine" style="--i: 2" d="M0 172L400 150" pathLength="1" />
+            <path class="rue rue--fine" style="--i: 3" d="M302 0C292 60 312 140 296 200" pathLength="1" />
+            <path class="rue rue--fine" style="--i: 4" d="M62 122L40 200" pathLength="1" />
+            <path class="trajet" d="M148 92C170 108 210 114 246 104" />
+            <text x="200" y="88" class="plan__petit" text-anchor="middle">5 min à pied</text>
+            <text x="230" y="140" class="plan__petit">rue des Braises</text>
+            <text x="352" y="186" text-anchor="middle">Gare</text>
+            <g transform="translate(250 104)">
+              <g class="repere">
+                <circle class="repere__onde" r="9" />
+                <path d="M0 0C-10-12-10-25 0-27C10-25 10-12 0 0Z" />
+                <circle cy="-18" r="4" class="repere__trou" />
+              </g>
+            </g>
+            <text x="264" y="84" class="plan__nom">Fuoco</text>
+          </svg>
           <ul class="services">
             {services.map((s) => <li>{s}</li>)}
           </ul>
@@ -319,11 +355,15 @@ const etoiles = '★★★★★';
                     <span class="prix">{p.prix} €</span>
                   </div>
                   <p>{p.desc}</p>
+                  <p class="allergenes">
+                    {allergenes(p).map(([c, n]) => <span tabindex="0" data-info={n} aria-label={n}>{c}</span>)}
+                  </p>
                 </div>
+                <button type="button" class="ajouter" data-prix={p.prix} aria-label={`Ajouter ${p.nom} au panier`}>+</button>
               </li>
             ))}
           </ul>
-          <p class="mention">Formule du midi (samedi et dimanche) : pizza + boisson, 15 €. Liste des allergènes disponible sur demande.</p>
+          <p class="mention">Formule du midi (samedi et dimanche) : pizza + boisson, 15 €.<br />Allergènes : <b>G</b> gluten · <b>L</b> lait · <b>P</b> porc · <b>V</b> végétarien.</p>
         </div>
       </section>
 
@@ -346,14 +386,20 @@ const etoiles = '★★★★★';
         <div class="panneau">
           <p class="sur">Avis</p>
           <h2><span class="etoiles">{etoiles}</span><br />4,8 sur 5.</h2>
-          <ul class="temoignages">
-            {avis.map(([t, n]) => (
-              <li>
-                <p>« {t} »</p>
-                <span>{n} · <span class="etoiles" aria-label="5 étoiles">{etoiles}</span></span>
-              </li>
-            ))}
-          </ul>
+          <div class="carrousel">
+            <ul class="temoignages">
+              {avis.map(([t, n, d], i) => (
+                <li class={i === 0 ? 'actif' : ''} aria-hidden={i === 0 ? 'false' : 'true'}>
+                  <span class="initiale" aria-hidden="true">{n[0]}</span>
+                  <p>« {t} »</p>
+                  <span>{n} · {d} · <span class="etoiles" aria-label="5 étoiles">{etoiles}</span></span>
+                </li>
+              ))}
+            </ul>
+            <div class="carrousel__points">
+              {avis.map((_, i) => <button type="button" data-i={i} aria-label={`Avis ${i + 1}`} aria-pressed={i === 0 ? 'true' : 'false'}></button>)}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -416,12 +462,61 @@ const etoiles = '★★★★★';
       </div>
     </footer>
 
+    <button class="panier" type="button" hidden><span class="panier__compte">0</span><span class="panier__total">0 €</span><b>Commander</b></button>
+    <aside class="tiroir" aria-label="Votre commande" aria-hidden="true">
+      <div class="tiroir__tete">
+        <p class="sur">À emporter</p>
+        <button type="button" class="tiroir__fermer" aria-label="Fermer la commande">×</button>
+      </div>
+      <h2 class="tiroir__titre">Votre commande</h2>
+      <ul class="tiroir__liste"></ul>
+      <p class="tiroir__total">Total <b>0 €</b></p>
+      <fieldset>
+        <legend>Retrait</legend>
+        <div class="retraits">
+          {retraits.map((h) => <button type="button" data-retrait={h} aria-pressed="false">{h}</button>)}
+        </div>
+      </fieldset>
+      <button class="bouton tiroir__ok" type="button">Valider la commande</button>
+      <p class="resa__note">Démo : aucune commande n’est envoyée, paiement sur place.</p>
+      <div class="ticket" aria-live="polite">
+        <p class="sur">Grazie !</p>
+        <p class="ticket__resume"></p>
+        <span class="tampon">Ordinato</span>
+      </div>
+    </aside>
+
     <a class="badge" href="https://jeannin.dev/" target="_top">Démo · pizzeria fictive · site réalisé par Timéo ↗</a>
   </body>
 </html>
 
 <script>
   const animer = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Loading screen while the 3D pizza loads: the oven "heats up", then the screen fades away.
+  const chargement = document.querySelector<HTMLElement>('.chargement')!;
+  const degres = chargement.querySelector('b')!;
+  const t0 = performance.now();
+  let chauffe = 0;
+  const monter = (t: number) => {
+    const k = Math.min((t - t0) / 1800, 1);
+    degres.textContent = String(Math.round(20 + 465 * (1 - (1 - k) ** 3)));
+    if (k < 1) chauffe = requestAnimationFrame(monter);
+  };
+  chauffe = requestAnimationFrame(monter);
+  let ouvert = false;
+  const ouvrir = () => {
+    if (ouvert) return;
+    ouvert = true;
+    // Let the heating animation play at least once so the screen does not just flash.
+    setTimeout(() => {
+      cancelAnimationFrame(chauffe);
+      degres.textContent = '485';
+      chargement.classList.add('fini');
+      document.documentElement.classList.add('charge');
+    }, Math.max(0, 1300 - (performance.now() - t0)));
+  };
+  setTimeout(ouvrir, 9000);
 
   // Reveal on scroll.
   const io = new IntersectionObserver(
@@ -440,6 +535,7 @@ const etoiles = '★★★★★';
     scene.hidden = true;
     etiquette.hidden = true;
     document.querySelector<HTMLElement>('.secours')!.hidden = false;
+    ouvrir();
   };
   import('../../scripts/pizza3d')
     .then(({ demarrer }) =>
@@ -454,7 +550,7 @@ const etoiles = '★★★★★';
           etiquette.classList.add('change');
         },
         secours,
-        () => {},
+        ouvrir,
       ),
     )
     .then((api) => {
@@ -599,9 +695,155 @@ const etoiles = '★★★★★';
     form.querySelector('.ticket__resume')!.textContent = `Table pour ${choix.couverts} · ${choix.jour} · ${choix.heure}`;
     form.classList.add('confirme');
   });
+
+  // Section titles: words rise one after the other when their panel appears.
+  document.querySelectorAll<HTMLElement>('.panneau h2').forEach((h2) => {
+    h2.setAttribute('aria-label', h2.textContent!.replace(/\s+/g, ' ').trim());
+    const noeuds: Text[] = [];
+    const parcours = document.createTreeWalker(h2, NodeFilter.SHOW_TEXT);
+    while (parcours.nextNode()) noeuds.push(parcours.currentNode as Text);
+    let n = 0;
+    for (const t of noeuds) {
+      const morceaux = document.createDocumentFragment();
+      for (const part of t.textContent!.split(/(\s+)/)) {
+        if (!part) continue;
+        if (/^\s+$/.test(part)) {
+          morceaux.append(part);
+          continue;
+        }
+        const mot = Object.assign(document.createElement('span'), { className: 'mot', textContent: part });
+        mot.style.setProperty('--w', String(n++));
+        mot.setAttribute('aria-hidden', 'true');
+        morceaux.append(mot);
+      }
+      t.replaceWith(morceaux);
+    }
+  });
+
+  // Reviews: one at a time, advancing every 5 s (paused while hovered or focused).
+  const avisLi = [...document.querySelectorAll<HTMLElement>('.temoignages li')];
+  const points = [...document.querySelectorAll<HTMLButtonElement>('.carrousel__points button')];
+  let actuel = 0;
+  const aller = (k: number) => {
+    actuel = (k + avisLi.length) % avisLi.length;
+    avisLi.forEach((li, j) => {
+      li.classList.toggle('actif', j === actuel);
+      li.setAttribute('aria-hidden', String(j !== actuel));
+    });
+    points.forEach((b, j) => b.setAttribute('aria-pressed', String(j === actuel)));
+  };
+  points.forEach((b, j) => b.addEventListener('click', () => aller(j)));
+  const carrousel = document.querySelector<HTMLElement>('.carrousel')!;
+  let enPause = false;
+  carrousel.addEventListener('pointerenter', () => (enPause = true));
+  carrousel.addEventListener('pointerleave', () => (enPause = false));
+  carrousel.addEventListener('focusin', () => (enPause = true));
+  carrousel.addEventListener('focusout', () => (enPause = false));
+  if (animer) setInterval(() => !enPause && !document.hidden && aller(actuel + 1), 5000);
+
+  // Takeaway order (demo, nothing is sent): "+" on a pizza flies it to the cart.
+  const panier = new Map<string, { prix: number; qte: number }>();
+  const boutonPanier = document.querySelector<HTMLButtonElement>('.panier')!;
+  const tiroir = document.querySelector<HTMLElement>('.tiroir')!;
+  const lignes = tiroir.querySelector('.tiroir__liste')!;
+  const retraits = tiroir.querySelector<HTMLElement>('.retraits')!;
+  let retrait = '';
+  const total = () => [...panier.values()].reduce((t, l) => t + l.prix * l.qte, 0);
+  const fermerTiroir = () => {
+    tiroir.classList.remove('ouvert');
+    tiroir.setAttribute('aria-hidden', 'true');
+    // After a confirmed order, the cart starts again empty.
+    if (tiroir.classList.contains('confirme')) {
+      setTimeout(() => {
+        panier.clear();
+        tiroir.classList.remove('confirme');
+        afficher();
+      }, 600);
+    }
+  };
+  const afficher = () => {
+    const n = [...panier.values()].reduce((t, l) => t + l.qte, 0);
+    boutonPanier.hidden = n === 0;
+    boutonPanier.querySelector('.panier__compte')!.textContent = String(n);
+    boutonPanier.querySelector('.panier__total')!.textContent = `${total()} €`;
+    tiroir.querySelector('.tiroir__total b')!.textContent = `${total()} €`;
+    lignes.replaceChildren(
+      ...[...panier].map(([nom, l]) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${nom}</span><span class="qte"><button type="button" data-nom="${nom}" data-qte="-1" aria-label="Une ${nom} de moins">−</button><b>${l.qte}</b><button type="button" data-nom="${nom}" data-qte="1" aria-label="Une ${nom} de plus">+</button></span><span>${l.prix * l.qte} €</span>`;
+        return li;
+      }),
+    );
+    if (n === 0 && !tiroir.classList.contains('confirme')) fermerTiroir();
+  };
+  document.querySelectorAll<HTMLButtonElement>('.ajouter').forEach((b) =>
+    b.addEventListener('click', () => {
+      const li = b.closest<HTMLElement>('.pizza')!;
+      const ligne = panier.get(li.dataset.nom!) ?? { prix: Number(b.dataset.prix), qte: 0 };
+      ligne.qte++;
+      panier.set(li.dataset.nom!, ligne);
+      afficher();
+      const rebond = () => {
+        boutonPanier.classList.remove('bump');
+        void boutonPanier.offsetWidth;
+        boutonPanier.classList.add('bump');
+      };
+      if (!animer) return rebond();
+      // The thumbnail flies to the cart button, spinning and shrinking.
+      const svg = li.querySelector('svg')!;
+      const a = svg.getBoundingClientRect(), c = boutonPanier.getBoundingClientRect();
+      const vol = svg.cloneNode(true) as SVGElement;
+      vol.classList.add('vol');
+      Object.assign(vol.style, { left: `${a.left}px`, top: `${a.top}px`, width: `${a.width}px` });
+      document.body.append(vol);
+      vol
+        .animate(
+          [
+            { transform: 'none' },
+            { transform: `translate(${c.left + c.width / 2 - a.left - a.width / 2}px, ${c.top + c.height / 2 - a.top - a.height / 2}px) scale(0.2) rotate(360deg)`, opacity: 0.5 },
+          ],
+          { duration: 700, easing: 'cubic-bezier(0.5, 0, 0.3, 1)' },
+        )
+        .finished.then(() => {
+          vol.remove();
+          rebond();
+        });
+    }),
+  );
+  boutonPanier.addEventListener('click', () => {
+    tiroir.classList.add('ouvert');
+    tiroir.removeAttribute('aria-hidden');
+    tiroir.querySelector<HTMLElement>('.tiroir__fermer')!.focus();
+  });
+  tiroir.querySelector('.tiroir__fermer')!.addEventListener('click', fermerTiroir);
+  addEventListener('keydown', (e) => e.key === 'Escape' && tiroir.classList.contains('ouvert') && fermerTiroir());
+  lignes.addEventListener('click', (e) => {
+    const b = (e.target as Element).closest<HTMLButtonElement>('button[data-qte]');
+    if (!b) return;
+    const ligne = panier.get(b.dataset.nom!)!;
+    ligne.qte += Number(b.dataset.qte);
+    if (ligne.qte <= 0) panier.delete(b.dataset.nom!);
+    afficher();
+  });
+  retraits.addEventListener('click', (e) => {
+    const b = (e.target as Element).closest<HTMLButtonElement>('button[data-retrait]');
+    if (!b) return;
+    retraits.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    retrait = b.dataset.retrait!;
+  });
+  tiroir.querySelector('.tiroir__ok')!.addEventListener('click', () => {
+    if (!retrait) {
+      retraits.classList.remove('secoue');
+      void retraits.offsetWidth;
+      retraits.classList.add('secoue');
+      return;
+    }
+    tiroir.querySelector('.ticket__resume')!.textContent = `Commande n° ${100 + Math.floor(Math.random() * 900)} · retrait ${retrait} · ${total()} € à régler sur place`;
+    tiroir.classList.add('confirme');
+  });
 </script>
 
-<style>
+<style is:global>
   :root {
     --nuit: #120b07;
     --charbon: #1d130d;
@@ -1044,7 +1286,7 @@ const etoiles = '★★★★★';
   }
   .pizza {
     display: grid;
-    grid-template-columns: 5.5rem 1fr;
+    grid-template-columns: 5.5rem 1fr auto;
     gap: 1.1rem;
     align-items: center;
   }
@@ -1400,8 +1642,455 @@ const etoiles = '★★★★★';
     color: var(--creme);
   }
 
+  /* ---------- Loading screen ---------- */
+  .chargement {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 1.1rem;
+    background: radial-gradient(ellipse at 50% 60%, #3b1d0e, var(--nuit) 70%);
+    transition:
+      opacity 0.8s var(--courbe),
+      visibility 0.8s,
+      transform 0.8s var(--courbe);
+  }
+  .chargement.fini {
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(1.06);
+    pointer-events: none;
+  }
+  .chargement__nom {
+    margin: 0;
+    font: 900 italic clamp(4rem, 12vw, 8rem) / 0.9 var(--f-titre);
+    font-variation-settings: 'SOFT' 100, 'WONK' 1;
+    background: linear-gradient(180deg, #ffe2a1 10%, var(--flamme) 45%, var(--braise));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .chargement__texte {
+    margin: 0;
+    color: var(--creme-2);
+    font-size: 0.85rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .chargement__texte b {
+    color: var(--flamme);
+    font-variant-numeric: tabular-nums;
+  }
+  .chargement__barre {
+    width: min(60vw, 260px);
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(246, 236, 217, 0.12);
+    overflow: hidden;
+  }
+  .chargement__barre i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #ffd27a, var(--braise));
+    transform-origin: left;
+    animation: chauffe 1.8s cubic-bezier(0.3, 0, 0.1, 1) both;
+  }
+  @keyframes chauffe {
+    from { scale: 0 1; }
+  }
+  /* The opening animations wait for the loading screen to lift. */
+  :root:not(.charge) #accueil .panneau * {
+    animation-play-state: paused;
+  }
+
+  /* ---------- Map ---------- */
+  .plan {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0 0 1.8rem;
+    border-radius: 16px;
+    background: rgba(246, 236, 217, 0.04);
+    box-shadow: inset 0 0 0 1px rgba(246, 236, 217, 0.1);
+  }
+  .plan__parc {
+    fill: rgba(79, 154, 60, 0.16);
+  }
+  .plan text {
+    fill: var(--creme-2);
+    font: 600 11px var(--f-texte);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .plan .plan__petit {
+    font-size: 9px;
+    fill: rgba(246, 236, 217, 0.45);
+    text-transform: none;
+  }
+  .plan .plan__nom {
+    fill: var(--creme);
+    font: 800 italic 18px var(--f-titre);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .rue {
+    fill: none;
+    stroke: rgba(246, 236, 217, 0.28);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  .rue--fine {
+    stroke-width: 3;
+    stroke: rgba(246, 236, 217, 0.16);
+  }
+  .vu .rue {
+    animation: trace 1.4s var(--courbe) forwards;
+    animation-delay: calc(var(--i) * 0.15s + 0.2s);
+  }
+  @keyframes trace {
+    to { stroke-dashoffset: 0; }
+  }
+  .trajet {
+    fill: none;
+    stroke: var(--flamme);
+    stroke-width: 2;
+    stroke-dasharray: 4 5;
+    opacity: 0;
+  }
+  .vu .trajet {
+    animation: apparait 0.6s 1.4s forwards;
+  }
+  @keyframes apparait {
+    to { opacity: 1; }
+  }
+  .repere {
+    opacity: 0;
+  }
+  .repere path {
+    fill: var(--braise);
+  }
+  .repere__trou {
+    fill: var(--nuit);
+  }
+  .vu .repere {
+    animation: tombe-repere 0.7s 1.2s cubic-bezier(0.3, 1.6, 0.5, 1) forwards;
+  }
+  @keyframes tombe-repere {
+    from { opacity: 0; translate: 0 -30px; }
+    to { opacity: 1; translate: 0 0; }
+  }
+  .repere__onde {
+    fill: none;
+    stroke: var(--braise);
+    stroke-width: 2;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: onde 2s ease-out infinite;
+  }
+  @keyframes onde {
+    from { scale: 0.3; opacity: 1; }
+    to { scale: 2.4; opacity: 0; }
+  }
+
+  /* ---------- Allergens and "+" ---------- */
+  .allergenes {
+    display: flex;
+    gap: 0.3rem;
+    margin: 0.4rem 0 0 !important;
+  }
+  .allergenes span {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(246, 236, 217, 0.3);
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--creme-2);
+    cursor: help;
+  }
+  .allergenes span::after {
+    content: attr(data-info);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    translate: -50% 4px;
+    padding: 0.3em 0.6em;
+    border-radius: 6px;
+    background: var(--creme);
+    color: var(--nuit);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, translate 0.2s;
+  }
+  .allergenes span:hover::after,
+  .allergenes span:focus-visible::after {
+    opacity: 1;
+    translate: -50% 0;
+  }
+  .ajouter {
+    width: 2.4rem;
+    height: 2.4rem;
+    border: 1.5px solid var(--braise);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--braise);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background 0.25s,
+      color 0.25s,
+      transform 0.3s var(--courbe);
+  }
+  .ajouter:hover {
+    background: var(--braise);
+    color: var(--nuit);
+    transform: rotate(90deg);
+  }
+  .mention b {
+    color: var(--creme);
+  }
+  .vol {
+    position: fixed;
+    z-index: 80;
+    pointer-events: none;
+  }
+
+  /* ---------- Cart ---------- */
+  .panier {
+    position: fixed;
+    left: 50%;
+    bottom: 1rem;
+    z-index: 46;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.55em 0.6em 0.55em 0.7em;
+    border: 0;
+    border-radius: 999px;
+    background: var(--braise);
+    color: var(--nuit);
+    font: 600 0.95rem var(--f-texte);
+    translate: -50% 0;
+    box-shadow: 0 10px 40px -8px rgba(255, 90, 31, 0.7);
+    cursor: pointer;
+    animation: monte 0.5s var(--courbe);
+  }
+  .panier[hidden] {
+    display: none;
+  }
+  .panier__compte {
+    min-width: 1.8em;
+    padding: 0.15em 0.5em;
+    border-radius: 999px;
+    background: var(--nuit);
+    color: var(--creme);
+    text-align: center;
+  }
+  .panier b {
+    padding: 0.35em 0.9em;
+    border-radius: 999px;
+    background: rgba(18, 11, 7, 0.15);
+  }
+  .panier.bump {
+    animation: bump 0.4s var(--courbe);
+  }
+  @keyframes bump {
+    40% { scale: 1.12; }
+  }
+  .tiroir {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 65;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    width: min(100%, 26rem);
+    padding: 1.5rem;
+    overflow: auto;
+    background: var(--charbon);
+    box-shadow: -30px 0 80px rgba(0, 0, 0, 0.6);
+    transform: translateX(105%);
+    visibility: hidden;
+    transition:
+      transform 0.6s var(--courbe),
+      visibility 0.6s;
+  }
+  .tiroir.ouvert {
+    transform: none;
+    visibility: visible;
+  }
+  .tiroir__tete {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tiroir__tete .sur {
+    margin: 0;
+  }
+  .tiroir__fermer {
+    width: 2.2rem;
+    height: 2.2rem;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(246, 236, 217, 0.1);
+    color: var(--creme);
+    font-size: 1.3rem;
+    cursor: pointer;
+  }
+  .tiroir__titre {
+    margin: 0;
+    font-size: 2.4rem;
+  }
+  .tiroir__liste {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .tiroir__liste li {
+    display: grid;
+    grid-template-columns: 1fr auto 4rem;
+    gap: 0.8rem;
+    align-items: center;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid rgba(246, 236, 217, 0.1);
+  }
+  .tiroir__liste li > span:last-child {
+    text-align: right;
+    color: var(--flamme);
+  }
+  .qte {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .qte button {
+    width: 1.8rem;
+    height: 1.8rem;
+    border: 1.5px solid rgba(246, 236, 217, 0.22);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--creme);
+    cursor: pointer;
+  }
+  .tiroir__total {
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+    font-size: 1.2rem;
+  }
+  .tiroir__total b {
+    font: 800 italic 1.6rem var(--f-titre);
+    color: var(--flamme);
+  }
+  .retraits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .retraits button {
+    padding: 0.5em 1em;
+    border: 1.5px solid rgba(246, 236, 217, 0.22);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--creme);
+    font: 500 0.88rem var(--f-texte);
+    cursor: pointer;
+  }
+  .retraits button[aria-pressed='true'] {
+    background: var(--braise);
+    border-color: var(--braise);
+    color: var(--nuit);
+  }
+  .tiroir__ok {
+    justify-content: center;
+  }
+
+  /* ---------- Reviews carousel ---------- */
+  .temoignages {
+    display: grid;
+  }
+  .temoignages li {
+    grid-area: 1 / 1;
+    opacity: 0;
+    transform: translateX(40px);
+    pointer-events: none;
+    transition:
+      opacity 0.6s var(--courbe),
+      transform 0.8s var(--courbe);
+  }
+  .temoignages li.actif {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .temoignages .initiale {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1rem;
+    border-radius: 50%;
+    background: var(--braise);
+    color: var(--nuit);
+    font: 800 italic 1.5rem var(--f-titre);
+  }
+  .carrousel__points {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.6rem;
+  }
+  .carrousel__points button {
+    width: 10px;
+    height: 10px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(246, 236, 217, 0.25);
+    cursor: pointer;
+    transition:
+      width 0.4s var(--courbe),
+      background 0.3s;
+  }
+  .carrousel__points button[aria-pressed='true'] {
+    width: 28px;
+    background: var(--braise);
+  }
+
+  /* ---------- Titles: word by word ---------- */
+  .panneau h2 .mot {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(60%) rotate(4deg);
+    filter: blur(6px);
+    transition:
+      opacity 0.7s var(--courbe),
+      transform 0.9s var(--courbe),
+      filter 0.7s;
+    transition-delay: calc(var(--w) * 80ms + 150ms);
+  }
+  .panneau.vu h2 .mot {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
   @media (max-width: 860px) {
     /* Phone: the pizza stays in the upper part of the screen; text panels scroll over it on a dark glass. */
+    .panier {
+      bottom: 4rem;
+    }
     .bloc {
       align-items: flex-end;
       padding: 45svh 1rem 3rem;
@@ -1446,6 +2135,13 @@ const etoiles = '★★★★★';
     }
     .thermo i {
       scale: 1 1;
+    }
+    .rue {
+      stroke-dashoffset: 0;
+    }
+    .repere,
+    .trajet {
+      opacity: 1;
     }
   }
 </style>
