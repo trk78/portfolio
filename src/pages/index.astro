@@ -92,9 +92,9 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
               <ul class="mono card__pts">
                 {s.points.map((p, k) => <li style={`--k: ${k}`}>{p}</li>)}
               </ul>
-              {s.demo && (
-                <button type="button" class="mono card__demo" data-demo={s.demo.url} data-domaine={s.demo.domaine}>
-                  Voir un exemple →
+              {s.demos && (
+                <button type="button" class="mono card__demo" data-demos={JSON.stringify(s.demos)}>
+                  Voir des exemples : {s.titre}
                 </button>
               )}
             </li>
@@ -228,6 +228,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     <div class="demo__fenetre" role="dialog" aria-modal="true" aria-label="Exemple de site">
       <div class="demo__barre">
         <span class="demo__points" aria-hidden="true"><i></i><i></i><i></i></span>
+        <div class="demo__onglets" role="tablist" aria-label="Exemples"></div>
         <span class="demo__url"></span>
         <a class="demo__plein mono trait" target="_blank" rel="noopener">Plein écran ↗</a>
         <button type="button" class="demo__fermer" aria-label="Fermer l’exemple">×</button>
@@ -260,11 +261,20 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     const f = fenetre.getBoundingClientRect();
     fenetre.style.transform = `translate(${c.left - f.left}px, ${c.top - f.top}px) scale(${c.width / f.width}, ${c.height / f.height})`;
   };
-  const charger = (b: HTMLElement) => {
-    if (cadre.dataset.src === b.dataset.demo) return;
-    cadre.dataset.src = b.dataset.demo!;
+  type Exemple = { nom: string; url: string; domaine: string };
+  const onglets = demo.querySelector<HTMLElement>('.demo__onglets')!;
+  const charger = (d: Exemple) => {
+    if (cadre.dataset.src === d.url) return;
+    cadre.dataset.src = d.url;
     cadre.classList.remove('is-pret');
-    cadre.src = b.dataset.demo!;
+    cadre.src = d.url;
+  };
+  // Shows one example: iframe, address bar, full-screen link and selected tab.
+  const afficher = (d: Exemple) => {
+    charger(d);
+    plein.href = d.url;
+    demo.querySelector('.demo__url')!.textContent = d.domaine;
+    onglets.querySelectorAll('button').forEach((o) => o.setAttribute('aria-selected', String(o.dataset.url === d.url)));
   };
   cadre.addEventListener('load', () => cadre.classList.add('is-pret'));
   const fermer = () => {
@@ -276,13 +286,23 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     declencheur?.focus();
   };
   document.querySelectorAll<HTMLButtonElement>('.card__demo').forEach((b) => {
-    // Start loading the example as soon as the card is hovered: it is often ready by the click.
-    b.closest('.card')!.addEventListener('pointerenter', () => charger(b), { once: true });
+    const exemples: Exemple[] = JSON.parse(b.dataset.demos!);
+    // Start loading the first example as soon as the card is hovered: it is often ready by the click.
+    b.closest('.card')!.addEventListener('pointerenter', () => charger(exemples[0]), { once: true });
     b.addEventListener('click', () => {
       declencheur = b;
-      charger(b);
-      plein.href = b.dataset.demo!;
-      demo.querySelector('.demo__url')!.textContent = b.dataset.domaine!;
+      // One tab per example (hidden when there is only one).
+      onglets.replaceChildren(
+        ...exemples.map((d) => {
+          const o = Object.assign(document.createElement('button'), { type: 'button', textContent: d.nom });
+          o.setAttribute('role', 'tab');
+          o.dataset.url = d.url;
+          o.addEventListener('click', () => afficher(d));
+          return o;
+        }),
+      );
+      onglets.hidden = exemples.length < 2;
+      afficher(exemples[0]);
       demo.hidden = false;
       lenis?.stop();
       if (animer) {
@@ -1026,6 +1046,31 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   }
   .demo__points i:nth-child(3) {
     background: #28c840;
+  }
+  .demo__onglets {
+    display: flex;
+    gap: 0.3rem;
+  }
+  .demo__onglets[hidden] {
+    display: none;
+  }
+  .demo__onglets button {
+    padding: 0.35rem 0.9rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #a9a296;
+    font: 500 0.82rem var(--f-body);
+    transition:
+      background 0.25s,
+      color 0.25s;
+  }
+  .demo__onglets button:hover {
+    color: #f0ebe2;
+  }
+  .demo__onglets button[aria-selected='true'] {
+    background: rgba(255, 255, 255, 0.12);
+    color: #f0ebe2;
   }
   .demo__url {
     flex: 1;
