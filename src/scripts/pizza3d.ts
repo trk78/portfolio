@@ -399,7 +399,7 @@ export function demarrer(
       uv.setXY(i, x / 0.46 + 0.5, z / 0.46 + 0.5);
       const r = Math.hypot(x, z) / 0.23;
       creux[i * 3] = x * 0.94;
-      creux[i * 3 + 1] = y + r * r * 0.085;
+      creux[i * 3 + 1] = y + r * r * 0.06;
       creux[i * 3 + 2] = z * 0.94;
     }
     salameGeo.morphAttributes.position = [new THREE.Float32BufferAttribute(creux, 3)];
@@ -479,7 +479,7 @@ export function demarrer(
     const m = new THREE.Mesh(feuilleGeo, matBasilic);
     m.castShadow = true;
     const a = (i / 10) * Math.PI * 2 + R(), d = 0.25 + R() * 0.95;
-    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.55 + i * 0.01, rot: R() * Math.PI * 2, s: 0.9 + R() * 0.5, y: 0.2 };
+    m.userData = { x: Math.cos(a) * d, z: Math.sin(a) * d, debut: 0.55 + i * 0.01, rot: R() * Math.PI * 2, s: 0.9 + R() * 0.5, y: 0.3 };
     pizza.add(m);
     return m;
   });
@@ -713,7 +713,7 @@ export function demarrer(
       const k = etape(d0, d0 + 0.09, q);
       const chute = 1 - doux(k);
       m.visible = k > 0;
-      m.position.set(x + Math.sin(k * 9 + n) * 0.3 * chute, 0.2 + chute * 2.4, z + Math.cos(k * 7 + n) * 0.2 * chute);
+      m.position.set(x + Math.sin(k * 9 + n) * 0.3 * chute, 0.3 + chute * 2.4, z + Math.cos(k * 7 + n) * 0.2 * chute);
       m.rotation.set(Math.sin(k * 11 + n) * 0.9 * chute, rot + chute * 4, Math.cos(k * 8) * 0.6 * chute);
       m.scale.setScalar(sc * (1 - cuisson * 0.12));
     }
