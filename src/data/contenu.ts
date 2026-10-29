@@ -21,7 +21,6 @@ export const services: Service[] = [
     points: ['Design sur mesure', 'SEO technique', 'Hébergement inclus ou chez vous'],
     demos: [
       { nom: 'Pizzeria', url: '/demo/pizzeria/', domaine: 'pizzeria-fuoco.demo' },
-      { nom: 'Domaine viticole', url: '/demo/domaine/', domaine: 'clos-des-brumes.demo' },
     ],
   },
   {
