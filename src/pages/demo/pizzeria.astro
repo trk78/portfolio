@@ -414,7 +414,6 @@ const etoiles = '★★★★★';
         <p><b>Ouvert</b><br />Mardi – dimanche<br />Fermé le lundi</p>
         <p><b>Contact</b><br />01 00 00 00 00<br />ciao@fuoco.example</p>
       </div>
-      <p class="pied__nom" aria-hidden="true">Fuoco</p>
     </footer>
 
     <a class="badge" href="https://jeannin.dev/" target="_top">Démo · pizzeria fictive · site réalisé par Timéo ↗</a>
@@ -656,8 +655,7 @@ const etoiles = '★★★★★';
   h3,
   .logo,
   .prix,
-  .degres,
-  .pied__nom {
+  .degres {
     font-family: var(--f-titre);
     font-variation-settings: 'SOFT' 100, 'WONK' 1;
   }
@@ -1369,11 +1367,9 @@ const etoiles = '★★★★★';
   }
 
   /* ---------- Footer ---------- */
+  /* Contact line at the very bottom of the page, over the finished pizza. */
   .pied {
-    padding: 4rem clamp(1rem, 4vw, 3rem) 0;
-    overflow: hidden;
-    background: var(--nuit);
-    border-top: 1px solid rgba(246, 236, 217, 0.12);
+    padding: 10rem clamp(1rem, 4vw, 3rem) 5rem;
   }
   .pied__infos {
     display: grid;
@@ -1385,17 +1381,6 @@ const etoiles = '★★★★★';
   }
   .pied__infos b {
     color: var(--creme);
-  }
-  .pied__nom {
-    margin: 2rem 0 -0.28em;
-    font-size: 24vw;
-    font-weight: 900;
-    font-style: italic;
-    line-height: 0.8;
-    letter-spacing: -0.05em;
-    text-align: center;
-    color: transparent;
-    -webkit-text-stroke: 1.5px rgba(255, 90, 31, 0.45);
   }
   .badge {
     position: fixed;
