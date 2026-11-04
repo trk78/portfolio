@@ -1,7 +1,8 @@
 ---
 // Demo "business website": homepage of a fictional Neapolitan pizzeria, opened from the Services section.
 // Standalone page (own fonts and colors, not the portfolio layout). A 3D pizza (src/scripts/pizza3d.ts) sits
-// behind the whole page and builds up section by section; menu thumbnails are drawn in SVG at build time.
+// behind the whole page and builds up section by section; menu thumbnails are drawn in SVG, then rasterized at build time.
+import sharp from 'sharp';
 import '@fontsource-variable/fraunces/full.css';
 import '@fontsource-variable/fraunces/full-italic.css';
 import '@fontsource/instrument-sans/400.css';
@@ -239,6 +240,13 @@ const allergenes = (p: { base: string; g: readonly string[] }) => [
 const retraits = ['19:00', '19:15', '19:30', '19:45', '20:00', '20:15', '20:30'];
 const creneaux = [['19:00', true], ['19:30', true], ['20:00', false], ['20:30', true], ['21:00', true], ['21:30', false]] as const;
 const etoiles = '★★★★★';
+// Rasterized: as inline SVG their filters were repainted while scrolling, which froze the page.
+const vignettes = await Promise.all(
+  carte.map(async (p, i) => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="300" height="300">${pizza(`p${i}`, p.graine, p.base, [...p.g])}</svg>`;
+    return `data:image/webp;base64,${(await sharp(Buffer.from(svg)).webp({ quality: 82 }).toBuffer()).toString('base64')}`;
+  }),
+);
 ---
 
 <!doctype html>
@@ -345,7 +353,7 @@ const etoiles = '★★★★★';
           <ul class="pizzas">
             {carte.map((p, i) => (
               <li class="pizza" data-cat={p.cat} data-base={p.base} data-g={p.g.join(',')} data-nom={p.nom} style={`view-transition-name: pizza-${i}`}>
-                <svg viewBox="0 0 200 200" aria-hidden="true" set:html={pizza(`p${i}`, p.graine, p.base, [...p.g])} />
+                <img src={vignettes[i]} alt="" width="300" height="300" decoding="async" />
                 <div>
                   <div class="pizza__ligne">
                     <h3>{p.nom}</h3>
@@ -486,7 +494,6 @@ const etoiles = '★★★★★';
       </div>
     </aside>
 
-    <a class="badge" href="https://jeannin.dev/" target="_top">Démo · pizzeria fictive · site réalisé par Timéo ↗</a>
   </body>
 </html>
 
@@ -1293,11 +1300,12 @@ const etoiles = '★★★★★';
   .pizza[hidden] {
     display: none;
   }
-  .pizza svg {
+  .pizza img {
     width: 100%;
+    height: auto;
     transition: rotate 1.2s var(--courbe), scale 0.8s var(--courbe);
   }
-  .pizza:hover svg {
+  .pizza:hover img {
     rotate: 120deg;
     scale: 1.12;
   }
@@ -1622,23 +1630,6 @@ const etoiles = '★★★★★';
     color: var(--creme-2);
   }
   .pied__infos b {
-    color: var(--creme);
-  }
-  .badge {
-    position: fixed;
-    left: 1rem;
-    bottom: 1rem;
-    z-index: 45;
-    padding: 0.55em 1em;
-    border-radius: 999px;
-    background: rgba(18, 11, 7, 0.8);
-    backdrop-filter: blur(8px);
-    box-shadow: inset 0 0 0 1px rgba(246, 236, 217, 0.18);
-    font-size: 0.78rem;
-    text-decoration: none;
-    color: var(--creme-2);
-  }
-  .badge:hover {
     color: var(--creme);
   }
 

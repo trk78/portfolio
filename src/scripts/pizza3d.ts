@@ -66,24 +66,24 @@ const grain = (c: CanvasRenderingContext2D, t: number, force: number) => {
   }
   c.putImageData(img, 0, 0);
 };
-// Texture redrawn as a mix of two states (raw / baked) when the bake progresses.
+// Two textures (raw / baked) mixed in the shader: the bake never redraws a canvas or uploads a texture while scrolling.
 const melange = (a: HTMLCanvasElement, b: HTMLCanvasElement) => {
-  const c = document.createElement('canvas');
-  c.width = a.width;
-  c.height = a.height;
-  const ctx = c.getContext('2d')!;
-  const tex = texture(c);
-  let fait = -1;
+  const cuite = texture(b);
+  const cuisson = { value: 0 };
   return {
-    tex,
+    tex: texture(a),
+    brancher(m: THREE.Material) {
+      m.onBeforeCompile = (s) => {
+        s.uniforms.mapCuite = { value: cuite };
+        s.uniforms.cuisson = cuisson;
+        s.fragmentShader = ('uniform sampler2D mapCuite;\nuniform float cuisson;\n' + s.fragmentShader).replace(
+          '#include <map_fragment>',
+          'diffuseColor *= mix(texture2D(map, vMapUv), texture2D(mapCuite, vMapUv), cuisson);',
+        );
+      };
+    },
     regler(k: number) {
-      if (Math.abs(k - fait) < 0.02) return;
-      fait = k;
-      ctx.globalAlpha = 1;
-      ctx.drawImage(a, 0, 0);
-      ctx.globalAlpha = k;
-      ctx.drawImage(b, 0, 0);
-      tex.needsUpdate = true;
+      cuisson.value = k;
     },
   };
 };
@@ -277,6 +277,7 @@ export function demarrer(
     sheen: 0.8, sheenRoughness: 0.6, sheenColor: new THREE.Color('#fff6e4'),
     emissive: new THREE.Color('#ff4a10'), emissiveIntensity: 0,
   });
+  pate.brancher(matPate);
   const disque = new THREE.Mesh(pateGeo, matPate);
   disque.castShadow = disque.receiveShadow = true;
   pizza.add(disque);
@@ -359,6 +360,7 @@ export function demarrer(
     }),
   );
   const matMozza = new THREE.MeshPhysicalMaterial({ map: mozza.tex, roughness: 0.45, sheen: 1, sheenColor: new THREE.Color('#fffaf0'), clearcoat: 0.4, clearcoatRoughness: 0.35 });
+  mozza.brancher(matMozza);
   const mozzas = Array.from({ length: 26 }, (_, i) => {
     const m = new THREE.Mesh(bosseler(new THREE.IcosahedronGeometry(0.2 + R() * 0.09, 5), 1.7, R() * 10), matMozza);
     m.castShadow = m.receiveShadow = true;
@@ -645,7 +647,13 @@ export function demarrer(
       casse(e);
     }
   };
+  const braises = document.querySelector<HTMLElement>('.braises');
   const image = () => {
+    // First frame with everything showing, under the loading screen: shaders and textures are ready before the scroll reveals them.
+    if (!premier) {
+      scene.traverse((o) => (o.visible = true));
+      composer.render();
+    }
     const t = (performance.now() - debut) / 1000;
     q += (cible - q) * 0.07;
     const i = SEUILS.filter((s) => q >= s).length;
@@ -655,7 +663,8 @@ export function demarrer(
     blanc += ((choix?.base === 'bianca' ? 1 : 0) - blanc) * 0.14;
     const cuisson = Math.max(doux(etape(0.68, 0.86, q)), apercu * 0.85);
     if (i !== derniere) surEtape((derniere = i), cuisson);
-    document.documentElement.style.setProperty('--cuisson', cuisson.toFixed(3));
+    // Set on the embers, its only user: on the root it would restyle the whole page.
+    braises?.style.setProperty('--cuisson', cuisson.toFixed(2));
 
     // The pizza rises into view on load and keeps turning slowly.
     const arrivee = doux(clamp01(t / 1.4));
@@ -673,7 +682,8 @@ export function demarrer(
     mozza.regler(cuisson);
     const lueur = Math.sin(Math.PI * etape(0.64, 0.92, q));
     const vacille = 1 + Math.sin(t * 13) * 0.12 + Math.sin(t * 7.3) * 0.1;
-    matPate.sheen = 0.8 * (1 - cuisson);
+    // Never exactly 0: three.js recompiles the material's shader when sheen turns off, freezing the scroll.
+    matPate.sheen = Math.max(0.8 * (1 - cuisson), 0.001);
     matPate.emissiveIntensity = lueur * 0.18 * vacille;
     matBulle.color.copy(pale).lerp(brule, cuisson * 0.8);
     matBasilic.color.copy(vert).lerp(fane, cuisson * 0.5);
