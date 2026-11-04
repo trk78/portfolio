@@ -85,7 +85,6 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
         {
           services.map((s, i) => (
             <li class="card reveal" style={`--i: ${i}`}>
-              <span class="mono card__ref">{String.fromCharCode(65 + i)}</span>
               <svg class="card__picto" viewBox="0 0 48 46" aria-hidden="true" set:html={pictos[i]} />
               <h3>{s.titre}</h3>
               <p>{s.texte}</p>
@@ -888,9 +887,6 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   }
   .card:hover::before {
     clip-path: circle(150% at var(--px, 50%) var(--py, 100%));
-  }
-  .card__ref {
-    font-size: 0.85rem;
   }
   /* Thin-stroke icon, redrawn on hover. */
   .card__picto {
