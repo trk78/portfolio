@@ -1,5 +1,5 @@
-// demos: example pages opened in a window from the card, one tab each (url under src/pages/demo/, fake domain shown in the bar).
-export type Service = { titre: string; texte: string; points: string[]; demos?: { nom: string; url: string; domaine: string }[] };
+// demos: example pages opened in a window from the card, one tab each (url under src/pages/demo/, fake domain shown in the bar, apercu: picture in the card's mini window).
+export type Service = { titre: string; texte: string; points: string[]; demos?: { nom: string; url: string; domaine: string; apercu: string }[] };
 export type Etape = { titre: string; texte: string };
 export type Projet = {
   nom: string;
@@ -20,7 +20,7 @@ export const services: Service[] = [
     texte: "Un site rapide, bien référencé, que vous pouvez faire évoluer sans moi.",
     points: ['Design sur mesure', 'SEO technique', 'Hébergement inclus ou chez vous'],
     demos: [
-      { nom: 'Pizzeria', url: '/demo/pizzeria/', domaine: 'pizzeria-fuoco.demo' },
+      { nom: 'Pizzeria', url: '/demo/pizzeria/', domaine: 'pizzeria-fuoco.demo', apercu: '/projets/apercus/pizzeria.webp' },
     ],
   },
   {

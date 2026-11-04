@@ -93,9 +93,18 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
                 {s.points.map((p, k) => <li style={`--k: ${k}`}>{p}</li>)}
               </ul>
               {s.demos && (
-                <button type="button" class="mono card__demo" data-demos={JSON.stringify(s.demos)}>
-                  Voir des exemples : {s.titre}
-                </button>
+                <>
+                  <button type="button" class="mono card__demo" data-demos={JSON.stringify(s.demos)}>
+                    Voir des exemples : {s.titre}
+                  </button>
+                  <span class="card__fenetre" aria-hidden="true">
+                    <span class="mono card__barre">
+                      <span class="demo__points"><i></i><i></i><i></i></span>
+                      {s.demos[0].domaine}
+                    </span>
+                    <img src={s.demos[0].apercu} alt="" width="1440" height="900" loading="lazy" decoding="async" />
+                  </span>
+                </>
               )}
             </li>
           ))
@@ -254,9 +263,13 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   const fermerDemo = demo.querySelector<HTMLButtonElement>('.demo__fermer')!;
   let declencheur: HTMLElement | null = null;
   const fenetre = demo.querySelector<HTMLElement>('.demo__fenetre')!;
-  // The window starts exactly over the card (transform only, smooth on the GPU), then grows to its place.
+  // The window starts exactly over the card's mini window when it is showing, otherwise over the card
+  // (transform only, smooth on the GPU), then grows to its place.
   const surCarte = () => {
-    const c = declencheur!.closest('.card')!.getBoundingClientRect();
+    const carte = declencheur!.closest('.card')!;
+    const bords = carte.getBoundingClientRect();
+    const mini = carte.querySelector('.card__fenetre')?.getBoundingClientRect();
+    const c = mini && mini.top < bords.bottom - 40 ? mini : bords;
     fenetre.style.transform = 'none';
     const f = fenetre.getBoundingClientRect();
     fenetre.style.transform = `translate(${c.left - f.left}px, ${c.top - f.top}px) scale(${c.width / f.width}, ${c.height / f.height})`;
@@ -980,6 +993,72 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   .card__demo:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: -4px;
+  }
+  /* Mini window rising from the bottom of the card: shows that it opens a site, and which one.
+     Clicks go through to the button; the opening demo window then grows from it. */
+  .card__fenetre {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2rem;
+    display: flex;
+    flex-direction: column;
+    width: min(100% - 2.5rem, 20rem);
+    height: 9.5rem;
+    margin-inline: auto;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #120b07;
+    box-shadow:
+      0 18px 40px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(255, 255, 255, 0.12);
+    pointer-events: none;
+    translate: 0 100%;
+    rotate: 5deg;
+    transition:
+      translate 0.55s cubic-bezier(0.2, 0.7, 0.1, 1),
+      rotate 0.55s cubic-bezier(0.2, 0.7, 0.1, 1);
+  }
+  .card:hover .card__fenetre,
+  .card__demo:focus-visible + .card__fenetre {
+    translate: 0 0;
+    rotate: -2.5deg;
+  }
+  .card__barre {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.5rem;
+    background: #1f1d1a;
+    color: #d9d3c7;
+    font-size: 0.6rem;
+  }
+  .card__barre .demo__points {
+    gap: 3px;
+  }
+  .card__barre .demo__points i {
+    width: 6px;
+    height: 6px;
+  }
+  .card__fenetre img {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    object-fit: cover;
+    object-position: 50% 30%;
+  }
+  /* No hover on touch screens: shown once when the card scrolls into view. */
+  @media (hover: none) {
+    .card.is-in .card__fenetre {
+      animation: fenetre-rappel 3.2s 0.8s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+    }
+  }
+  @keyframes fenetre-rappel {
+    20%,
+    75% {
+      translate: 0 0;
+      rotate: -2.5deg;
+    }
   }
 
   /* ---------- Demo window ---------- */
