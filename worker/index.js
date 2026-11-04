@@ -2,7 +2,7 @@
 const NOMS = ['undercover-parties', 'pastetok-videos'];
 
 function origineAutorisee(origin) {
-  return origin === 'https://trk78.github.io' || /^http:\/\/localhost(?::\d+)?$/.test(origin || '');
+  return origin === 'https://trk78.github.io';
 }
 
 export default {
@@ -36,9 +36,12 @@ export default {
     }
     if (request.method !== 'POST') return new Response('Méthode interdite', { status: 405, headers });
 
-    // Simple safeguards: origin required, body size capped, allow-listed names, fixed increment.
-    // shortcut: no per-IP rate limit; the origin can be spoofed outside a browser.
-    // No identifier or IP is stored; repeated calls remain possible.
+    // Simple safeguards: origin required, per-IP limit, body size capped, allow-listed names, fixed increment.
+    // The limit's key is not stored by this Worker.
+    // shortcut: the origin can be spoofed outside a browser and the limit is per IP, so a distributed script can still inflate the totals; add a signed token if that happens.
+    const { success } = await env.LIMITE.limit({ key: request.headers.get('CF-Connecting-IP') || 'inconnue' });
+    if (!success) return new Response('Trop de requêtes', { status: 429, headers });
+
     let donnees;
     try {
       const lecteur = request.body?.getReader();

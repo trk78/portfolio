@@ -59,7 +59,7 @@ Fontsource fonts: import `@fontsource/<font>/<weight>` **without** `.css` (the p
 
 ### Counters (Worker + D1)
 
-`POST /hit` counts Undercover+ games started and valid links submitted to PasteTok (not confirmed downloads). `GET /stats` provides both totals, with a 60-second cache. Only these totals are stored. Allowed write origins: `https://trk78.github.io` and `http://localhost:*`; each call adds 1.
+`POST /hit` counts Undercover+ games started and valid links submitted to PasteTok (not confirmed downloads). `GET /stats` provides both totals, with a 60-second cache. Only these totals are stored. The only allowed write origin is `https://trk78.github.io`; each call adds 1, limited to 10 calls per minute per IP (the IP is not stored by the Worker).
 
 From `worker/`, create the database with `npx wrangler d1 create compteurs`, then replace the `database_id` placeholder in `wrangler.toml` with the returned ID.
 Apply the schema with `npx wrangler d1 execute compteurs --remote --file=schema.sql`, then deploy with `npx wrangler deploy`.
@@ -104,7 +104,7 @@ worker/                     # Counters Worker, D1 schema and Wrangler configurat
 
 ## ⚠️ Known limitations
 
-The counters Worker has no per-IP rate limit. Its safeguards do not prevent repeated calls from a client spoofing the origin. No identifiers or IP addresses are stored.
+The counters Worker limits calls to 10 per minute per IP. The origin can be spoofed outside a browser, so a distributed script can still inflate the totals. No identifiers or IP addresses are stored by the Worker.
 
 ## 📄 License
 

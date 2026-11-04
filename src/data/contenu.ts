@@ -125,7 +125,7 @@ export const chiffres: Chiffre[] = [
   },
   {
     valeur: 0,
-    label: 'vidéos TikTok téléchargées sur PasteTok',
+    label: 'liens TikTok collés sur PasteTok',
     source: 'https://compteurs.timeo-jeannin.workers.dev/stats',
     champ: 'pastetokVideos',
   },

@@ -6,3 +6,11 @@ compatibility_date = "2026-10-01"
 binding = "DB"
 database_name = "compteurs"
 database_id = "c20399d2-2f8c-4a69-a805-b5d2363fc7fc"
+
+[[ratelimits]]
+name = "LIMITE"
+namespace_id = "1001"
+
+  [ratelimits.simple]
+  limit = 10
+  period = 60
