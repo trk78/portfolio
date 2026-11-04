@@ -66,11 +66,11 @@ export const projets: Projet[] = [
     type: 'Application web',
     annee: '2026',
     resume:
-      'Comparer le coût et la qualité de vie entre 7 674 villes dans 179 pays : fiches ville, comparateur, carte, classement et simulateur de budget. Uniquement des données publiques sourcées, sans publicité.',
+      'Comparer le coût et la qualité de vie entre 9 915 villes dans 179 pays : fiches ville, comparateur, carte, classement et simulateur de budget. Uniquement des données publiques sourcées, sans publicité.',
     stack: ['Next.js 14', 'TypeScript', 'Prisma 7', 'Neon PostgreSQL', 'Tailwind CSS 4', 'Cloudflare'],
     url: 'https://mycitycost.com',
     logo: '/projets/mycitycost.svg',
-    apercu: '/projets/apercus/mycitycost.webp',
+    apercu: '/projets/apercus/mycitycost.webp?v=2',
     video: '/projets/videos/mycitycost.mp4',
   },
   {
@@ -129,7 +129,7 @@ export const chiffres: Chiffre[] = [
     source: 'https://compteurs.timeo-jeannin.workers.dev/stats',
     champ: 'pastetokVideos',
   },
-  { valeur: 7674, label: 'villes comparées sur MyCityCost' },
+  { valeur: 9915, label: 'villes comparées sur MyCityCost' },
   {
     valeur: 0,
     label: 'adresses générées sur Ghostmails',
