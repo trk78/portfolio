@@ -280,7 +280,8 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     if (cadre.dataset.src === d.url) return;
     cadre.dataset.src = d.url;
     cadre.classList.remove('is-pret');
-    cadre.src = d.url;
+    // From the Pages domain: another site for the browser, so the demo runs in its own process and its 3D never blocks this page.
+    cadre.src = 'https://timeo.pages.dev' + d.url;
   };
   // Shows one example: iframe, address bar, full-screen link and selected tab.
   const afficher = (d: Exemple) => {
@@ -292,7 +293,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   cadre.addEventListener('load', () => cadre.classList.add('is-pret'));
   const fermer = () => {
     if (!demo.classList.contains('is-ouvert')) return;
-    demo.classList.remove('is-ouvert', 'is-deplie');
+    demo.classList.remove('is-ouvert');
     if (animer) surCarte();
     lenis?.start();
     setTimeout(() => !demo.classList.contains('is-ouvert') && (demo.hidden = true), animer ? 600 : 0);
@@ -325,8 +326,6 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       demo.classList.add('is-ouvert');
       fenetre.style.transform = '';
       fermerDemo.focus({ preventScroll: true });
-      // The iframe shares this page's thread and its 3D scene starts once it has a size: wait for the window to finish growing.
-      setTimeout(() => demo.classList.contains('is-ouvert') && demo.classList.add('is-deplie'), animer ? 600 : 0);
     });
   });
   fermerDemo.addEventListener('click', fermer);
@@ -1193,9 +1192,6 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     background: #120b07;
     opacity: 0;
     transition: opacity 0.4s;
-  }
-  .demo:not(.is-deplie) iframe {
-    display: none;
   }
   .demo.is-ouvert iframe.is-pret {
     opacity: 1;
