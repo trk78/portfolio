@@ -102,7 +102,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
                       <span class="demo__points"><i></i><i></i><i></i></span>
                       {s.demos[0].domaine}
                     </span>
-                    <img src={s.demos[0].apercu} alt="" width="1440" height="900" loading="lazy" decoding="async" />
+                    <img src={s.demos[0].apercu} alt="" width="640" height="400" loading="lazy" decoding="async" />
                   </span>
                 </>
               )}
@@ -292,7 +292,7 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
   cadre.addEventListener('load', () => cadre.classList.add('is-pret'));
   const fermer = () => {
     if (!demo.classList.contains('is-ouvert')) return;
-    demo.classList.remove('is-ouvert');
+    demo.classList.remove('is-ouvert', 'is-deplie');
     if (animer) surCarte();
     lenis?.start();
     setTimeout(() => !demo.classList.contains('is-ouvert') && (demo.hidden = true), animer ? 600 : 0);
@@ -325,6 +325,8 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       demo.classList.add('is-ouvert');
       fenetre.style.transform = '';
       fermerDemo.focus({ preventScroll: true });
+      // The iframe shares this page's thread and its 3D scene starts once it has a size: wait for the window to finish growing.
+      setTimeout(() => demo.classList.contains('is-ouvert') && demo.classList.add('is-deplie'), animer ? 600 : 0);
     });
   });
   fermerDemo.addEventListener('click', fermer);
@@ -1013,6 +1015,9 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
       0 18px 40px rgba(0, 0, 0, 0.45),
       0 0 0 1px rgba(255, 255, 255, 0.12);
     pointer-events: none;
+    /* Own GPU layer, above the card's cursor highlight: moving it repaints nothing. */
+    z-index: 1;
+    will-change: translate, rotate;
     translate: 0 100%;
     rotate: 5deg;
     transition:
@@ -1188,6 +1193,9 @@ const deploiement = ['build', 'tests', 'nom de domaine', 'HTTPS'];
     background: #120b07;
     opacity: 0;
     transition: opacity 0.4s;
+  }
+  .demo:not(.is-deplie) iframe {
+    display: none;
   }
   .demo.is-ouvert iframe.is-pret {
     opacity: 1;
