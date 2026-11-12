@@ -66,10 +66,12 @@ export const projets: Projet[] = [
     type: 'App mobile',
     annee: '2025',
     resume:
-      "Casino virtuel sur téléphone, sans un centime en jeu : 16 jeux dont des exclusivités et du multijoueur en ligne, clans, classement et succès. Monnaie fictive, 12 langues.",
+      "Jeux de hasard et d'adresse en monnaie fictive, sur téléphone et dans le navigateur : 16 jeux dont des exclusivités et du multijoueur en ligne, clans, niveaux et classement. Pour le plaisir, jamais pour de l'argent.",
     stack: ['Flutter 3.47', 'Dart 3.13', 'Riverpod', 'Firebase', 'AdMob'],
+    url: 'https://zino.day',
     logo: '/projets/zino.webp',
-    apercu: '/projets/apercus/zino.webp',
+    apercu: '/projets/apercus/zino.webp?v=2',
+    video: '/projets/videos/zino.mp4',
   },
   {
     nom: 'Ghostmails',

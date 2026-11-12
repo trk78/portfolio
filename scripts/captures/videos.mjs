@@ -296,6 +296,36 @@ const projets = {
     );
   },
 
+  // Zino: needs a signed-in account, so the three phones play the app tour recorded for its website,
+  // each from a different moment (offsets kept under the 19.2 s tour, so no phone wraps around).
+  async zino() {
+    const tour = `data:video/mp4;base64,${readFileSync('../zino/docs/img/tour-fr.mp4').toString('base64')}`;
+    const tel = (x, y, debut) =>
+      `<div class="ecran" style="left:${x}px;top:${y}px;width:340px;height:699px;border-radius:44px;padding:12px;box-sizing:border-box">
+        <video src="${tour}" data-debut="${debut}" muted playsinline preload="auto" style="width:316px;height:675px;object-fit:cover;border-radius:32px"></video></div>`;
+    await filmer(
+      'zino',
+      async (page) => {
+        await page.setContent(scene(fondSvg('#1fc8ff') + tel(820, 120, 0) + tel(1180, 60, 6) + tel(1540, 150, 11.5)), { waitUntil: 'load' });
+        await page.evaluate(() =>
+          Promise.all(
+            [...document.querySelectorAll('video')].map(
+              (v) =>
+                new Promise((ok) => {
+                  v.addEventListener('seeked', ok, { once: true });
+                  v.currentTime = Number(v.dataset.debut);
+                }),
+            ),
+          ),
+        );
+      },
+      async (page) => {
+        await page.evaluate(() => document.querySelectorAll('video').forEach((v) => v.play()));
+        await attendre(7000);
+      },
+    );
+  },
+
   // UniDroid: the launcher screens change on the TV while the remote screens change on the phone.
   async 'unidroid-suite'() {
     const dossier = '../unidroid-suite/docs/screenshots';
