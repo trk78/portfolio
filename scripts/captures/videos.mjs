@@ -8,13 +8,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import puppeteer from 'puppeteer-core';
 import sharp from 'sharp';
-import { fond } from './cadre.mjs';
+import { fond, ombre } from './cadre.mjs';
 
 const SORTIE = 'public/projets/videos';
 const FONDU = 0.8; // crossfade between the end and the start, in seconds
 const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
 const pub = /googlesyndication|doubleclick|adservice|googletagmanager|profitablecpm/;
-const portable = (page) => page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1.5 });
 
 const browser = await puppeteer.launch({
   executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
@@ -22,8 +21,8 @@ const browser = await puppeteer.launch({
   defaultViewport: { width: 1920, height: 1200 },
 });
 
-// Films `scene(page)` once `preparer(page)` is done, then encodes the loop.
-const filmer = async (nom, preparer, scene) => {
+// Records `scene(page)` once `preparer(page)` is done; returns the raw screencast.
+const prise = async (nom, preparer, scene) => {
   const page = await browser.newPage();
   await preparer(page);
   // The screencast only sends frames when the page changes: a near-invisible blinking pixel keeps
@@ -40,17 +39,28 @@ const filmer = async (nom, preparer, scene) => {
   await scene(page);
   await rec.stop();
   await page.close();
+  return brut;
+};
+
+// Films one page, then encodes the loop.
+const filmer = async (nom, preparer, scene) => {
+  const brut = await prise(nom, preparer, scene);
   boucler(brut, `${SORTIE}/${nom}.mp4`);
   rmSync(brut);
   console.log(nom, 'ok');
 };
 
-// The end of the clip fades into its first FONDU seconds: the output starts where that head ends.
 // The raw screencast has no duration in its header: normalise it to 24 fps first, then measure it.
+const normaliser = (brut, largeur) => {
+  const sortie = brut.replace(/\.\w+$/, '-24.mp4');
+  execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', brut, '-vf', `fps=24,scale=${largeur}:-2`, '-c:v', 'libx264', '-crf', '12', sortie]);
+  const duree = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', sortie]).toString());
+  return { fichier: sortie, duree };
+};
+
+// The end of the clip fades into its first FONDU seconds: the output starts where that head ends.
 const boucler = (brut, sortie) => {
-  const entree = brut.replace('.webm', '.mp4');
-  execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', brut, '-vf', 'fps=24,scale=1280:-2', '-c:v', 'libx264', '-crf', '12', entree]);
-  const d = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', entree]).toString());
+  const { fichier: entree, duree: d } = normaliser(brut, 1280);
   const filtre =
     `[0:v]split[a][b];` +
     `[a]trim=start=${FONDU},setpts=PTS-STARTPTS[corps];` +
@@ -69,6 +79,68 @@ const scene = (corps) => `<!doctype html><html><head><style>
   .ecran img,.ecran iframe{display:block;border:0}
 </style></head><body>${corps}</body></html>`;
 const fondSvg = (lueur) => `<img class="fond" src="data:image/svg+xml;base64,${fond(lueur).toString('base64')}">`;
+
+// Website staging: the desktop site in a browser window and the mobile site on a phone, filmed one after
+// the other then composed on the dark background; the screenshot is a frame of the composition.
+const FEN = { x: 560, y: 64, l: 1260, barre: 44, r: 14 };
+FEN.h = Math.round((FEN.l * 800) / 1280);
+const TEL = { x: 1500, y: 430, l: 300, bord: 12, r: 44 };
+TEL.lc = TEL.l - TEL.bord * 2;
+TEL.hc = Math.round((TEL.lc * 844) / 390);
+const svg = (l, h, corps) => Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${l}" height="${h}">${corps}</svg>`);
+const mettreEnScene = async (nom, lueur, domaine, ordi, tel) => {
+  const bruts = [
+    await prise(`${nom}-ordi`, async (p) => {
+      await p.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1.5 });
+      await ordi.preparer(p);
+    }, ordi.jouer),
+    await prise(`${nom}-tel`, async (p) => {
+      await p.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+      await tel.preparer(p);
+    }, tel.jouer),
+  ];
+  const [a, b] = [normaliser(bruts[0], FEN.l), normaliser(bruts[1], TEL.lc)];
+  // The desktop take sets the length; a shorter phone take holds its last frame.
+  const d = a.duree;
+  const hFen = FEN.barre + FEN.h;
+  const hTel = TEL.hc + TEL.bord * 2;
+  const fichier = (n) => join(tmpdir(), `${nom}-${n}.png`);
+  const [oF, oT] = [await ombre({ largeur: FEN.l, hauteur: hFen }, FEN.r), await ombre({ largeur: TEL.l, hauteur: hTel }, TEL.r)];
+  const chrome = svg(FEN.l, hFen, `<rect width="${FEN.l}" height="${hFen}" rx="${FEN.r}" fill="#1d1b22"/>
+    <circle cx="24" cy="22" r="6" fill="#ff5f57"/><circle cx="44" cy="22" r="6" fill="#febc2e"/><circle cx="64" cy="22" r="6" fill="#28c840"/>
+    <rect x="${FEN.l / 2 - 220}" y="9" width="440" height="26" rx="13" fill="#2b2932"/>
+    <text x="${FEN.l / 2}" y="27" text-anchor="middle" font-family="Arial" font-size="14" fill="#b9b4c2">${domaine}</text>`);
+  await sharp(fond(lueur))
+    .composite([
+      { input: oF.input, left: FEN.x + oF.decalage, top: FEN.y + oF.decalage },
+      { input: chrome, left: FEN.x, top: FEN.y },
+      { input: oT.input, left: TEL.x + oT.decalage, top: TEL.y + oT.decalage },
+      { input: svg(TEL.l, hTel, `<rect width="${TEL.l}" height="${hTel}" rx="${TEL.r}" fill="#0b0b0d"/>`), left: TEL.x, top: TEL.y },
+    ])
+    .png()
+    .toFile(fichier('fond'));
+  // Masks: the page under the window bar keeps square top corners; the phone screen is rounded all around.
+  const r = FEN.r;
+  await sharp(svg(FEN.l, FEN.h, `<rect width="100%" height="100%"/><path d="M0 0H${FEN.l}V${FEN.h - r}Q${FEN.l} ${FEN.h} ${FEN.l - r} ${FEN.h}H${r}Q0 ${FEN.h} 0 ${FEN.h - r}Z" fill="#fff"/>`)).png().toFile(fichier('masque-ordi'));
+  await sharp(svg(TEL.lc, TEL.hc, `<rect width="100%" height="100%"/><rect width="100%" height="100%" rx="32" fill="#fff"/>`)).png().toFile(fichier('masque-tel'));
+  const composee = join(tmpdir(), `${nom}-scene.mp4`);
+  execFileSync('ffmpeg', ['-y', '-v', 'error', '-loop', '1', '-i', fichier('fond'), '-i', a.fichier, '-i', b.fichier,
+    '-loop', '1', '-i', fichier('masque-ordi'), '-loop', '1', '-i', fichier('masque-tel'), '-filter_complex',
+    `[1:v]scale=${FEN.l}:${FEN.h},format=rgba[a];[3:v]format=gray[ma];[a][ma]alphamerge[ra];` +
+      `[2:v]tpad=stop_mode=clone:stop_duration=10,scale=${TEL.lc}:${TEL.hc},format=rgba[b];[4:v]format=gray[mb];[b][mb]alphamerge[rb];` +
+      `[0:v][ra]overlay=${FEN.x}:${FEN.y + FEN.barre}[t];[t][rb]overlay=${TEL.x + TEL.bord}:${TEL.y + TEL.bord},format=yuv420p[v]`,
+    '-map', '[v]', '-t', d.toFixed(2), '-r', '24', '-c:v', 'libx264', '-crf', '12', composee]);
+  const image = fichier('apercu');
+  // Near the end: every scene has its final state on screen by then (loaded pictures, opened email).
+  execFileSync('ffmpeg', ['-y', '-v', 'error', '-ss', (d - 0.3).toFixed(2), '-i', composee, '-frames:v', '1', image]);
+  await sharp(image).webp({ quality: 82 }).toFile(`public/projets/apercus/${nom}.webp`);
+  boucler(composee, `${SORTIE}/${nom}.mp4`);
+  for (const f of [...bruts, a.fichier, b.fichier, composee, image, fichier('fond'), fichier('masque-ordi'), fichier('masque-tel')]) rmSync(f);
+  console.log(nom, 'ok');
+};
+// Declines the cookie banner when there is one.
+const refuserCookies = (page) =>
+  page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Refuser')?.click());
 
 const projets = {
   // Ghostmails: the inbox (mocked API), three emails opened one after the other.
@@ -90,10 +162,7 @@ const projets = {
       e2: carte('Boutique Lumen', 'linear-gradient(135deg,#f59e0b,#ef4444)', '<h2 style="margin:0 0 12px">-15 % sur votre première commande</h2><p>Votre code : <b style="font-size:22px;letter-spacing:2px">LUMEN15</b></p>'),
       e3: carte('Studio Nova', 'linear-gradient(135deg,#0ea5e9,#22c55e)', '<p>Votre code de vérification :</p><p style="font-size:40px;font-weight:700;letter-spacing:8px;text-align:center;margin:20px 0">482 913</p><p style="color:#6b7280;font-size:13px">Valable 10 minutes.</p>'),
     };
-    await filmer(
-      'ghostmails',
-      async (page) => {
-        await portable(page);
+    const preparer = async (page) => {
         await page.evaluateOnNewDocument(() => {
           localStorage.setItem('gm_consent', 'essential');
           localStorage.setItem('gm_lang', 'fr');
@@ -117,15 +186,35 @@ const projets = {
           return json({});
         });
         await page.goto('https://ghostmails.cc/', { waitUntil: 'networkidle2', timeout: 60_000 });
-        await page.locator('::-p-text(Confirmez votre inscription)').click();
-        await attendre(1500);
+    };
+    await mettreEnScene(
+      'ghostmails',
+      '#7c6aff',
+      'ghostmails.cc',
+      {
+        async preparer(page) {
+          await preparer(page);
+          await page.locator('::-p-text(Confirmez votre inscription)').click();
+          await attendre(1500);
+        },
+        async jouer(page) {
+          await attendre(2200);
+          await page.locator('::-p-text(Votre code de vérification)').click();
+          await attendre(2400);
+          await page.locator('::-p-text(Votre code de réduction)').click();
+          await attendre(2200);
+        },
       },
-      async (page) => {
-        await attendre(2200);
-        await page.locator('::-p-text(Votre code de vérification)').click();
-        await attendre(2400);
-        await page.locator('::-p-text(Votre code de réduction)').click();
-        await attendre(2200);
+      {
+        async preparer(page) {
+          await preparer(page);
+          await attendre(1000);
+        },
+        async jouer(page) {
+          await attendre(1600);
+          await page.locator('::-p-text(Votre code de vérification)').click();
+          await attendre(5400);
+        },
       },
     );
   },
@@ -140,10 +229,7 @@ const projets = {
         <text x="50%" y="56%" text-anchor="middle" font-family="Arial" font-weight="900" font-size="96" fill="#fff">EN 60 s</text></svg>`),
     ).jpeg().toBuffer();
     const avatar = await sharp({ create: { width: 128, height: 128, channels: 3, background: '#f59e0b' } }).jpeg().toBuffer();
-    await filmer(
-      'pastetok',
-      async (page) => {
-        await portable(page);
+    const preparer = async (page) => {
         await page.setRequestInterception(true);
         page.on('request', async (req) => {
           const url = new URL(req.url());
@@ -164,34 +250,40 @@ const projets = {
         });
         await page.goto('https://trk78.github.io/pastetok/', { waitUntil: 'networkidle2', timeout: 60_000 });
         await attendre(1000);
-      },
-      async (page) => {
-        await attendre(900);
-        await page.type('input', 'https://www.tiktok.com/@chef.lea/video/7400000000000000000', { delay: 28 });
-        await attendre(400);
-        await page.click('button[type="submit"]');
-        await page.waitForNavigation({ timeout: 8000 }).catch(() => {});
-        await attendre(2600);
-      },
-    );
+    };
+    // A link is typed and submitted, after `pause` ms; the video card appears.
+    const coller = (pause) => async (page) => {
+      await attendre(pause);
+      await page.type('input', 'https://www.tiktok.com/@chef.lea/video/7400000000000000000', { delay: 28 });
+      await attendre(400);
+      await page.click('button[type="submit"]');
+      await page.waitForNavigation({ timeout: 8000 }).catch(() => {});
+      await attendre(3500 - pause);
+    };
+    await mettreEnScene('pastetok', '#fe2c55', 'trk78.github.io/pastetok', { preparer, jouer: coller(900) }, { preparer, jouer: coller(2000) });
   },
 
-  // MyCityCost: the cost of living map, zoomed in on a region then panned slowly.
+  // MyCityCost: the cost of living map, zoomed in on a region then panned slowly; the Paris page scrolls on the phone.
   async mycitycost() {
-    await filmer(
-      'mycitycost',
-      async (page) => {
-        await page.setRequestInterception(true);
-        page.on('request', (req) => (pub.test(new URL(req.url()).hostname) ? req.abort() : req.continue()));
-        await portable(page);
-        await page.goto('https://mycitycost.com/map', { waitUntil: 'networkidle2', timeout: 60_000 });
-        await page.locator('::-p-text(Refuser)').setTimeout(3000).click().catch(() => {});
-        await attendre(3000);
+    const ouvrir = async (page, url) => {
+      await page.setRequestInterception(true);
+      page.on('request', (req) => (pub.test(new URL(req.url()).hostname) ? req.abort() : req.continue()));
+      await page.goto(url, { waitUntil: 'networkidle2', timeout: 60_000 });
+      await attendre(1500);
+      await refuserCookies(page);
+      await attendre(1500);
+    };
+    await mettreEnScene('mycitycost', '#e8603c', 'mycitycost.com', {
+      async preparer(page) {
+        await ouvrir(page, 'https://mycitycost.com/map');
+        // Pollution layer: green to red, more telling than the default data coverage layer.
+        await page.select('select:has(option[value="pm25"])', 'pm25');
+        await attendre(1500);
         const r = await page.$eval('.leaflet-container', (el) => el.getBoundingClientRect().toJSON());
         page.carte = { x: r.x + r.width / 2, y: r.y + r.height / 2 };
         await page.mouse.move(page.carte.x, page.carte.y);
       },
-      async (page) => {
+      async jouer(page) {
         const { x, y } = page.carte;
         await attendre(500);
         await page.click('.leaflet-control-zoom-in');
@@ -208,7 +300,17 @@ const projets = {
         await page.click('.leaflet-control-zoom-in');
         await attendre(1800);
       },
-    );
+    }, {
+      preparer: (page) => ouvrir(page, 'https://mycitycost.com/city/paris'),
+      async jouer(page) {
+        await attendre(1200);
+        for (let k = 0; k < 90; k++) {
+          await page.evaluate(() => scrollBy(0, 9));
+          await attendre(40);
+        }
+        await attendre(1600);
+      },
+    });
   },
 
   // Undercover+: three phones (same layout as the screenshot) playing at the same time.

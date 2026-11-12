@@ -58,8 +58,8 @@ export const projets: Projet[] = [
     stack: ['Next.js 14', 'TypeScript', 'Prisma 7', 'Neon PostgreSQL', 'Tailwind CSS 4', 'Cloudflare'],
     url: 'https://mycitycost.com',
     logo: '/projets/mycitycost.svg',
-    apercu: '/projets/apercus/mycitycost.webp?v=2',
-    video: '/projets/videos/mycitycost.mp4',
+    apercu: '/projets/apercus/mycitycost.webp?v=3',
+    video: '/projets/videos/mycitycost.mp4?v=2',
   },
   {
     nom: 'Zino',
@@ -82,8 +82,8 @@ export const projets: Projet[] = [
     stack: ['Next.js 15', 'TypeScript', 'Hono', 'Tailwind CSS', 'Cloudflare Workers', 'Cloudflare Pages'],
     url: 'https://ghostmails.cc',
     logo: '/projets/ghostmails.svg',
-    apercu: '/projets/apercus/ghostmails.webp',
-    video: '/projets/videos/ghostmails.mp4',
+    apercu: '/projets/apercus/ghostmails.webp?v=2',
+    video: '/projets/videos/ghostmails.mp4?v=2',
   },
   {
     nom: 'UniDroid',
@@ -120,8 +120,8 @@ export const projets: Projet[] = [
     url: 'https://trk78.github.io/pastetok/',
     repo: 'https://github.com/trk78/pastetok',
     logo: '/projets/pastetok.svg',
-    apercu: '/projets/apercus/pastetok.webp',
-    video: '/projets/videos/pastetok.mp4',
+    apercu: '/projets/apercus/pastetok.webp?v=2',
+    video: '/projets/videos/pastetok.mp4?v=2',
   },
 ];
 
