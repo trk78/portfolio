@@ -50,6 +50,28 @@ export const etapes: Etape[] = [
 // The Projects section only appears when the list contains at least one project.
 export const projets: Projet[] = [
   {
+    nom: 'MyCityCost',
+    type: 'Application web',
+    annee: '2026',
+    resume:
+      'Comparer le coût et la qualité de vie entre 9 915 villes dans 179 pays : fiches ville, comparateur, carte, classement et simulateur de budget. Uniquement des données publiques sourcées, sans publicité.',
+    stack: ['Next.js 14', 'TypeScript', 'Prisma 7', 'Neon PostgreSQL', 'Tailwind CSS 4', 'Cloudflare'],
+    url: 'https://mycitycost.com',
+    logo: '/projets/mycitycost.svg',
+    apercu: '/projets/apercus/mycitycost.webp?v=2',
+    video: '/projets/videos/mycitycost.mp4',
+  },
+  {
+    nom: 'Zino',
+    type: 'App mobile',
+    annee: '2025',
+    resume:
+      "Casino virtuel sur téléphone, sans un centime en jeu : 16 jeux dont des exclusivités et du multijoueur en ligne, clans, classement et succès. Monnaie fictive, 12 langues.",
+    stack: ['Flutter 3.47', 'Dart 3.13', 'Riverpod', 'Firebase', 'AdMob'],
+    logo: '/projets/zino.webp',
+    apercu: '/projets/apercus/zino.webp',
+  },
+  {
     nom: 'Ghostmails',
     type: 'Service web',
     annee: '2026',
@@ -62,16 +84,16 @@ export const projets: Projet[] = [
     video: '/projets/videos/ghostmails.mp4',
   },
   {
-    nom: 'MyCityCost',
-    type: 'Application web',
+    nom: 'UniDroid',
+    type: 'App Android TV',
     annee: '2026',
     resume:
-      'Comparer le coût et la qualité de vie entre 9 915 villes dans 179 pays : fiches ville, comparateur, carte, classement et simulateur de budget. Uniquement des données publiques sourcées, sans publicité.',
-    stack: ['Next.js 14', 'TypeScript', 'Prisma 7', 'Neon PostgreSQL', 'Tailwind CSS 4', 'Cloudflare'],
-    url: 'https://mycitycost.com',
-    logo: '/projets/mycitycost.svg',
-    apercu: '/projets/apercus/mycitycost.webp?v=2',
-    video: '/projets/videos/mycitycost.mp4',
+      "Écran d'accueil rapide pour box Android TV et vidéoprojecteurs, sans pub, avec une télécommande sur téléphone intégrée : appairage par code, souris, clavier en direct, 6 à 8 ms par touche.",
+    stack: ['Android 5+', 'Java', 'Android TV'],
+    repo: 'https://github.com/trk78/unidroid-suite',
+    logo: '/projets/unidroid-suite.webp',
+    apercu: '/projets/apercus/unidroid-suite.webp?v=2',
+    video: '/projets/videos/unidroid-suite.mp4',
   },
   {
     nom: 'Undercover+',
@@ -98,18 +120,6 @@ export const projets: Projet[] = [
     logo: '/projets/pastetok.svg',
     apercu: '/projets/apercus/pastetok.webp',
     video: '/projets/videos/pastetok.mp4',
-  },
-  {
-    nom: 'UniDroid',
-    type: 'App Android TV',
-    annee: '2026',
-    resume:
-      "Écran d'accueil rapide pour box Android TV et vidéoprojecteurs, sans pub, avec une télécommande sur téléphone intégrée : appairage par code, souris, clavier en direct, 6 à 8 ms par touche.",
-    stack: ['Android 5+', 'Java', 'Android TV'],
-    repo: 'https://github.com/trk78/unidroid-suite',
-    logo: '/projets/unidroid-suite.webp',
-    apercu: '/projets/apercus/unidroid-suite.webp?v=2',
-    video: '/projets/videos/unidroid-suite.mp4',
   },
 ];
 
